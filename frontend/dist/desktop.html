@@ -280,20 +280,30 @@
             </button>
           </div>
         </div>
-        <div class="relative w-full h-[440px] bg-slate-100" id="gis-map">
-          <div class="absolute top-2 right-2 z-[400] bg-white/95 border border-gray-300 p-2 rounded shadow text-xs space-y-1 max-w-[210px]">
-            <div class="text-[10px] font-bold text-[#0b2545] uppercase tracking-wide border-b border-gray-200 pb-1">Priority Hazard Corridors</div>
-            <button class="w-full text-left p-1 rounded hover:bg-red-50 text-[11px] flex items-center justify-between text-gray-800" onclick="zoomToZone(25.4484, 92.2152, 'Jaintia Hills NH-44 Sec 8')">
-              <span class="flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-red-600"></span><span class="truncate">Jaintia Hills NH-44</span></span>
-              <span class="font-bold text-[#b91c1c]">94%</span>
+        <div class="relative w-full h-[400px] sm:h-[450px] bg-slate-100" id="gis-map">
+          <!-- Mobile Corridor Toggle Button -->
+          <button class="sm:hidden absolute top-2 right-2 z-[400] bg-white/95 border border-gray-300 px-2.5 py-1 rounded shadow text-[10px] font-bold text-[#0b2545] flex items-center space-x-1.5 backdrop-blur-xs hover:bg-gray-50" onclick="toggleCorridorsDrawer()">
+            <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+            <span>Hazard Corridors</span>
+          </button>
+
+          <!-- Corridor Box (Hidden on small mobile by default so it never blocks pan/zoom) -->
+          <div id="corridors-box" class="hidden sm:block absolute top-2 right-2 z-[400] bg-white/95 border border-gray-300 p-2.5 rounded shadow-md text-xs space-y-1.5 max-w-[220px] backdrop-blur-xs">
+            <div class="text-[10px] font-bold text-[#0b2545] uppercase tracking-wide border-b border-gray-200 pb-1 flex items-center justify-between">
+              <span>Priority Hazard Corridors</span>
+              <button class="sm:hidden text-gray-500 hover:text-gray-900 font-bold px-1" onclick="toggleCorridorsDrawer()">✕</button>
+            </div>
+            <button class="w-full text-left p-1.5 rounded hover:bg-red-50 text-[11px] flex items-center justify-between text-gray-800 transition-colors" onclick="zoomToZone(25.4484, 92.2152, 'Jaintia Hills NH-44 Sec 8')">
+              <span class="flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-red-600 shrink-0"></span><span class="truncate font-medium">Jaintia Hills NH-44</span></span>
+              <span class="font-bold text-[#b91c1c] ml-1">94%</span>
             </button>
-            <button class="w-full text-left p-1 rounded hover:bg-amber-50 text-[11px] flex items-center justify-between text-gray-800" onclick="zoomToZone(27.3389, 88.6065, 'Gangtok South Ridge')">
-              <span class="flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-amber-600"></span><span class="truncate">Gangtok S-Ridge</span></span>
-              <span class="font-bold text-amber-700">81%</span>
+            <button class="w-full text-left p-1.5 rounded hover:bg-amber-50 text-[11px] flex items-center justify-between text-gray-800 transition-colors" onclick="zoomToZone(27.3389, 88.6065, 'Gangtok South Ridge')">
+              <span class="flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-amber-600 shrink-0"></span><span class="truncate font-medium">Gangtok S-Ridge</span></span>
+              <span class="font-bold text-amber-700 ml-1">81%</span>
             </button>
-            <button class="w-full text-left p-1 rounded hover:bg-amber-50 text-[11px] flex items-center justify-between text-gray-800" onclick="zoomToZone(23.7271, 92.7176, 'Aizawl East Escarpment')">
-              <span class="flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-amber-600"></span><span class="truncate">Aizawl East Flank</span></span>
-              <span class="font-bold text-amber-700">76%</span>
+            <button class="w-full text-left p-1.5 rounded hover:bg-amber-50 text-[11px] flex items-center justify-between text-gray-800 transition-colors" onclick="zoomToZone(23.7271, 92.7176, 'Aizawl East Escarpment')">
+              <span class="flex items-center space-x-1.5"><span class="w-2 h-2 rounded-full bg-amber-600 shrink-0"></span><span class="truncate font-medium">Aizawl East Flank</span></span>
+              <span class="font-bold text-amber-700 ml-1">76%</span>
             </button>
           </div>
           <div class="absolute bottom-2 left-2 z-[400] bg-white/90 text-gray-700 text-[11px] font-mono px-2 py-0.5 rounded border border-gray-300 pointer-events-none">Grid: 25.5788° N, 91.8933° E | GSI Datum: WGS-84</div>
@@ -399,8 +409,8 @@
           <p class="text-xs text-gray-500">High-resolution interactive macro-zonation covering all 8 North Eastern Region States</p>
         </div>
         <div class="flex items-center space-x-2 text-xs">
-          <button class="px-3 py-1.5 font-semibold rounded bg-[#113f67] text-white border border-[#113f67]" onclick="switchBaseMap('topo')">Topo Layer</button>
-          <button class="px-3 py-1.5 font-medium rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-300" onclick="switchBaseMap('sat')">Satellite Layer</button>
+          <button class="px-3 py-1.5 font-semibold rounded bg-[#113f67] text-white border border-[#113f67]" id="btn-topo-full" onclick="switchBaseMap('topo')">Topo Layer</button>
+          <button class="px-3 py-1.5 font-medium rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-300" id="btn-sat-full" onclick="switchBaseMap('sat')">Satellite Layer</button>
           <button class="px-3 py-1.5 font-medium rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-300" onclick="resetMapView()">Reset Extent</button>
         </div>
       </div>
@@ -420,8 +430,35 @@
       </div>
 
       <!-- Dedicated Risk Map Viewport -->
-      <div class="relative w-full h-[540px] bg-slate-100 rounded border border-gray-300" id="gis-map-full">
-        <div class="absolute bottom-2 left-2 z-[400] bg-white/90 text-gray-700 text-[11px] font-mono px-2 py-0.5 rounded border border-gray-300 pointer-events-none">GSI NLSM National Grid: WGS-84 Datum | In-Situ Telemetry Overlay Active</div>
+      <div class="relative w-full h-[420px] sm:h-[540px] bg-slate-100 rounded border border-gray-300" id="gis-map-full">
+        <div class="absolute bottom-2 left-2 z-[400] bg-white/90 text-gray-700 text-[11px] font-mono px-2 py-0.5 rounded border border-gray-300 pointer-events-none">GSI NLSM National Grid: WGS-84 Datum | In-Situ Telemetry &amp; Macro-Polygons Active</div>
+      </div>
+
+      <!-- GSI 5-Tier Classification Standard for Dedicated Risk Map -->
+      <div class="bg-gray-50 border border-gray-200 rounded p-3">
+        <div class="text-[11px] font-bold text-[#0b2545] uppercase tracking-wide mb-1.5">GSI 5-Tier Landslide Susceptibility Classification Standard:</div>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+          <div class="flex items-center space-x-1.5 bg-white border border-gray-200 p-1.5 rounded cursor-pointer hover:bg-red-50" onclick="filterByTier('Critical')">
+            <span class="w-3 h-3 rounded bg-[#b91c1c] shrink-0"></span>
+            <div><div class="font-bold text-gray-800 text-[11px]">Critical (Red)</div><div class="text-[10px] text-gray-500">&gt; 80% Prob.</div></div>
+          </div>
+          <div class="flex items-center space-x-1.5 bg-white border border-gray-200 p-1.5 rounded cursor-pointer hover:bg-amber-50" onclick="filterByTier('High')">
+            <span class="w-3 h-3 rounded bg-[#d97706] shrink-0"></span>
+            <div><div class="font-bold text-gray-800 text-[11px]">High (Orange)</div><div class="text-[10px] text-gray-500">65% - 80% Prob.</div></div>
+          </div>
+          <div class="flex items-center space-x-1.5 bg-white border border-gray-200 p-1.5 rounded cursor-pointer hover:bg-yellow-50" onclick="filterByTier('Moderate')">
+            <span class="w-3 h-3 rounded bg-[#ca8a04] shrink-0"></span>
+            <div><div class="font-bold text-gray-800 text-[11px]">Moderate (Yellow)</div><div class="text-[10px] text-gray-500">45% - 64% Prob.</div></div>
+          </div>
+          <div class="flex items-center space-x-1.5 bg-white border border-gray-200 p-1.5 rounded cursor-pointer hover:bg-green-50" onclick="filterByTier('Low')">
+            <span class="w-3 h-3 rounded bg-[#7cb342] shrink-0"></span>
+            <div><div class="font-bold text-gray-800 text-[11px]">Low / Watch (Lime)</div><div class="text-[10px] text-gray-500">25% - 44% Prob.</div></div>
+          </div>
+          <div class="flex items-center space-x-1.5 bg-white border border-gray-200 p-1.5 rounded cursor-pointer hover:bg-emerald-50" onclick="filterByTier('Safe')">
+            <span class="w-3 h-3 rounded bg-[#2e7d32] shrink-0"></span>
+            <div><div class="font-bold text-gray-800 text-[11px]">Safe Basin (Green)</div><div class="text-[10px] text-gray-500">&lt; 25% Prob.</div></div>
+          </div>
+        </div>
       </div>
 
       <!-- Vulnerability Zones Table -->
@@ -1025,11 +1062,21 @@
     // Keep viewport at the top of content smoothly
     window.scrollTo({ top: 0, behavior: 'instant' });
 
-    // Invalidate map sizes if switching to map views
-    setTimeout(() => {
-      if (map) map.invalidateSize();
-      if (fullMap) fullMap.invalidateSize();
-    }, 120);
+    // Invalidate map sizes if switching to map views to ensure complete tile rendering without grey artifacts
+    if (tabId === 'dashboard') {
+      setTimeout(() => { if (map) map.invalidateSize(); }, 50);
+      setTimeout(() => { if (map) map.invalidateSize(); }, 250);
+    } else if (tabId === 'risk-map') {
+      setTimeout(() => {
+        if (!fullMapInitialized) {
+          initFullMap();
+        } else if (fullMap) {
+          fullMap.invalidateSize();
+        }
+      }, 50);
+      setTimeout(() => { if (fullMap) fullMap.invalidateSize(); }, 250);
+      setTimeout(() => { if (fullMap) fullMap.invalidateSize(); }, 500);
+    }
   }
 
   // 3. Sensor Fluctuations
@@ -1053,8 +1100,241 @@
   }
   setInterval(fluctuate, 2500);
 
-  // 4. Geospatial Data
-  let map, fullMap, topoLayer, satLayer, hazardMarkers = [], fullHazardMarkers = [];
+  // 4. Geospatial Data & Layers
+  let map, fullMap;
+  let topoLayer, satLayer, fullTopoLayer, fullSatLayer;
+  let currentBaseMap = 'topo';
+  let fullMapInitialized = false;
+  let hazardMarkers = [], fullHazardMarkers = [];
+  let dashboardPolygons = [], fullPolygons = [];
+  let userGpsMarker = null, userGpsMarkerFull = null;
+
+  // Authentic 16 GSI Macro-Scale Geological Zones covering all 8 NER States
+  const regionalZones = [
+    // === 1. GREEN — VERY LOW / SAFE BASINS ===
+    {
+      id: 'safe-assam-brahmaputra',
+      name: 'Assam — Brahmaputra Lowland Basin (Safe Plain)',
+      tier: 'Safe',
+      state: 'Assam',
+      score: 14,
+      color: '#2e7d32',
+      description: 'Alluvial Brahmaputra flood plain across Lower, Central, and Upper Assam. Slope <5°, deep stable alluvium.',
+      coords: [
+        [26.15, 89.98], [26.48, 90.25], [26.75, 91.20], [26.85, 92.40],
+        [27.15, 93.70], [27.50, 94.75], [27.75, 95.35], [27.50, 95.65],
+        [27.05, 94.90], [26.65, 93.60], [26.25, 92.65], [26.10, 91.50],
+        [25.95, 90.50], [26.05, 90.00]
+      ]
+    },
+    {
+      id: 'safe-tripura-basin',
+      name: 'Tripura — Alluvial Lowland Basin (Safe Zone)',
+      tier: 'Safe',
+      state: 'Tripura',
+      score: 16,
+      color: '#2e7d32',
+      description: 'Gentle undulating terrain covering West, South, and Gomati districts strictly inside Tripura border.',
+      coords: [
+        [23.10, 91.35], [23.65, 91.25], [24.10, 91.35], [24.30, 91.85],
+        [24.15, 92.10], [23.75, 92.10], [23.35, 91.75], [23.10, 91.55]
+      ]
+    },
+    {
+      id: 'safe-imphal-valley',
+      name: 'Manipur — Central Imphal Lacustrine Floor (Safe Basin)',
+      tier: 'Safe',
+      state: 'Manipur',
+      score: 18,
+      color: '#2e7d32',
+      description: 'Flat intermontane lacustrine valley floor around Loktak Lake, Imphal East & West. Zero slope angle.',
+      coords: [
+        [24.45, 93.80], [24.85, 93.85], [24.95, 94.05], [24.75, 94.10],
+        [24.45, 93.98]
+      ]
+    },
+
+    // === 2. LIME GREEN — LOW VULNERABILITY FOOTHILLS ===
+    {
+      id: 'watch-barak-valley',
+      name: 'Assam — Cachar & Barak Foothill Fringe (Low Vulnerability)',
+      tier: 'Low',
+      state: 'Assam',
+      score: 34,
+      color: '#7cb342',
+      description: 'Barak Valley low terrace perimeter and riverbank alluvial buffer.',
+      coords: [
+        [24.60, 92.55], [25.00, 92.65], [25.05, 93.05], [24.65, 93.05]
+      ]
+    },
+    {
+      id: 'watch-meghalaya-north-slopes',
+      name: 'Meghalaya — Ri-Bhoi Northern Rolling Slopes (Low Vulnerability)',
+      tier: 'Low',
+      state: 'Meghalaya',
+      score: 32,
+      color: '#7cb342',
+      description: 'Stable rolling granitic gneiss terrain in northern Meghalaya towards Guwahati border.',
+      coords: [
+        [25.75, 91.50], [26.00, 91.65], [25.95, 92.15], [25.70, 92.05]
+      ]
+    },
+    {
+      id: 'watch-arunachal-outer-siwalik',
+      name: 'Arunachal Pradesh — Outer Siwalik Low Hills (Low Vulnerability)',
+      tier: 'Low',
+      state: 'Arunachal',
+      score: 36,
+      color: '#7cb342',
+      description: 'Tertiary sandstone foothills along the Assam-Arunachal border zone.',
+      coords: [
+        [27.05, 92.60], [27.35, 93.50], [27.70, 94.60], [27.85, 95.25],
+        [27.55, 95.10], [27.20, 93.80], [26.90, 92.80]
+      ]
+    },
+
+    // === 3. GOLDEN AMBER — MODERATE SUSCEPTIBILITY HIGHLANDS ===
+    {
+      id: 'mod-mizoram-ridges',
+      name: 'Mizoram — Central & Northern Ridge System (Moderate Susceptibility)',
+      tier: 'Moderate',
+      state: 'Mizoram',
+      score: 54,
+      color: '#ca8a04',
+      description: 'Anticlinal ridge belts strictly inside Mizoram territory (Aizawl to Kolasib and Champhai).',
+      coords: [
+        [22.80, 92.65], [23.50, 92.55], [24.15, 92.60], [24.10, 93.10],
+        [23.45, 93.20], [22.80, 93.05]
+      ]
+    },
+    {
+      id: 'mod-nagaland-highlands',
+      name: 'Nagaland — Central Highlands & Patkai Slopes (Moderate Susceptibility)',
+      tier: 'Moderate',
+      state: 'Nagaland',
+      score: 56,
+      color: '#ca8a04',
+      description: 'Disang Group shales and sandstones along Mokokchung, Wokha, and Zunheboto ridges.',
+      coords: [
+        [25.65, 93.85], [26.15, 94.10], [26.70, 94.60], [26.75, 95.00],
+        [26.25, 94.85], [25.75, 94.30]
+      ]
+    },
+    {
+      id: 'mod-arunachal-interior',
+      name: 'Arunachal Pradesh — Lesser Himalayan Mid-Hills (Moderate Susceptibility)',
+      tier: 'Moderate',
+      state: 'Arunachal',
+      score: 52,
+      color: '#ca8a04',
+      description: 'Forested valleys of Subansiri, Siang, and Lohit river systems.',
+      coords: [
+        [27.35, 92.80], [27.95, 93.70], [28.35, 94.60], [28.25, 95.30],
+        [27.85, 94.80], [27.45, 93.40]
+      ]
+    },
+    {
+      id: 'mod-sikkim-south',
+      name: 'South Sikkim — Namchi Ridge & Teesta Terraces (Moderate Susceptibility)',
+      tier: 'Moderate',
+      state: 'Sikkim',
+      score: 48,
+      color: '#ca8a04',
+      description: 'Phyllite and sandstone terraced slopes around Namchi, Ravangla, and Jorethang.',
+      coords: [
+        [27.10, 88.25], [27.30, 88.30], [27.35, 88.60], [27.15, 88.60]
+      ]
+    },
+
+    // === 4. SUNSET ORANGE — HIGH HAZARD SCARPS ===
+    {
+      id: 'high-meghalaya-escarpment',
+      name: 'Meghalaya — Southern Sohra/Cherrapunji Escarpment (High Hazard)',
+      tier: 'High',
+      state: 'Meghalaya',
+      score: 76,
+      color: '#d97706',
+      description: 'Precipitous sandstone cliffs of East Khasi & West Khasi Hills overlooking the southern border.',
+      coords: [
+        [25.18, 91.20], [25.40, 91.20], [25.42, 92.15], [25.18, 92.15]
+      ]
+    },
+    {
+      id: 'high-manipur-highways',
+      name: 'Manipur — NH-37 & NH-2 Hill Corridor (High Hazard)',
+      tier: 'High',
+      state: 'Manipur',
+      score: 73,
+      color: '#d97706',
+      description: 'Steep hill cuts and fractured ophiolite ridges along highway lifelines (Noney to Tamenglong).',
+      coords: [
+        [24.50, 93.35], [25.15, 93.45], [25.25, 94.20], [24.65, 93.80]
+      ]
+    },
+    {
+      id: 'high-arunachal-west-kameng',
+      name: 'Arunachal Pradesh — West Kameng & Bomdila Slopes (High Hazard)',
+      tier: 'High',
+      state: 'Arunachal',
+      score: 74,
+      color: '#d97706',
+      description: 'Steep fractured crystalline rock slopes around Bomdila, Dirang, and Sela Pass corridor.',
+      coords: [
+        [27.20, 92.05], [27.65, 92.10], [27.75, 92.65], [27.25, 92.55]
+      ]
+    },
+
+    // === 5. DEEP SCARLET RED — CRITICAL ACTIVE FAULTS ===
+    {
+      id: 'crit-sikkim-mct',
+      name: 'North Sikkim — Teesta Gorge & Main Central Thrust (Critical Active Fault)',
+      tier: 'Critical',
+      state: 'Sikkim',
+      score: 91,
+      color: '#b91c1c',
+      description: 'Active tectonic MCT zone, narrow Teesta gorges, chronic rockfall and catastrophic debris flow belt.',
+      coords: [
+        [27.40, 88.35], [27.85, 88.40], [27.85, 88.75], [27.45, 88.70]
+      ]
+    },
+    {
+      id: 'crit-dima-hasao-haflong',
+      name: 'Assam — Haflong Railway Sinking Corridor (Critical Zone)',
+      tier: 'Critical',
+      state: 'Assam',
+      score: 88,
+      color: '#b91c1c',
+      description: 'Soft water-sensitive Disang shale belt causing chronic subsidence on Lumding-Badarpur track.',
+      coords: [
+        [25.05, 92.95], [25.35, 92.98], [25.38, 93.30], [25.08, 93.25]
+      ]
+    },
+    {
+      id: 'crit-kohima-thrust',
+      name: 'Nagaland — Kohima NH-29 Active Sinking Fault Zone (Critical Zone)',
+      tier: 'Critical',
+      state: 'Nagaland',
+      score: 87,
+      color: '#b91c1c',
+      description: 'Active geological thrust fault along NH-29 between Zubza and Kohima with chronic creep.',
+      coords: [
+        [25.60, 94.00], [25.80, 94.02], [25.80, 94.22], [25.60, 94.20]
+      ]
+    },
+    {
+      id: 'crit-jaintia-fracture',
+      name: 'Meghalaya — Jaintia Hills Dawki Fracture Zone (Critical Zone)',
+      tier: 'Critical',
+      state: 'Meghalaya',
+      score: 94,
+      color: '#b91c1c',
+      description: 'Dawki Fault fracture corridor with extreme rainfall runoff into subterranean void cavities.',
+      coords: [
+        [25.12, 92.15], [25.30, 92.18], [25.32, 92.45], [25.14, 92.42]
+      ]
+    }
+  ];
+
   const hazardZones = [
     { name:"Jaintia Hills NH-44 Sec 8", state:"Meghalaya", lat:25.4484, lon:92.2152, tier:"Critical", color:"#b91c1c", rain:"142mm", risk:94 },
     { name:"Nongstoin Slope KM 42", state:"Meghalaya", lat:25.5200, lon:91.2600, tier:"High", color:"#d97706", rain:"89mm", risk:78 },
@@ -1073,19 +1353,107 @@
     { name:"Agartala Baramura", state:"Tripura", lat:23.8315, lon:91.5600, tier:"Safe", color:"#15803d", rain:"18mm", risk:22 }
   ];
 
-  function initMap() {
-    // Mini Dashboard Map
-    map = L.map('gis-map', { zoomControl:true, attributionControl:false }).setView([25.5,92.5],7);
-    topoLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:18}).addTo(map);
-    satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18});
-    renderHazardMarkers(map, hazardMarkers);
+  function createTileLayers() {
+    const topoUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
+    const satUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+    topoLayer = L.tileLayer(topoUrl, { maxZoom: 18, attribution: false });
+    satLayer = L.tileLayer(satUrl, { maxZoom: 18, attribution: false });
+    fullTopoLayer = L.tileLayer(topoUrl, { maxZoom: 18, attribution: false });
+    fullSatLayer = L.tileLayer(satUrl, { maxZoom: 18, attribution: false });
+  }
 
-    // Full Geospatial Risk Map
-    fullMap = L.map('gis-map-full', { zoomControl:true, attributionControl:false }).setView([25.5,92.5],7);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:18}).addTo(fullMap);
-    renderHazardMarkers(fullMap, fullHazardMarkers);
+  function initMap() {
+    createTileLayers();
+
+    // Mini Dashboard Map
+    const mapEl = document.getElementById('gis-map');
+    if (mapEl) {
+      map = L.map('gis-map', {
+        zoomControl: true,
+        attributionControl: false,
+        tap: false,
+        maxBounds: [[20.0, 87.0], [30.5, 98.0]],
+        minZoom: 5.5
+      }).setView([25.5, 92.5], 7);
+
+      if (currentBaseMap === 'topo') {
+        topoLayer.addTo(map);
+      } else {
+        satLayer.addTo(map);
+      }
+
+      renderRegionalPolygons(map, dashboardPolygons);
+      renderHazardMarkers(map, hazardMarkers);
+    }
 
     populateZonesTable(hazardZones);
+  }
+
+  function initFullMap() {
+    if (fullMapInitialized) {
+      if (fullMap) fullMap.invalidateSize();
+      return;
+    }
+    const fullMapEl = document.getElementById('gis-map-full');
+    if (!fullMapEl || fullMapEl.offsetParent === null) return;
+
+    fullMap = L.map('gis-map-full', {
+      zoomControl: true,
+      attributionControl: false,
+      tap: false,
+      maxBounds: [[20.0, 87.0], [30.5, 98.0]],
+      minZoom: 5.5
+    }).setView([25.5, 92.5], 7);
+
+    if (currentBaseMap === 'topo') {
+      fullTopoLayer.addTo(fullMap);
+    } else {
+      fullSatLayer.addTo(fullMap);
+    }
+
+    renderRegionalPolygons(fullMap, fullPolygons);
+    renderHazardMarkers(fullMap, fullHazardMarkers);
+    fullMapInitialized = true;
+    fullMap.invalidateSize();
+  }
+
+  function renderRegionalPolygons(targetMap, polygonArr) {
+    polygonArr.forEach(p => targetMap.removeLayer(p));
+    polygonArr.length = 0;
+
+    regionalZones.forEach(z => {
+      const poly = L.polygon(z.coords, {
+        color: z.color,
+        weight: 2,
+        opacity: 0.85,
+        fillColor: z.color,
+        fillOpacity: 0.35,
+        className: 'gsi-hazard-polygon'
+      }).addTo(targetMap);
+
+      poly.bindPopup(`
+        <div style="font-family:'Public Sans',sans-serif;color:#ffffff;min-width:220px;">
+          <div style="font-weight:700;font-size:12px;color:#fde047;border-bottom:1px solid #334155;padding-bottom:4px;margin-bottom:6px;">${z.name}</div>
+          <div style="font-size:11px;margin-bottom:3px;"><strong>State:</strong> ${z.state}</div>
+          <div style="font-size:11px;margin-bottom:3px;"><strong>GSI Hazard Tier:</strong> <span style="color:${z.color};font-weight:bold;text-transform:uppercase;">${z.tier} (${z.score}%)</span></div>
+          <div style="font-size:10px;color:#cbd5e1;line-height:1.4;margin-top:4px;background:#0f172a;padding:5px;border-radius:3px;border:1px solid #1e293b;">${z.description}</div>
+          <div style="margin-top:8px;display:flex;gap:6px;">
+            <button onclick="zoomToPolygon('${z.id}')" style="background:#113f67;color:#fff;border:1px solid #38bdf8;padding:3px 8px;font-size:10px;border-radius:2px;cursor:pointer;font-weight:600;">Focus Zone</button>
+            ${z.score >= 70 ? `<button onclick="openEmergencyModal('${z.name}')" style="background:#b91c1c;color:#fff;border:none;padding:3px 8px;font-size:10px;border-radius:2px;cursor:pointer;font-weight:600;">DISPATCH</button>` : ''}
+          </div>
+        </div>
+      `);
+
+      poly.on('mouseover', function() {
+        this.setStyle({ fillOpacity: 0.6, weight: 3 });
+      });
+      poly.on('mouseout', function() {
+        this.setStyle({ fillOpacity: 0.35, weight: 2 });
+      });
+
+      poly.zoneData = z;
+      polygonArr.push(poly);
+    });
   }
 
   function renderHazardMarkers(targetMap, markerArr) {
@@ -1121,54 +1489,117 @@
   }
 
   function switchBaseMap(type) {
-    const t = document.getElementById('btn-topo'), s = document.getElementById('btn-sat');
-    if (type==='topo') {
-      if(map.hasLayer(satLayer)) map.removeLayer(satLayer);
-      topoLayer.addTo(map);
-      if (t) t.className="px-2.5 py-1 font-semibold rounded bg-[#113f67] text-white border border-[#113f67]";
-      if (s) s.className="px-2.5 py-1 font-medium rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-300";
+    currentBaseMap = type;
+    const t = document.getElementById('btn-topo');
+    const s = document.getElementById('btn-sat');
+    const tf = document.getElementById('btn-topo-full');
+    const sf = document.getElementById('btn-sat-full');
+
+    const activeDash = "px-2.5 py-1 font-semibold rounded bg-[#113f67] text-white border border-[#113f67]";
+    const inactiveDash = "px-2.5 py-1 font-medium rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-300";
+    const activeFull = "px-3 py-1.5 font-semibold rounded bg-[#113f67] text-white border border-[#113f67]";
+    const inactiveFull = "px-3 py-1.5 font-medium rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-300";
+
+    if (type === 'topo') {
+      if (map) {
+        if (map.hasLayer(satLayer)) map.removeLayer(satLayer);
+        if (!map.hasLayer(topoLayer)) topoLayer.addTo(map);
+      }
+      if (fullMap) {
+        if (fullMap.hasLayer(fullSatLayer)) fullMap.removeLayer(fullSatLayer);
+        if (!fullMap.hasLayer(fullTopoLayer)) fullTopoLayer.addTo(fullMap);
+      }
+      if (t) t.className = activeDash;
+      if (s) s.className = inactiveDash;
+      if (tf) tf.className = activeFull;
+      if (sf) sf.className = inactiveFull;
     } else {
-      if(map.hasLayer(topoLayer)) map.removeLayer(topoLayer);
-      satLayer.addTo(map);
-      if (s) s.className="px-2.5 py-1 font-semibold rounded bg-[#113f67] text-white border border-[#113f67]";
-      if (t) t.className="px-2.5 py-1 font-medium rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-300";
+      if (map) {
+        if (map.hasLayer(topoLayer)) map.removeLayer(topoLayer);
+        if (!map.hasLayer(satLayer)) satLayer.addTo(map);
+      }
+      if (fullMap) {
+        if (fullMap.hasLayer(fullTopoLayer)) fullMap.removeLayer(fullTopoLayer);
+        if (!fullMap.hasLayer(fullSatLayer)) fullSatLayer.addTo(fullMap);
+      }
+      if (s) s.className = activeDash;
+      if (t) t.className = inactiveDash;
+      if (sf) sf.className = activeFull;
+      if (tf) tf.className = inactiveFull;
     }
   }
 
   function resetMapView() {
-    if (map) map.flyTo([25.5,92.5],7,{animate:true,duration:0.8});
-    if (fullMap) fullMap.flyTo([25.5,92.5],7,{animate:true,duration:0.8});
+    if (map) map.flyTo([25.5, 92.5], 7, { animate: true, duration: 0.8 });
+    if (fullMap && fullMapInitialized) fullMap.flyTo([25.5, 92.5], 7, { animate: true, duration: 0.8 });
   }
 
-  function zoomToZone(lat,lon,label) {
-    const targetMap = !document.getElementById('view-risk-map').classList.contains('hidden') ? fullMap : map;
-    const targetMarkers = !document.getElementById('view-risk-map').classList.contains('hidden') ? fullHazardMarkers : hazardMarkers;
-    if(targetMap){
-      targetMap.flyTo([lat,lon],12,{animate:true,duration:1});
-      setTimeout(()=>{
-        const f=targetMarkers.find(m=>m.zoneData&&m.zoneData.name.includes(label.split(' ')[0]));
-        if(f)f.openPopup();
-      },1100);
+  function zoomToZone(lat, lon, label) {
+    const isRiskMapActive = !document.getElementById('view-risk-map').classList.contains('hidden');
+    if (isRiskMapActive && !fullMapInitialized) {
+      initFullMap();
+    }
+    const targetMap = isRiskMapActive ? fullMap : map;
+    const targetMarkers = isRiskMapActive ? fullHazardMarkers : hazardMarkers;
+    if (targetMap) {
+      targetMap.flyTo([lat, lon], 11, { animate: true, duration: 1.0 });
+      setTimeout(() => {
+        const f = targetMarkers.find(m => m.zoneData && (m.zoneData.name.includes(label.split(' ')[0]) || label.includes(m.zoneData.name.split(' ')[0])));
+        if (f) f.openPopup();
+      }, 1100);
     }
   }
 
-  function filterStatePill(btn,state) {
-    document.querySelectorAll('#ner-state-pills .state-pill').forEach(b=>{b.className="state-pill px-2.5 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300";});
-    btn.className="state-pill px-2.5 py-1 rounded text-xs font-semibold bg-[#113f67] text-white";
-    const filtered = state==='all' ? hazardZones : hazardZones.filter(z=>z.state.toLowerCase()===state.toLowerCase());
+  function zoomToPolygon(zoneId) {
+    const isRiskMapActive = !document.getElementById('view-risk-map').classList.contains('hidden');
+    if (isRiskMapActive && !fullMapInitialized) {
+      initFullMap();
+    }
+    const targetMap = isRiskMapActive ? fullMap : map;
+    const targetPolys = isRiskMapActive ? fullPolygons : dashboardPolygons;
+    const targetPoly = targetPolys.find(p => p.zoneData && p.zoneData.id === zoneId);
+    if (targetMap && targetPoly) {
+      targetMap.fitBounds(targetPoly.getBounds(), { padding: [30, 30], maxZoom: 12, animate: true });
+      setTimeout(() => { targetPoly.openPopup(); }, 600);
+    }
+  }
+
+  function toggleCorridorsDrawer() {
+    const box = document.getElementById('corridors-box');
+    if (box) {
+      box.classList.toggle('hidden');
+    }
+  }
+
+  function filterStatePill(btn, state) {
+    document.querySelectorAll('#ner-state-pills .state-pill').forEach(b => {
+      b.className = "state-pill px-2.5 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300";
+    });
+    btn.className = "state-pill px-2.5 py-1 rounded text-xs font-semibold bg-[#113f67] text-white";
+    const filtered = state === 'all' ? hazardZones : hazardZones.filter(z => z.state.toLowerCase() === state.toLowerCase());
     populateZonesTable(filtered);
-    if(fullMap) {
-      if(state==='all'){ fullMap.flyTo([25.5,92.5],7,{animate:true}); }
-      else if(filtered.length) { fullMap.flyTo([filtered[0].lat,filtered[0].lon],9,{animate:true}); }
+    if (fullMap && fullMapInitialized) {
+      if (state === 'all') {
+        fullMap.flyTo([25.5, 92.5], 7, { animate: true });
+      } else if (filtered.length) {
+        fullMap.flyTo([filtered[0].lat, filtered[0].lon], 9, { animate: true });
+      }
     }
   }
 
   function filterByTier(tier) {
-    const filtered = hazardZones.filter(z=>z.tier===tier);
+    const filtered = hazardZones.filter(z => z.tier.toLowerCase() === tier.toLowerCase());
     populateZonesTable(filtered);
+    const targetMap = (!document.getElementById('view-risk-map').classList.contains('hidden') && fullMapInitialized) ? fullMap : map;
+    if (targetMap && filtered.length) {
+      targetMap.flyTo([filtered[0].lat, filtered[0].lon], 8, { animate: true });
+    }
   }
 
-  let userGpsMarker = null;
+  window.addEventListener('resize', () => {
+    if (map) map.invalidateSize();
+    if (fullMap) fullMap.invalidateSize();
+  });
 
   function calculateDistanceKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
@@ -1250,18 +1681,32 @@
     if (box2) { box2.className = statusClass; box2.innerHTML = cardHtml; }
 
     // Drop a pulsing GPS user pin on map
+    const userPin = L.divIcon({
+      className: 'custom-map-pin',
+      html: `<div style="width:16px;height:16px;background:#2563eb;border:3px solid #ffffff;border-radius:9999px;box-shadow:0 0 12px rgba(37,99,235,0.9);"></div>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8]
+    });
+    if (map) {
+      if (userGpsMarker) map.removeLayer(userGpsMarker);
+      userGpsMarker = L.marker([lat, lon], { icon: userPin }).addTo(map);
+      userGpsMarker.bindPopup(`<strong>Your GPS Location</strong><br/>${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E<br/>Live Rain: ${rain.toFixed(1)} mm/h<br/>Temp: ${temp}°C`);
+    }
+    if (fullMap) {
+      if (userGpsMarkerFull) fullMap.removeLayer(userGpsMarkerFull);
+      userGpsMarkerFull = L.marker([lat, lon], { icon: userPin }).addTo(fullMap);
+      userGpsMarkerFull.bindPopup(`<strong>Your GPS Location</strong><br/>${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E<br/>Live Rain: ${rain.toFixed(1)} mm/h<br/>Temp: ${temp}°C`);
+    }
     const activeMap = !document.getElementById('view-risk-map').classList.contains('hidden') ? fullMap : map;
     if (activeMap) {
-      if (userGpsMarker) activeMap.removeLayer(userGpsMarker);
-      const userPin = L.divIcon({
-        className: 'custom-map-pin',
-        html: `<div style="width:16px;height:16px;background:#2563eb;border:3px solid #ffffff;border-radius:9999px;box-shadow:0 0 12px rgba(37,99,235,0.9);"></div>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
-      });
-      userGpsMarker = L.marker([lat, lon], { icon: userPin }).addTo(activeMap);
-      userGpsMarker.bindPopup(`<strong>Your GPS Location</strong><br/>${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E<br/>Live Rain: ${rain.toFixed(1)} mm/h<br/>Temp: ${temp}°C`).openPopup();
       activeMap.flyTo([lat, lon], Math.min(activeMap.getZoom() || 8, 9), { animate: true });
+      setTimeout(() => {
+        if (!document.getElementById('view-risk-map').classList.contains('hidden')) {
+          if (userGpsMarkerFull) userGpsMarkerFull.openPopup();
+        } else {
+          if (userGpsMarker) userGpsMarker.openPopup();
+        }
+      }, 700);
     }
   }
 
