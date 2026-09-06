@@ -55,6 +55,21 @@
     from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  /* CRITICAL: Fix map scroll overwrite and container bleed */
+  #gis-map, #gis-map-full {
+    overflow: hidden !important;
+    isolation: isolate !important;
+    z-index: 10 !important;
+    contain: layout paint;
+  }
+  .leaflet-container {
+    z-index: 10 !important;
+    contain: layout paint;
+  }
+  .leaflet-pane {
+    contain: paint;
+  }
 </style>
 </head>
 <body class="bg-[#f4f6f9] text-[#1e293b] font-sans antialiased min-h-screen flex flex-col selection:bg-blue-100 selection:text-blue-900">
@@ -115,11 +130,14 @@
       </div>
     </div>
     <div class="text-center md:text-left flex-1 md:px-6">
-      <div class="flex items-center justify-center md:justify-start space-x-2">
+      <div class="flex items-center justify-center md:justify-start space-x-2 flex-wrap gap-y-1">
         <h1 class="text-xl md:text-2xl font-bold text-[#0b2545] tracking-tight">NER-LEWS 2.0</h1>
         <span class="bg-[#113f67] text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Operational Node</span>
+        <span class="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-300 flex items-center space-x-1">
+          <span>🛰️</span><span>100% Software &amp; Remote Sensing (Zero Hardware)</span>
+        </span>
       </div>
-      <p class="text-xs text-[#475569] mt-0.5 font-medium">North Eastern Region Landslide Early Warning &amp; Geotechnical Telemetry System</p>
+      <p class="text-xs text-[#475569] mt-0.5 font-medium">North Eastern Region Landslide Early Warning &amp; Earth Observation Intelligence System</p>
     </div>
     <div class="flex items-center space-x-4 shrink-0">
       <div class="flex items-center space-x-2 border border-gray-200 rounded p-1 bg-gray-50/80">
@@ -151,7 +169,7 @@
 </header>
 
 <!-- 4. OFFICIAL HORIZONTAL NAVIGATION BAR (TAB SWITCHER) -->
-<nav class="bg-[#113f67] text-white border-b-2 border-amber-500 text-sm shadow-sm sticky top-0 z-40">
+<nav class="bg-[#113f67] text-white border-b-2 border-amber-500 text-sm shadow-sm sticky top-0 z-[1001]">
   <div class="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between">
     <div class="flex items-center space-x-1 overflow-x-auto py-0 scrollbar-none flex-nowrap" id="main-nav-links">
       <button data-tab="dashboard" class="nav-tab bg-[#0b2545] border-b-2 border-amber-400 text-amber-200 font-bold px-3.5 py-2.5 text-xs tracking-wide uppercase transition-colors whitespace-nowrap shrink-0" onclick="switchTab('dashboard')">
@@ -160,8 +178,8 @@
       <button data-tab="risk-map" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors whitespace-nowrap shrink-0" onclick="switchTab('risk-map')">
         Geospatial Risk Map
       </button>
-      <button data-tab="sensors" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors whitespace-nowrap shrink-0" onclick="switchTab('sensors')">
-        Geotechnical Telemetry
+      <button data-tab="satellite" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors whitespace-nowrap shrink-0" onclick="switchTab('satellite')">
+        Satellite &amp; Radar Telemetry
       </button>
       <button data-tab="predictions" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors whitespace-nowrap shrink-0" onclick="switchTab('predictions')">
         AI Predictions
@@ -237,13 +255,13 @@
         </div>
         <div class="text-[11px] text-gray-500 mt-1">Yellow Watch Active</div>
       </div>
-      <div class="bg-white border border-gray-200 border-l-4 border-l-[#113f67] p-3 rounded-xs shadow-2xs hover:shadow-xs transition-shadow cursor-pointer" onclick="switchTab('sensors')">
-        <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Operational Stations</div>
+      <div class="bg-white border border-gray-200 border-l-4 border-l-[#113f67] p-3 rounded-xs shadow-2xs hover:shadow-xs transition-shadow cursor-pointer" onclick="switchTab('satellite')">
+        <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Satellite &amp; Radar Streams</div>
         <div class="mt-1 flex items-baseline justify-between">
-          <span class="text-2xl font-bold font-mono text-[#113f67]">341<span class="text-xs text-gray-500 font-normal">/347</span></span>
-          <span class="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">98.2%</span>
+          <span class="text-2xl font-bold font-mono text-[#113f67]">100%<span class="text-xs text-green-600 font-semibold"> Live</span></span>
+          <span class="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Zero Hardware</span>
         </div>
-        <div class="text-[11px] text-gray-500 mt-1">IMD ARG + Piezometers</div>
+        <div class="text-[11px] text-gray-500 mt-1">Sentinel InSAR + IMD Radar</div>
       </div>
       <div class="bg-white border border-gray-200 border-l-4 border-l-[#15803d] p-3 rounded-xs shadow-2xs hover:shadow-xs transition-shadow">
         <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Shelter Relocations</div>
@@ -280,7 +298,7 @@
             </button>
           </div>
         </div>
-        <div class="relative w-full h-[400px] sm:h-[450px] bg-slate-100" id="gis-map">
+        <div class="relative w-full h-[400px] sm:h-[450px] bg-slate-100 overflow-hidden" id="gis-map" style="overflow: hidden; isolation: isolate; z-index: 10;">
           <!-- Mobile Corridor Toggle Button -->
           <button class="sm:hidden absolute top-2 right-2 z-[400] bg-white/95 border border-gray-300 px-2.5 py-1 rounded shadow text-[10px] font-bold text-[#0b2545] flex items-center space-x-1.5 backdrop-blur-xs hover:bg-gray-50" onclick="toggleCorridorsDrawer()">
             <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
@@ -366,31 +384,31 @@
           </div>
         </div>
 
-        <!-- Telemetry Gauges -->
+        <!-- Satellite & Radar Earth Observation Telemetry -->
         <div class="bg-white border border-gray-300 rounded shadow-2xs p-3.5 space-y-3">
           <div class="border-b border-gray-200 pb-2 flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <span class="material-symbols-outlined text-[#113f67]">speed</span>
-              <h3 class="font-bold text-sm text-[#0b2545]">Station JH-082 Telemetry</h3>
+              <span class="material-symbols-outlined text-[#113f67]">satellite_alt</span>
+              <h3 class="font-bold text-sm text-[#0b2545]">Satellite &amp; Radar Observation (JH-08 Sector)</h3>
             </div>
-            <span class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 font-semibold">Live Telemetry</span>
+            <span class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 font-semibold">Live Remote Sensing</span>
           </div>
           <div class="space-y-1">
-            <div class="flex justify-between text-xs"><span class="font-semibold text-gray-700">Pore Water Pressure (3.0m)</span><span class="font-mono font-bold text-[#b91c1c]" id="gauge-moisture-val">87.0% - Critical</span></div>
+            <div class="flex justify-between text-xs"><span class="font-semibold text-gray-700">NASA SMAP Satellite Soil Saturation</span><span class="font-mono font-bold text-[#b91c1c]" id="gauge-moisture-val">87.0% - Critical</span></div>
             <div class="w-full bg-gray-200 h-2 rounded overflow-hidden"><div class="bg-[#b91c1c] h-full rounded transition-all duration-700" id="gauge-moisture-bar" style="width: 87%;"></div></div>
           </div>
           <div class="space-y-1">
-            <div class="flex justify-between text-xs"><span class="font-semibold text-gray-700">Inclinometer Shear Rate</span><span class="font-mono font-bold text-amber-700" id="gauge-incline-val">4.2 mm/h</span></div>
+            <div class="flex justify-between text-xs"><span class="font-semibold text-gray-700">Sentinel-1 InSAR Ground Deformation</span><span class="font-mono font-bold text-amber-700" id="gauge-incline-val">4.2 mm/mo</span></div>
             <div class="w-full bg-gray-200 h-2 rounded overflow-hidden"><div class="bg-amber-500 h-full rounded transition-all duration-700" id="gauge-incline-bar" style="width: 71%;"></div></div>
           </div>
           <div class="space-y-1">
-            <div class="flex justify-between text-xs"><span class="font-semibold text-gray-700">Rain Gauge (ARG #408)</span><span class="font-mono font-bold text-[#113f67]" id="gauge-rain-val">18.7 mm/h</span></div>
+            <div class="flex justify-between text-xs"><span class="font-semibold text-gray-700">IMD Doppler Weather Radar Rate</span><span class="font-mono font-bold text-[#113f67]" id="gauge-rain-val">18.7 mm/h</span></div>
             <div class="w-full bg-gray-200 h-2 rounded overflow-hidden"><div class="bg-[#113f67] h-full rounded transition-all duration-700" id="gauge-rain-bar" style="width: 62%;"></div></div>
           </div>
           <div class="border-t border-gray-200 pt-2 flex items-center justify-between text-[11px] text-gray-500">
-            <span>In-situ Rate: 15 mins</span>
-            <button class="text-[#113f67] font-semibold hover:underline flex items-center" onclick="switchTab('sensors')">
-              <span>View All 347 Stations</span>
+            <span>ISRO &bull; ESA &bull; IMD Doppler Feeds</span>
+            <button class="text-[#113f67] font-semibold hover:underline flex items-center" onclick="switchTab('satellite')">
+              <span>View Earth Observation Feeds</span>
               <span class="material-symbols-outlined text-xs">chevron_right</span>
             </button>
           </div>
@@ -430,8 +448,8 @@
       </div>
 
       <!-- Dedicated Risk Map Viewport -->
-      <div class="relative w-full h-[420px] sm:h-[540px] bg-slate-100 rounded border border-gray-300" id="gis-map-full">
-        <div class="absolute bottom-2 left-2 z-[400] bg-white/90 text-gray-700 text-[11px] font-mono px-2 py-0.5 rounded border border-gray-300 pointer-events-none">GSI NLSM National Grid: WGS-84 Datum | In-Situ Telemetry &amp; Macro-Polygons Active</div>
+      <div class="relative w-full h-[420px] sm:h-[540px] bg-slate-100 rounded border border-gray-300 overflow-hidden" id="gis-map-full" style="overflow: hidden; isolation: isolate; z-index: 10;">
+        <div class="absolute bottom-2 left-2 z-[400] bg-white/90 text-gray-700 text-[11px] font-mono px-2 py-0.5 rounded border border-gray-300 pointer-events-none">GSI NLSM National Grid: WGS-84 Datum | Satellite Remote Sensing &amp; Macro-Polygons Active (Zero-Hardware)</div>
       </div>
 
       <!-- GSI 5-Tier Classification Standard for Dedicated Risk Map -->
@@ -483,125 +501,210 @@
   </div>
 
 
-  <!-- ==================== TAB 3: TELEMETRY & SENSORS ==================== -->
-  <div id="view-sensors" class="tab-view hidden space-y-5">
+  <!-- ==================== TAB 3: SATELLITE REMOTE SENSING & RADAR ==================== -->
+  <div id="view-satellite" class="tab-view hidden space-y-5">
     <div class="bg-white border border-gray-300 rounded shadow-2xs p-4 space-y-4">
       <div class="flex flex-wrap items-center justify-between border-b border-gray-200 pb-3 gap-2">
         <div>
-          <h2 class="text-lg font-bold text-[#0b2545] tracking-tight">Real-Time Geotechnical Telemetry Network (347 Stations)</h2>
-          <p class="text-xs text-gray-500">Live piezometer pore water pressures, borehole inclinometer displacements, and optical automated rain gauges</p>
+          <div class="flex items-center space-x-2">
+            <h2 class="text-lg font-bold text-[#0b2545] tracking-tight">Earth Observation &amp; Satellite Telemetry Operations Hub</h2>
+            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-300">100% Zero-Hardware</span>
+          </div>
+          <p class="text-xs text-gray-500">Autonomous orbital SAR interferometry (InSAR), multi-spectral optical vegetation indices, L-band soil moisture &amp; IMD Doppler weather radars</p>
         </div>
         <div class="flex items-center space-x-2 text-xs">
-          <span class="inline-flex items-center px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">● 341 Active</span>
-          <span class="inline-flex items-center px-2.5 py-1 rounded bg-amber-50 text-amber-800 border border-amber-200 font-bold">▲ 4 Warning</span>
-          <span class="inline-flex items-center px-2.5 py-1 rounded bg-red-50 text-red-800 border border-red-200 font-bold">✕ 2 Offline</span>
+          <span class="inline-flex items-center px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">● 6 Satellites Live</span>
+          <span class="inline-flex items-center px-2.5 py-1 rounded bg-blue-50 text-blue-800 border border-blue-200 font-bold">📡 3 Doppler Radars</span>
+          <span class="inline-flex items-center px-2.5 py-1 rounded bg-purple-50 text-purple-800 border border-purple-200 font-bold">⚡ Zero Field Maintenance</span>
         </div>
       </div>
 
-      <!-- Gauges Grid -->
+      <!-- Remote Sensing Modalities Grid -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Modality 1: Sentinel-1 InSAR -->
         <div class="bg-gray-50 border border-gray-200 p-3.5 rounded space-y-2">
           <div class="flex justify-between items-center text-xs font-bold text-gray-800">
-            <span>Piezometer Sensor (Pore Pressure)</span>
-            <span class="text-red-700 font-mono">87.0%</span>
+            <span class="flex items-center space-x-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span>Sentinel-1 InSAR Surface Creep</span>
+            </span>
+            <span class="text-amber-700 font-mono" id="tab3-insar-val">4.2 mm/mo</span>
           </div>
           <div class="w-full bg-gray-200 h-2.5 rounded overflow-hidden">
-            <div class="bg-red-600 h-full rounded" style="width: 87%"></div>
+            <div class="bg-amber-500 h-full rounded transition-all duration-700" id="tab3-insar-bar" style="width: 70%"></div>
           </div>
-          <div class="text-[11px] text-gray-500">Station JH-082 (Jaintia Hills) · Threshold Exceeded</div>
+          <div class="text-[11px] text-gray-500 flex justify-between">
+            <span>ESA / ISRO C-Band SAR</span>
+            <span class="font-semibold text-gray-700">&lt; 1mm Precision</span>
+          </div>
         </div>
 
+        <!-- Modality 2: NASA SMAP Moisture -->
         <div class="bg-gray-50 border border-gray-200 p-3.5 rounded space-y-2">
           <div class="flex justify-between items-center text-xs font-bold text-gray-800">
-            <span>Inclinometer Shear Rate</span>
-            <span class="text-amber-700 font-mono">4.2 mm/h</span>
+            <span class="flex items-center space-x-1.5">
+              <span class="w-2 h-2 rounded-full bg-red-600"></span>
+              <span>SMAP L-Band Soil Saturation</span>
+            </span>
+            <span class="text-red-700 font-mono" id="tab3-soil-val">87.0%</span>
           </div>
           <div class="w-full bg-gray-200 h-2.5 rounded overflow-hidden">
-            <div class="bg-amber-500 h-full rounded" style="width: 70%"></div>
+            <div class="bg-red-600 h-full rounded transition-all duration-700" id="tab3-soil-bar" style="width: 87%"></div>
           </div>
-          <div class="text-[11px] text-gray-500">Depth of Shear: 6.4m · Cumulative 18.6mm</div>
+          <div class="text-[11px] text-gray-500 flex justify-between">
+            <span>NASA / JPL 1.41 GHz Radiometer</span>
+            <span class="font-semibold text-red-700">Subsurface Pore Sat.</span>
+          </div>
         </div>
 
+        <!-- Modality 3: IMD Doppler Radar -->
         <div class="bg-gray-50 border border-gray-200 p-3.5 rounded space-y-2">
           <div class="flex justify-between items-center text-xs font-bold text-gray-800">
-            <span>Optical Rain Gauge (ARG)</span>
-            <span class="text-blue-800 font-mono">18.7 mm/h</span>
+            <span class="flex items-center space-x-1.5">
+              <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+              <span>IMD Doppler Weather Radar</span>
+            </span>
+            <span class="text-blue-800 font-mono" id="tab3-radar-val">18.7 mm/h</span>
           </div>
           <div class="w-full bg-gray-200 h-2.5 rounded overflow-hidden">
-            <div class="bg-blue-600 h-full rounded" style="width: 62%"></div>
+            <div class="bg-blue-600 h-full rounded transition-all duration-700" id="tab3-radar-bar" style="width: 62%"></div>
           </div>
-          <div class="text-[11px] text-gray-500">IMD AWS Station #408 · 24h Acc: 142.8mm</div>
+          <div class="text-[11px] text-gray-500 flex justify-between">
+            <span>Cherrapunji &bull; Agartala Dual-Pol</span>
+            <span class="font-semibold text-blue-700">10-Min Volume Scan</span>
+          </div>
         </div>
       </div>
 
-      <!-- Telemetry Stations Table -->
+      <!-- Platform Filter Pills -->
+      <div class="flex items-center space-x-1.5 overflow-x-auto py-1" id="satellite-pills">
+        <span class="text-gray-500 font-bold mr-1 text-[11px] uppercase tracking-wider">Feed Modality:</span>
+        <button class="sat-pill px-2.5 py-1 rounded text-xs font-semibold bg-[#113f67] text-white" onclick="filterSatellitePlatform(this, 'all')">All Feeds (6)</button>
+        <button class="sat-pill px-2.5 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300" onclick="filterSatellitePlatform(this, 'sar')">SAR InSAR (Interferometry)</button>
+        <button class="sat-pill px-2.5 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300" onclick="filterSatellitePlatform(this, 'radar')">IMD Doppler Radar</button>
+        <button class="sat-pill px-2.5 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300" onclick="filterSatellitePlatform(this, 'optical')">Optical / NDMI Moisture</button>
+        <button class="sat-pill px-2.5 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300" onclick="filterSatellitePlatform(this, 'geological')">GSI NLSM Lithology</button>
+      </div>
+
+      <!-- Satellite & Earth Observation Telemetry Feeds Table -->
       <div class="overflow-x-auto border border-gray-200 rounded">
         <table class="w-full text-left text-xs border-collapse">
           <thead class="bg-gray-50 border-b border-gray-200 font-bold text-gray-700">
             <tr>
-              <th class="p-2.5">Station ID</th>
-              <th class="p-2.5">Location &amp; Corridor</th>
-              <th class="p-2.5">State</th>
-              <th class="p-2.5">Telemetry Status</th>
-              <th class="p-2.5">Pore Water Press.</th>
-              <th class="p-2.5">Shear Displacement</th>
-              <th class="p-2.5">24h Rain</th>
-              <th class="p-2.5">Battery</th>
+              <th class="p-2.5">Platform / Constellation</th>
+              <th class="p-2.5">Agency / Provider</th>
+              <th class="p-2.5">Observation Modality</th>
+              <th class="p-2.5">Observed Physical Parameter</th>
+              <th class="p-2.5">Spatial / Temporal Resolution</th>
+              <th class="p-2.5">Zero-Hardware Ingest Status</th>
+              <th class="p-2.5">Telemetry Ingest</th>
+              <th class="p-2.5 text-right">Inspection</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200">
-            <tr class="hover:bg-red-50/50">
-              <td class="p-2.5 font-mono font-bold text-red-700">STN-JH-082</td>
-              <td class="p-2.5 font-semibold text-gray-900">Jaintia Hills Sector 8 (NH-44)</td>
-              <td class="p-2.5">Meghalaya</td>
-              <td class="p-2.5"><span class="bg-red-100 text-red-800 px-2 py-0.5 rounded font-bold text-[10px]">CRITICAL</span></td>
-              <td class="p-2.5 font-mono font-bold text-red-700">87.0%</td>
-              <td class="p-2.5 font-mono">4.2 mm/h</td>
-              <td class="p-2.5 font-mono">142.8 mm</td>
-              <td class="p-2.5 font-mono text-emerald-700">12.8V (Solar OK)</td>
+          <tbody class="divide-y divide-gray-200" id="satellite-table-body">
+            <tr class="hover:bg-amber-50/50" data-cat="sar">
+              <td class="p-2.5 font-bold text-gray-900 flex items-center space-x-1.5">
+                <span class="material-symbols-outlined text-amber-600 text-sm">satellite_alt</span>
+                <span>Sentinel-1A / 1B (SAR)</span>
+              </td>
+              <td class="p-2.5">ESA / Copernicus / ISRO</td>
+              <td class="p-2.5"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">C-BAND DInSAR</span></td>
+              <td class="p-2.5 font-semibold text-gray-800">Ground Line-of-Sight Deformation (Displacement Creep)</td>
+              <td class="p-2.5 font-mono">5m × 20m &bull; 6-Day Orbit</td>
+              <td class="p-2.5"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[10px]">CLOUD STREAM ACTIVE</span></td>
+              <td class="p-2.5 font-mono text-gray-600">6 mins ago</td>
+              <td class="p-2.5 text-right">
+                <button onclick="inspectFeed('Sentinel-1 SAR', 'ESA / ISRO / Copernicus', 'C-Band DInSAR Ground Interferometry', '5m × 20m • 6-Day Orbit', 'Ground Line-of-Sight Deformation: 4.2 mm/mo creep detected', 'Active')" class="bg-[#113f67] hover:bg-[#0b2545] text-white px-2 py-1 rounded text-[11px] font-semibold transition-colors">Inspect</button>
+              </td>
             </tr>
-            <tr class="hover:bg-amber-50/50">
-              <td class="p-2.5 font-mono font-bold text-amber-700">STN-SK-014</td>
-              <td class="p-2.5 font-semibold text-gray-900">Gangtok South Ridge (NH-10)</td>
-              <td class="p-2.5">Sikkim</td>
-              <td class="p-2.5"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold text-[10px]">HIGH WATCH</span></td>
-              <td class="p-2.5 font-mono font-bold text-amber-700">74.5%</td>
-              <td class="p-2.5 font-mono">2.8 mm/h</td>
-              <td class="p-2.5 font-mono">96.0 mm</td>
-              <td class="p-2.5 font-mono text-emerald-700">12.6V (Solar OK)</td>
+            <tr class="hover:bg-blue-50/50" data-cat="radar">
+              <td class="p-2.5 font-bold text-gray-900 flex items-center space-x-1.5">
+                <span class="material-symbols-outlined text-blue-600 text-sm">radar</span>
+                <span>Cherrapunji DWR (Doppler)</span>
+              </td>
+              <td class="p-2.5">India Meteorological Dept (IMD)</td>
+              <td class="p-2.5"><span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">S-BAND DUAL-POL</span></td>
+              <td class="p-2.5 font-semibold text-gray-800">Radar Reflectivity (dBZ) &amp; Hydrometeor Fall Velocity</td>
+              <td class="p-2.5 font-mono">250m Radial &bull; 10-Min Sweep</td>
+              <td class="p-2.5"><span class="bg-red-100 text-red-800 px-2 py-0.5 rounded font-bold text-[10px]">PRECIP CELL ACTIVE</span></td>
+              <td class="p-2.5 font-mono text-gray-600">2 mins ago</td>
+              <td class="p-2.5 text-right">
+                <button onclick="inspectFeed('Cherrapunji DWR (Doppler)', 'India Meteorological Dept (IMD)', 'S-Band Dual-Polarization Doppler Radar', '250m Radial • 10-Min Sweep', 'Precipitation Cell Rate: 24.2 mm/h reflectivity over Jaintia Hills', 'Elevated')" class="bg-[#b91c1c] hover:bg-[#991b1b] text-white px-2 py-1 rounded text-[11px] font-semibold transition-colors">Inspect</button>
+              </td>
             </tr>
-            <tr class="hover:bg-amber-50/50">
-              <td class="p-2.5 font-mono font-bold text-amber-700">STN-MZ-049</td>
-              <td class="p-2.5 font-semibold text-gray-900">Bawngkawn Ridge Escarpment</td>
-              <td class="p-2.5">Mizoram</td>
-              <td class="p-2.5"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold text-[10px]">HIGH WATCH</span></td>
-              <td class="p-2.5 font-mono font-bold text-amber-700">71.2%</td>
-              <td class="p-2.5 font-mono">2.1 mm/h</td>
-              <td class="p-2.5 font-mono">84.0 mm</td>
-              <td class="p-2.5 font-mono text-emerald-700">12.7V (Solar OK)</td>
+            <tr class="hover:bg-red-50/50" data-cat="optical">
+              <td class="p-2.5 font-bold text-gray-900 flex items-center space-x-1.5">
+                <span class="material-symbols-outlined text-red-600 text-sm">water_drop</span>
+                <span>NASA SMAP Radiometer</span>
+              </td>
+              <td class="p-2.5">NASA / JPL / Caltech</td>
+              <td class="p-2.5"><span class="bg-red-100 text-red-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">L-BAND MICROWAVE</span></td>
+              <td class="p-2.5 font-semibold text-gray-800">Topsoil Volumetric Water Content (0-5 cm Saturation)</td>
+              <td class="p-2.5 font-mono">9 km Gridded &bull; 2-3 Day Revisit</td>
+              <td class="p-2.5"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[10px]">CLOUD STREAM ACTIVE</span></td>
+              <td class="p-2.5 font-mono text-gray-600">14 mins ago</td>
+              <td class="p-2.5 text-right">
+                <button onclick="inspectFeed('NASA SMAP Soil Moisture', 'NASA / JPL / Caltech', '1.41 GHz L-Band Passive Radiometer', '9 km Gridded • 2-3 Day Revisit', 'Topsoil Volumetric Pore Water Saturation: 87.0% (Critical Shear Trigger)', 'Critical')" class="bg-[#d97706] hover:bg-[#b45309] text-white px-2 py-1 rounded text-[11px] font-semibold transition-colors">Inspect</button>
+              </td>
             </tr>
-            <tr class="hover:bg-gray-50">
-              <td class="p-2.5 font-mono font-bold text-gray-700">STN-NL-021</td>
-              <td class="p-2.5 font-semibold text-gray-900">Kohima Dzüdza Bridge Sector</td>
-              <td class="p-2.5">Nagaland</td>
-              <td class="p-2.5"><span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded font-bold text-[10px]">MODERATE</span></td>
-              <td class="p-2.5 font-mono">58.4%</td>
-              <td class="p-2.5 font-mono">1.2 mm/h</td>
-              <td class="p-2.5 font-mono">62.0 mm</td>
-              <td class="p-2.5 font-mono text-emerald-700">12.4V (Solar OK)</td>
+            <tr class="hover:bg-blue-50/50" data-cat="radar">
+              <td class="p-2.5 font-bold text-gray-900 flex items-center space-x-1.5">
+                <span class="material-symbols-outlined text-blue-600 text-sm">radar</span>
+                <span>Agartala DWR (Doppler)</span>
+              </td>
+              <td class="p-2.5">India Meteorological Dept (IMD)</td>
+              <td class="p-2.5"><span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">C-BAND DOPPLER</span></td>
+              <td class="p-2.5 font-semibold text-gray-800">Cloudburst Boundary Tracking &amp; Rain Rate Estimation</td>
+              <td class="p-2.5 font-mono">500m Radial &bull; 10-Min Sweep</td>
+              <td class="p-2.5"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[10px]">CLOUD STREAM ACTIVE</span></td>
+              <td class="p-2.5 font-mono text-gray-600">4 mins ago</td>
+              <td class="p-2.5 text-right">
+                <button onclick="inspectFeed('Agartala DWR (Doppler)', 'India Meteorological Dept (IMD)', 'C-Band Doppler Weather Radar', '500m Radial • 10-Min Volume Scan', 'Cloudburst Boundary Tracking: Convective cells moving NE at 28 km/h', 'Active')" class="bg-[#113f67] hover:bg-[#0b2545] text-white px-2 py-1 rounded text-[11px] font-semibold transition-colors">Inspect</button>
+              </td>
             </tr>
-            <tr class="hover:bg-gray-50">
-              <td class="p-2.5 font-mono font-bold text-gray-700">STN-AS-102</td>
-              <td class="p-2.5 font-semibold text-gray-900">Haflong Hill Station Pass</td>
-              <td class="p-2.5">Assam</td>
-              <td class="p-2.5"><span class="bg-red-100 text-red-800 px-2 py-0.5 rounded font-bold text-[10px]">CRITICAL</span></td>
-              <td class="p-2.5 font-mono font-bold text-red-700">82.1%</td>
-              <td class="p-2.5 font-mono">3.6 mm/h</td>
-              <td class="p-2.5 font-mono">128.0 mm</td>
-              <td class="p-2.5 font-mono text-emerald-700">12.5V (Solar OK)</td>
+            <tr class="hover:bg-green-50/50" data-cat="optical">
+              <td class="p-2.5 font-bold text-gray-900 flex items-center space-x-1.5">
+                <span class="material-symbols-outlined text-green-600 text-sm">filter_hdr</span>
+                <span>Sentinel-2A / 2B (MSI)</span>
+              </td>
+              <td class="p-2.5">ESA / Copernicus</td>
+              <td class="p-2.5"><span class="bg-green-100 text-green-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">13-BAND OPTICAL</span></td>
+              <td class="p-2.5 font-semibold text-gray-800">Normalized Difference Moisture Index (NDMI) &amp; Scar Mapping</td>
+              <td class="p-2.5 font-mono">10m / 20m &bull; 5-Day Revisit</td>
+              <td class="p-2.5"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[10px]">CLOUD STREAM ACTIVE</span></td>
+              <td class="p-2.5 font-mono text-gray-600">28 mins ago</td>
+              <td class="p-2.5 text-right">
+                <button onclick="inspectFeed('Sentinel-2 MSI Optical', 'ESA / Copernicus', '13-Band Multi-Spectral Instrument (MSI)', '10m / 20m • 5-Day Revisit', 'NDMI Canopy Moisture Index & Scarp Scar Boundary Verification', 'Active')" class="bg-[#113f67] hover:bg-[#0b2545] text-white px-2 py-1 rounded text-[11px] font-semibold transition-colors">Inspect</button>
+              </td>
+            </tr>
+            <tr class="hover:bg-gray-50" data-cat="geological">
+              <td class="p-2.5 font-bold text-gray-900 flex items-center space-x-1.5">
+                <span class="material-symbols-outlined text-gray-700 text-sm">terrain</span>
+                <span>GSI NLSM National Database</span>
+              </td>
+              <td class="p-2.5">Geological Survey of India</td>
+              <td class="p-2.5"><span class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">VECTOR GIS LAYER</span></td>
+              <td class="p-2.5 font-semibold text-gray-800">Macro-Scale Lithology, Shear Discontinuities &amp; Fault Corridors</td>
+              <td class="p-2.5 font-mono">1:50,000 Precision &bull; WGS-84 Datum</td>
+              <td class="p-2.5"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[10px]">INTEGRATED IN CORE AI</span></td>
+              <td class="p-2.5 font-mono text-gray-600">Synchronized</td>
+              <td class="p-2.5 text-right">
+                <button onclick="inspectFeed('GSI NLSM Geodatabase', 'Geological Survey of India', 'Macro-Scale Hazard Polygons & Lithology', '1:50,000 Precision • WGS-84 Datum', 'National Landslide Susceptibility Mapping 16 NER zones calibrated', 'Active')" class="bg-[#113f67] hover:bg-[#0b2545] text-white px-2 py-1 rounded text-[11px] font-semibold transition-colors">Inspect</button>
+              </td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Zero-Hardware Scientific Justification Box -->
+      <div class="bg-[#113f67]/5 border border-[#113f67]/20 rounded p-3 text-xs text-gray-700 space-y-1.5">
+        <div class="font-bold text-[#0b2545] flex items-center space-x-1.5">
+          <span class="material-symbols-outlined text-amber-600 text-sm">verified</span>
+          <span>Why Zero Physical Hardware is an Unmatched SIH Technological Advantage:</span>
+        </div>
+        <p class="text-[11px] leading-relaxed text-gray-600">
+          Traditional early warning systems rely on in-situ geotechnical sensors (borehole inclinometers, vibrating wire piezometers) that routinely fail in rugged Himalayan terrain due to cable cuts from rockfalls, battery depletion in monsoons, and inaccessible maintenance locations. <strong>Team AEGIS NER-LEWS 2.0 operates 100% in the cloud</strong>, fusing ISRO/Copernicus spaceborne synthetic aperture radar (InSAR), NASA microwave soil telemetry, IMD Doppler radars, and GSI macro-zonation through physics-informed AI. This ensures <strong>zero capital hardware expenditure, zero in-situ maintenance vulnerability, and comprehensive 262,000 sq km coverage</strong> across all 8 North Eastern States.
+        </p>
       </div>
     </div>
   </div>
@@ -869,7 +972,7 @@
           <div class="font-bold text-emerald-800 text-sm">LEVEL 0 · NORMAL (GREEN)</div>
           <div class="text-[11px] text-gray-600">Threshold: Rainfall &lt; 50mm/24h. Factor of Safety (FoS) &gt; 1.5.</div>
           <ul class="list-disc list-inside space-y-1 text-gray-700 text-[11px]">
-            <li>Routine in-situ telemetry checks</li>
+            <li>Automated orbital satellite &amp; radar telemetry sync</li>
             <li>Weep hole clearing along NH corridors</li>
             <li>Weekly NLSM satellite verification</li>
           </ul>
@@ -879,7 +982,7 @@
           <div class="font-bold text-yellow-800 text-sm">LEVEL 1 · WATCH (YELLOW)</div>
           <div class="text-[11px] text-gray-600">Threshold: 50mm - 90mm/24h. FoS between 1.3 and 1.5.</div>
           <ul class="list-disc list-inside space-y-1 text-gray-700 text-[11px]">
-            <li>Increase piezometer sampling to 5 mins</li>
+            <li>Task rapid-scan IMD Doppler radar sweeps &amp; InSAR tracking</li>
             <li>Alert local PWD and BRO clearing units</li>
             <li>Issue advisory to heavy transport vehicles</li>
           </ul>
@@ -927,7 +1030,7 @@
 
 
 <!-- 11. EMERGENCY MODAL -->
-<div class="fixed inset-0 z-50 bg-black/60 hidden items-center justify-center p-4" id="emergency-modal">
+<div class="fixed inset-0 z-[9999] bg-black/60 hidden items-center justify-center p-4" id="emergency-modal">
   <div class="bg-white border border-gray-300 w-full max-w-lg rounded shadow-lg overflow-hidden">
     <div class="bg-[#b91c1c] px-4 py-3 text-white flex items-center justify-between">
       <div class="flex items-center space-x-2">
@@ -964,6 +1067,46 @@
         <span class="material-symbols-outlined text-sm">send</span>
         <span>Authorize &amp; Transmit</span>
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- 11b. EARTH OBSERVATION TELEMETRY INSPECTOR MODAL -->
+<div class="fixed inset-0 z-[9999] bg-black/60 hidden items-center justify-center p-4" id="telemetry-inspector-modal">
+  <div class="bg-white border border-gray-300 w-full max-w-lg rounded shadow-lg overflow-hidden">
+    <div class="bg-[#113f67] px-4 py-3 text-white flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <span class="material-symbols-outlined text-xl text-amber-400">satellite_alt</span>
+        <div>
+          <h4 class="font-bold text-sm" id="inspect-modal-title">Sentinel-1 SAR Telemetry Stream</h4>
+          <p class="text-[10px] opacity-90" id="inspect-modal-agency">Provider: ESA / Copernicus / ISRO Ground Station</p>
+        </div>
+      </div>
+      <button class="text-white hover:opacity-80 p-1" onclick="closeTelemetryModal()">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+    <div class="p-4 space-y-3 text-xs">
+      <div class="grid grid-cols-2 gap-2 bg-gray-50 border border-gray-200 p-2.5 rounded font-mono">
+        <div><span class="text-gray-500 text-[10px] block">OBSERVATION TYPE:</span><strong class="text-gray-800 text-xs" id="inspect-modal-modality">C-Band DInSAR</strong></div>
+        <div><span class="text-gray-500 text-[10px] block">INGEST STATUS:</span><span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold text-[10px]" id="inspect-modal-status">CLOUD STREAM ACTIVE</span></div>
+        <div><span class="text-gray-500 text-[10px] block">SPATIAL COVERAGE:</span><strong class="text-gray-800 text-xs" id="inspect-modal-res">5m × 20m • 6-Day Orbit</strong></div>
+        <div><span class="text-gray-500 text-[10px] block">HARDWARE FOOTPRINT:</span><strong class="text-emerald-700 text-xs">0 kg In-Situ (100% Spaceborne)</strong></div>
+      </div>
+      <div class="bg-blue-50 border border-blue-200 p-2.5 rounded space-y-1">
+        <div class="font-bold text-[#113f67] text-[11px] flex items-center space-x-1">
+          <span class="material-symbols-outlined text-sm">insights</span>
+          <span>Active Remote Sensing Telemetry Reading:</span>
+        </div>
+        <p class="text-gray-800 font-mono text-xs font-semibold" id="inspect-modal-telemetry">Ground Line-of-Sight Displacement: 4.2 mm/mo creep detected</p>
+      </div>
+      <div class="text-[11px] text-gray-500 bg-gray-50 p-2 rounded border border-gray-200">
+        <strong>Zero-Hardware Verification:</strong> Feed processed via cloud serverless pipeline directly from space agency data hubs with automated cloud masking and interferogram coherence filtering.
+      </div>
+    </div>
+    <div class="bg-gray-50 px-4 py-2 border-t border-gray-200 flex justify-between items-center text-xs">
+      <span class="text-gray-500 font-mono text-[10px]">Transmission Latency: ~120ms</span>
+      <button class="bg-[#113f67] hover:bg-[#0b2545] text-white font-bold px-3 py-1.5 rounded" onclick="closeTelemetryModal()">Close Inspector</button>
     </div>
   </div>
 </div>
@@ -1039,6 +1182,8 @@
 
   // 2. Tab Switcher Function (NO SCROLL DOWN, INSTANT VIEW SWAP)
   function switchTab(tabId) {
+    if (tabId === 'sensors') tabId = 'satellite';
+
     // Hide all tab views
     document.querySelectorAll('.tab-view').forEach(view => {
       view.classList.add('hidden');
@@ -1052,11 +1197,11 @@
 
     // Update active navbar button styling
     document.querySelectorAll('#main-nav-links .nav-tab').forEach(btn => {
-      btn.className = "nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors";
+      btn.className = "nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors whitespace-nowrap shrink-0";
     });
     const activeBtn = document.querySelector(`#main-nav-links button[data-tab="${tabId}"]`);
     if (activeBtn) {
-      activeBtn.className = "nav-tab bg-[#0b2545] border-b-2 border-amber-400 text-amber-200 font-bold px-3.5 py-2.5 text-xs tracking-wide uppercase transition-colors";
+      activeBtn.className = "nav-tab bg-[#0b2545] border-b-2 border-amber-400 text-amber-200 font-bold px-3.5 py-2.5 text-xs tracking-wide uppercase transition-colors whitespace-nowrap shrink-0";
     }
 
     // Keep viewport at the top of content smoothly
@@ -1079,26 +1224,59 @@
     }
   }
 
-  // 3. Sensor Fluctuations
+  // 3. Real-Time Remote Sensing & Radar Telemetry Fluctuations (100% Zero Hardware)
   function fluctuate() {
-    const moisture = (85 + Math.random()*5).toFixed(1);
-    const incline = (3.8 + Math.random()*1).toFixed(1);
-    const rain = (16 + Math.random()*6).toFixed(1);
+    const soil = (85 + Math.random() * 4).toFixed(1);
+    const insar = (4.1 + Math.random() * 0.6).toFixed(1);
+    const radar = (18 + Math.random() * 5).toFixed(1);
+
+    // Tab 1 (Dashboard) Live Gauges
     const mEl = document.getElementById('gauge-moisture-val');
     const iEl = document.getElementById('gauge-incline-val');
     const rEl = document.getElementById('gauge-rain-val');
     const mBar = document.getElementById('gauge-moisture-bar');
     const iBar = document.getElementById('gauge-incline-bar');
     const rBar = document.getElementById('gauge-rain-bar');
-    if (mEl) { mEl.innerText = moisture + '% - Critical'; mBar.style.width = moisture + '%'; }
-    if (iEl) { iEl.innerText = incline + ' mm/h'; iBar.style.width = (parseFloat(incline)/6*100)+'%'; }
-    if (rEl) { rEl.innerText = rain + ' mm/h'; rBar.style.width = (parseFloat(rain)/30*100)+'%'; }
+    if (mEl) { mEl.innerText = soil + '% - Critical'; if (mBar) mBar.style.width = soil + '%'; }
+    if (iEl) { iEl.innerText = insar + ' mm/mo'; if (iBar) iBar.style.width = (parseFloat(insar) / 6 * 100) + '%'; }
+    if (rEl) { rEl.innerText = radar + ' mm/h'; if (rBar) rBar.style.width = (parseFloat(radar) / 30 * 100) + '%'; }
+
+    // Tab 1 Quick verification card
     const bRain = document.getElementById('box-live-rain');
     const bSoil = document.getElementById('box-soil-sat');
-    if (bRain) bRain.innerText = (20+Math.random()*10).toFixed(1)+' mm/h';
-    if (bSoil) bSoil.innerText = (87+Math.random()*5).toFixed(1)+'%';
+    if (bRain) bRain.innerText = radar + ' mm/h';
+    if (bSoil) bSoil.innerText = soil + '%';
+
+    // Tab 3 (Satellite & Radar Telemetry Operations Hub)
+    const t3Insar = document.getElementById('tab3-insar-val');
+    const t3InsarBar = document.getElementById('tab3-insar-bar');
+    const t3Soil = document.getElementById('tab3-soil-val');
+    const t3SoilBar = document.getElementById('tab3-soil-bar');
+    const t3Radar = document.getElementById('tab3-radar-val');
+    const t3RadarBar = document.getElementById('tab3-radar-bar');
+    if (t3Insar) { t3Insar.innerText = insar + ' mm/mo'; if (t3InsarBar) t3InsarBar.style.width = (parseFloat(insar) / 6 * 100) + '%'; }
+    if (t3Soil) { t3Soil.innerText = soil + '%'; if (t3SoilBar) t3SoilBar.style.width = soil + '%'; }
+    if (t3Radar) { t3Radar.innerText = radar + ' mm/h'; if (t3RadarBar) t3RadarBar.style.width = (parseFloat(radar) / 30 * 100) + '%'; }
   }
   setInterval(fluctuate, 2500);
+
+  // Satellite Modality Platform Filter Pill Handler
+  function filterSatellitePlatform(btn, category) {
+    document.querySelectorAll('#satellite-pills .sat-pill').forEach(b => {
+      b.className = "sat-pill px-2.5 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300";
+    });
+    btn.className = "sat-pill px-2.5 py-1 rounded text-xs font-semibold bg-[#113f67] text-white";
+
+    const rows = document.querySelectorAll('#satellite-table-body tr');
+    rows.forEach(row => {
+      const cat = row.getAttribute('data-cat');
+      if (category === 'all' || cat === category) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
 
   // 4. Geospatial Data & Layers
   let map, fullMap;
@@ -1372,6 +1550,8 @@
         zoomControl: true,
         attributionControl: false,
         tap: false,
+        scrollWheelZoom: false,
+        preferCanvas: true,
         maxBounds: [[20.0, 87.0], [30.5, 98.0]],
         minZoom: 5.5
       }).setView([25.5, 92.5], 7);
@@ -1401,6 +1581,8 @@
       zoomControl: true,
       attributionControl: false,
       tap: false,
+      scrollWheelZoom: false,
+      preferCanvas: true,
       maxBounds: [[20.0, 87.0], [30.5, 98.0]],
       minZoom: 5.5
     }).setView([25.5, 92.5], 7);
@@ -1428,6 +1610,7 @@
         opacity: 0.85,
         fillColor: z.color,
         fillOpacity: 0.35,
+        smoothFactor: 1.5,
         className: 'gsi-hazard-polygon'
       }).addTo(targetMap);
 
@@ -1872,6 +2055,37 @@
       playEmergencySiren(true);
       speakVoiceAlert();
     }, 800);
+  }
+
+  function inspectFeed(name, agency, modality, resolution, telemetry, status) {
+    const titleEl = document.getElementById('inspect-modal-title');
+    const agencyEl = document.getElementById('inspect-modal-agency');
+    const modEl = document.getElementById('inspect-modal-modality');
+    const resEl = document.getElementById('inspect-modal-res');
+    const telemEl = document.getElementById('inspect-modal-telemetry');
+    const statEl = document.getElementById('inspect-modal-status');
+    if (titleEl) titleEl.innerText = name + " Telemetry Stream";
+    if (agencyEl) agencyEl.innerText = "Provider: " + agency;
+    if (modEl) modEl.innerText = modality;
+    if (resEl) resEl.innerText = resolution;
+    if (telemEl) telemEl.innerText = telemetry;
+    if (statEl) {
+      statEl.innerText = status === 'Critical' ? 'CRITICAL ANOMALY' : status === 'Elevated' ? 'PRECIP CELL DETECTED' : 'CLOUD STREAM ACTIVE';
+      statEl.className = status === 'Critical' ? "bg-red-100 text-red-800 px-1.5 py-0.2 rounded font-bold text-[10px]" : status === 'Elevated' ? "bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-bold text-[10px]" : "bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold text-[10px]";
+    }
+    const modal = document.getElementById('telemetry-inspector-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeTelemetryModal() {
+    const modal = document.getElementById('telemetry-inspector-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
   }
 
   window.addEventListener('DOMContentLoaded', initMap);
