@@ -1,28 +1,28 @@
-// Smart Device & Environment Router:
-// 1. Web Browser (Desktop PC, Mac, Laptop, Android Phone Browser, iPhone Safari):
-//    -> STRICTLY the Official Government Authority Portal (MDoNER / GSI / NDMA)
-//       with ALL features (GIS Hazard Maps, In-Situ Telemetry, SOS Siren & Bluetooth, AI Predictions, Dispatch).
-// 2. Installed Native Mobile APK (Capacitor Android Runtime on Realme GT / Android):
-//    -> Native Mobile App (AppMobile) with an instant option to switch to the Authority Control Room.
-
 import React from 'react'
 import { Capacitor } from '@capacitor/core'
 import AppMobile from './AppMobile'
 
 export default function App() {
-  // Check if running inside the installed native Android/iOS Capacitor APK
+  // Check if running inside the native Android APK or mobile app container:
+  // 1. Capacitor native platform (Realme GT, Android/iOS runtime)
+  // 2. Local asset protocol (capacitor:, file:)
+  // 3. Explicit mobile query parameter (?mode=mobile, ?mode=native_app, ?app=true)
   const isNativeApp = typeof window !== 'undefined' && (
+    Capacitor.isNativePlatform() ||
     (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
-    window.location.search.includes('mode=native_app')
+    window.location.protocol === 'capacitor:' ||
+    window.location.protocol === 'file:' ||
+    window.location.search.includes('mode=native_app') ||
+    window.location.search.includes('mode=mobile') ||
+    window.location.search.includes('app=true')
   );
 
-  // If inside the installed native APK, run the native mobile app
+  // If inside the native Android APK, ALWAYS render the native mobile app
   if (isNativeApp) {
     return <AppMobile />;
   }
 
-  // If in ANY web browser (Desktop, Laptop, Android phone browser, iPhone, Tablet):
-  // The website is strictly the AUTHORITY PORTAL with ALL features!
+  // If in a standard web browser on desktop, redirect to the Authority Desktop Portal (website stays untouched)
   if (typeof window !== 'undefined') {
     if (!window.location.pathname.includes('desktop.html')) {
       const search = window.location.search || '';
@@ -32,5 +32,5 @@ export default function App() {
     }
   }
 
-  return null;
+  return <AppMobile />;
 }

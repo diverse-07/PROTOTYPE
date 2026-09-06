@@ -616,6 +616,7 @@ function HomeView({ t, onOpenSection, onOpenSOS }) {
   const [liveSoil, setLiveSoil] = useState(87)
   const [liveDisp, setLiveDisp] = useState(4.2)
   const [liveRain, setLiveRain] = useState(18.7)
+  const [quickMult, setQuickMult] = useState(1.0)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -663,6 +664,52 @@ function HomeView({ t, onOpenSection, onOpenSOS }) {
             <div className="hero-metric-val" style={{ color: "#1e40af" }}>{liveRain.toFixed(0)} mm</div>
             <div className="hero-metric-lbl">Live Rain</div>
           </div>
+        </div>
+      </div>
+
+      {/* Quick Interactive Cloudburst What-If Bar */}
+      <div className="quick-stress-card">
+        <div className="quick-stress-head">
+          <div className="quick-stress-title">
+            <Icons.Simulator size={16} color="var(--navy)" />
+            <span>Interactive Cloudburst Stress Slider</span>
+          </div>
+          <span className="quick-stress-badge" style={{ 
+            background: quickMult >= 1.8 ? "#b91c1c" : quickMult >= 1.3 ? "#ea580c" : "#15803d",
+            color: "#fff"
+          }}>
+            {quickMult.toFixed(1)}x {quickMult >= 1.8 ? "Cloudburst" : quickMult >= 1.3 ? "Heavy Rain" : "Normal"}
+          </span>
+        </div>
+        <div className="quick-stress-body">
+          <input 
+            type="range" 
+            min="0.5" 
+            max="2.5" 
+            step="0.1" 
+            value={quickMult} 
+            onChange={e => setQuickMult(parseFloat(e.target.value))} 
+            className="sick-range-input mini"
+            style={{
+              background: quickMult > 1.7 
+                ? "linear-gradient(90deg, #15803d 0%, #d97706 30%, #b91c1c 100%)"
+                : quickMult > 1.2
+                ? "linear-gradient(90deg, #15803d 0%, #d97706 100%)"
+                : "linear-gradient(90deg, #15803d, #22c55e)"
+            }}
+          />
+          <div className="quick-stress-labels">
+            <span>0.5x Sub</span>
+            <span>1.0x Normal</span>
+            <span>1.8x Cloudburst</span>
+            <span>2.5x Deluge</span>
+          </div>
+        </div>
+        <div className="quick-stress-footer">
+          <span>Derived FoS: <strong>{(1.42 / (quickMult * 0.95 + 0.05)).toFixed(2)}</strong></span>
+          <button className="quick-stress-link" onClick={() => onOpenSection("simulation")}>
+            Full Simulation Engine ›
+          </button>
         </div>
       </div>
 
@@ -1041,56 +1088,228 @@ function AnalyticsView({ t, onBack }) {
   )
 }
 
-// 8. SCENARIO SIMULATOR VIEW
-function SimulatorView({ t, onBack }) {
+// 8. SICK SCENARIO & CLOUDBURST SIMULATOR VIEW
+function SimulatorView({ t, onBack, onOpenSOS }) {
   const [mult, setMult] = useState(1.0)
-  const crit = mult <= 0.8 ? 4 : mult <= 1.2 ? 12 : mult <= 1.8 ? 24 : 39
-  const fos = mult <= 0.8 ? 1.42 : mult <= 1.2 ? 1.08 : mult <= 1.8 ? 0.86 : 0.62
-  const pop = mult <= 0.8 ? "3,200" : mult <= 1.2 ? "18,400" : mult <= 1.8 ? "46,800" : "84,300"
+  const [activePreset, setActivePreset] = useState("actual")
+
+  const baseRain = 18.7
+  const simRain = (baseRain * mult).toFixed(1)
+  const crit = mult <= 0.8 ? 4 : mult <= 1.2 ? 12 : mult <= 1.8 ? 26 : 41
+  const fos = (1.45 / (mult * 0.95 + 0.05)).toFixed(2)
+  const pop = mult <= 0.8 ? "3,200" : mult <= 1.2 ? "18,400" : mult <= 1.8 ? "48,600" : "89,200"
+  const runoutVol = (Math.round(mult * 165000)).toLocaleString()
+
+  let tier = "EQUILIBRIUM"
+  let tierColor = "#15803d"
+  let trackGradient = "linear-gradient(90deg, #15803d, #22c55e)"
+  if (mult > 0.8 && mult <= 1.2) {
+    tier = "NORMAL MONSOON"
+    tierColor = "#059669"
+    trackGradient = "linear-gradient(90deg, #15803d 0%, #059669 100%)"
+  } else if (mult > 1.2 && mult <= 1.7) {
+    tier = "HIGH CLOUDBURST RISK"
+    tierColor = "#ea580c"
+    trackGradient = "linear-gradient(90deg, #15803d 0%, #d97706 40%, #ea580c 100%)"
+  } else if (mult > 1.7) {
+    tier = "CATASTROPHIC SURGE"
+    tierColor = "#b91c1c"
+    trackGradient = "linear-gradient(90deg, #15803d 0%, #d97706 25%, #ea580c 55%, #b91c1c 100%)"
+  }
+
+  const handlePreset = (val, key) => {
+    setMult(val)
+    setActivePreset(key)
+  }
 
   return (
-    <div>
+    <div className="sick-simulator-wrap">
       <div className="view-nav-header">
         <button className="view-back-btn" onClick={onBack}>← {t.dashboard}</button>
         <div className="view-title-wrap text-right">
-          <h2>Rainfall Simulator</h2>
+          <h2>Cloudburst Simulator</h2>
           <p>GSI Hydro-Mechanical FoS</p>
         </div>
       </div>
 
+      {/* Hero Stress Dial Card */}
+      <div className="sick-slider-hero" style={{ borderColor: tierColor }}>
+        <div className="sick-slider-top">
+          <span className="sick-slider-tier-badge" style={{ background: tierColor }}>
+            {tier}
+          </span>
+          <span className="sick-slider-live-rate">
+            {simRain} mm/h Precipitation
+          </span>
+        </div>
+
+        <div className="sick-slider-val-row">
+          <div className="sick-slider-big-mult">
+            <span className="mult-num" style={{ color: tierColor }}>{mult.toFixed(1)}</span>
+            <span className="mult-x">x</span>
+          </div>
+          <div className="sick-slider-summary">
+            <div className="summary-title">Precipitation Multiplier</div>
+            <div className="summary-desc">
+              {mult > 1.5 ? "⚠️ Soil pore pressure breaches shear limit across NER" : "Slope safety factor within acceptable equilibrium"}
+            </div>
+          </div>
+        </div>
+
+        {/* The Sick Interactive Slider Component */}
+        <div className="sick-slider-container">
+          <div className="sick-slider-track-wrap">
+            <input 
+              type="range" 
+              min="0.5" 
+              max="2.5" 
+              step="0.05" 
+              value={mult} 
+              onChange={e => {
+                setMult(parseFloat(e.target.value))
+                setActivePreset("custom")
+              }}
+              className="sick-range-input"
+              style={{ background: trackGradient }}
+            />
+          </div>
+          <div className="sick-slider-ticks">
+            <span>0.5x Sub</span>
+            <span>1.0x Normal</span>
+            <span>1.5x (+50mm)</span>
+            <span>2.0x Severe</span>
+            <span>2.5x Deluge</span>
+          </div>
+        </div>
+
+        {/* 4 Quick Preset Chips */}
+        <div className="sick-presets-row">
+          <button 
+            className={`sick-preset-chip ${activePreset === "sub" ? "active" : ""}`}
+            onClick={() => handlePreset(0.5, "sub")}
+          >
+            ☀️ Dry (0.5x)
+          </button>
+          <button 
+            className={`sick-preset-chip ${activePreset === "actual" ? "active" : ""}`}
+            onClick={() => handlePreset(1.0, "actual")}
+          >
+            🌧️ Normal (1.0x)
+          </button>
+          <button 
+            className={`sick-preset-chip ${activePreset === "cloudburst" ? "active" : ""}`}
+            onClick={() => handlePreset(1.8, "cloudburst")}
+          >
+            ⛈️ Cloudburst (1.8x)
+          </button>
+          <button 
+            className={`sick-preset-chip ${activePreset === "max" ? "active" : ""}`}
+            onClick={() => handlePreset(2.5, "max")}
+          >
+            🌊 Deluge (2.5x)
+          </button>
+        </div>
+      </div>
+
+      {/* 4 Real-time Hydro-Mechanical Impact KPI Cards */}
+      <div className="sick-kpi-grid">
+        <div className="sick-kpi-card">
+          <div className="sick-kpi-val" style={{ color: parseFloat(fos) < 1.0 ? "#b91c1c" : "#15803d" }}>
+            {fos}
+          </div>
+          <div className="sick-kpi-lbl">Factor of Safety</div>
+          <div className="sick-kpi-sub">{parseFloat(fos) < 1.0 ? "Active Shear Failure" : "Slope Equilibrium"}</div>
+        </div>
+
+        <div className="sick-kpi-card">
+          <div className="sick-kpi-val" style={{ color: crit > 15 ? "#b91c1c" : "#d97706" }}>
+            {crit}
+          </div>
+          <div className="sick-kpi-lbl">Red Slopes</div>
+          <div className="sick-kpi-sub">Sovereign Corridors</div>
+        </div>
+
+        <div className="sick-kpi-card">
+          <div className="sick-kpi-val" style={{ color: "#1e40af" }}>
+            {pop}
+          </div>
+          <div className="sick-kpi-lbl">Citizens at Risk</div>
+          <div className="sick-kpi-sub">Evacuation Radius</div>
+        </div>
+
+        <div className="sick-kpi-card">
+          <div className="sick-kpi-val" style={{ color: "#7c3aed" }}>
+            {runoutVol} m³
+          </div>
+          <div className="sick-kpi-lbl">Runout Volume</div>
+          <div className="sick-kpi-sub">Debris Flow Inflow</div>
+        </div>
+      </div>
+
+      {/* Dynamic Sector Status Breakdown */}
       <div className="card">
         <div className="card-header">
           <div className="card-title">
-            <Icons.Simulator size={18} color="var(--navy)" />
-            <span>Precipitation Multiplier Slider</span>
+            <Icons.Map size={16} color="var(--navy)" />
+            <span>Regional Sector Instability ({mult.toFixed(1)}x)</span>
           </div>
-          <span style={{ fontSize: 12, fontWeight: 800, color: "var(--navy)", fontFamily: "monospace" }}>{mult.toFixed(1)}x</span>
+          <span className="badge-micro" style={{ background: tierColor, color: "#fff" }}>
+            {crit} Sectors Triggered
+          </span>
         </div>
-        <div className="card-body">
-          <input type="range" min="0.5" max="2.5" step="0.1" value={mult} onChange={e => setMult(parseFloat(e.target.value))} />
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--text-muted)", fontFamily: "monospace" }}>
-            <span>0.5x (Sub)</span>
-            <span>1.0x (Actual)</span>
-            <span>1.5x (+50mm)</span>
-            <span>2.5x (Peak)</span>
+        <div className="card-body" style={{ padding: "10px 14px" }}>
+          <div className="sim-sector-row">
+            <div className="sim-sector-name">
+              <strong>Jaintia Hills (NH-44 Corridor)</strong>
+              <div className="sim-sector-detail">Saturated sandstone overburden · 38° slope</div>
+            </div>
+            <span className={`risk-pill ${mult >= 1.2 ? "critical" : "moderate"}`}>
+              {mult >= 1.2 ? "TRIGGERED (RED)" : "WATCH (AMBER)"}
+            </span>
+          </div>
+
+          <div className="sim-sector-row">
+            <div className="sim-sector-name">
+              <strong>Kohima Bypass (NH-29)</strong>
+              <div className="sim-sector-detail">Dish-shaped thrust fault · InSAR creep active</div>
+            </div>
+            <span className={`risk-pill ${mult >= 1.5 ? "critical" : mult >= 1.0 ? "high" : "low"}`}>
+              {mult >= 1.5 ? "TRIGGERED (RED)" : mult >= 1.0 ? "HIGH (ORANGE)" : "STABLE"}
+            </span>
+          </div>
+
+          <div className="sim-sector-row">
+            <div className="sim-sector-name">
+              <strong>Mangan Highway Pass (North Sikkim)</strong>
+              <div className="sim-sector-detail">Glacial moraine wash · Teesta River basin</div>
+            </div>
+            <span className={`risk-pill ${mult >= 1.8 ? "critical" : mult >= 1.2 ? "high" : "safe"}`}>
+              {mult >= 1.8 ? "TRIGGERED (RED)" : mult >= 1.2 ? "ELEVATED" : "SAFE"}
+            </span>
           </div>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 14 }}>
-        <div className="card" style={{ padding: 12, textAlign: "center", marginBottom: 0 }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: crit > 12 ? "var(--red)" : "var(--orange)", fontFamily: "monospace" }}>{crit}</div>
-          <div style={{ fontSize: 10, color: "var(--text-muted)" }}>Critical Zones</div>
+      {/* If Critical, Show Instant Dispatch SOS Trigger */}
+      {mult >= 1.5 && onOpenSOS && (
+        <div className="card" style={{ background: "#fef2f2", border: "1px solid #f87171" }}>
+          <div className="card-body" style={{ textAlign: "center", padding: "16px" }}>
+            <div style={{ fontSize: "14px", fontWeight: "800", color: "#b91c1c", marginBottom: "4px" }}>
+              🚨 SIMULATION EXCEEDS DISASTER THRESHOLD
+            </div>
+            <div style={{ fontSize: "12px", color: "#7f1d1d", marginBottom: "14px" }}>
+              Factor of Safety below 1.0. Mobilize NDRF 1st Bn and issue cell-broadcast warnings for this scenario.
+            </div>
+            <button 
+              className="btn btn-danger" 
+              style={{ width: "100%", padding: "12px", fontWeight: "700", boxShadow: "0 4px 14px rgba(185,28,28,0.3)" }}
+              onClick={onOpenSOS}
+            >
+              Issue Emergency Dispatch Protocol
+            </button>
+          </div>
         </div>
-        <div className="card" style={{ padding: 12, textAlign: "center", marginBottom: 0 }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: fos < 1 ? "var(--red)" : "var(--green)", fontFamily: "monospace" }}>{fos}</div>
-          <div style={{ fontSize: 10, color: "var(--text-muted)" }}>FoS Index</div>
-        </div>
-        <div className="card" style={{ padding: 12, textAlign: "center", marginBottom: 0 }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: "#1e40af", fontFamily: "monospace" }}>{pop}</div>
-          <div style={{ fontSize: 10, color: "var(--text-muted)" }}>At-Risk Pop.</div>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -1102,7 +1321,7 @@ function AlertsView({ t, onBack, onOpenSOS }) {
     { zone:"Haflong Pass Corridor", sev:"CRITICAL", msg:"Debris flow warning triggered. Heavy hill cutting runoff.", time:"28m ago", conf:89 },
     { zone:"Gangtok South Ridge", sev:"HIGH", msg:"Antecedent precipitation threshold reached. Watch advisory.", time:"1h ago", conf:81 },
     { zone:"Aizawl East Bawngkawn", sev:"HIGH", msg:"Urban residential slope saturation at 84%. Alert defense.", time:"2h ago", conf:76 },
-    { zone:"Kohima NH-29 Bridge", sev:"HIGH", msg:"Inclinometer shear rate 1.2mm/h. Single-lane convoy only.", time:"3h ago", conf:71 },
+    { zone:"Kohima NH-29 Bridge", sev:"HIGH", msg:"Sentinel-1 InSAR surface deformation 1.2mm/h. Single-lane convoy only.", time:"3h ago", conf:71 },
     { zone:"Senapati Terraces", sev:"MODERATE", msg:"Telemetry sensor offline. Periodic patrol dispatched.", time:"5h ago", conf:54 },
     { zone:"Tawang Route", sev:"HIGH", msg:"Permafrost degradation and rockfall along high pass.", time:"6h ago", conf:81 },
   ]
@@ -1363,7 +1582,7 @@ function OfflineDisasterPortal({ t, activeTab, onSelectTab, onSwitchOnline }) {
         </div>
         <div className="offline-hero-title">Zero Internet? No Problem.</div>
         <div className="offline-hero-desc">
-          AEGIS operates 100% autonomously in remote mountain blackouts using Hardware Satellite GPS, Local Flash Cache, and Bluetooth P2P Mesh.
+          AEGIS operates 100% autonomously in remote mountain blackouts using Built-in Device GPS, Local Flash Cache, and Bluetooth P2P Mesh.
         </div>
       </div>
 
@@ -1378,6 +1597,10 @@ function OfflineDisasterPortal({ t, activeTab, onSelectTab, onSwitchOnline }) {
           <button className={`offline-chip-btn ${activeTab === "mesh" ? "active" : ""}`} onClick={() => onSelectTab("mesh")}>
             <Icons.Bluetooth size={16} />
             <span>Bluetooth P2P Mesh ({peers.length})</span>
+          </button>
+          <button className={`offline-chip-btn ${activeTab === "simulation" ? "active" : ""}`} onClick={() => onSelectTab("simulation")}>
+            <Icons.Simulator size={16} />
+            <span>Soil Stress Simulator</span>
           </button>
           <button className={`offline-chip-btn ${activeTab === "shelters" ? "active" : ""}`} onClick={() => onSelectTab("shelters")}>
             <Icons.Map size={16} />
@@ -1399,6 +1622,14 @@ function OfflineDisasterPortal({ t, activeTab, onSelectTab, onSwitchOnline }) {
       </div>
 
       {/* TAB 1: PRE-DOWNLOADED PREDICTIONS */}
+      {activeTab === "simulation" && (
+        <SimulatorView t={t} onBack={() => onSelectTab("predictions")} onOpenSOS={() => showToast("Emergency SOS protocol triggered offline")} />
+      )}
+
+      {activeTab === "simulation" && (
+        <SimulatorView t={t} onBack={() => onSelectTab("predictions")} onOpenSOS={() => showToast("Emergency SOS protocol triggered offline")} />
+      )}
+
       {activeTab === "predictions" && (
         <div className="offline-tab-content">
           <div className="offline-section-header">
@@ -1748,17 +1979,17 @@ export default function AppMobile() {
   const ONLINE_DOCK_APPS = [
     { id: "home", label: t.dashboard, icon: <Icons.Home size={20} /> },
     { id: "safety", label: t.safety, icon: <Icons.Safety size={20} /> },
-    { id: "map", label: t.map, icon: <Icons.Map size={20} /> },
+    { id: "simulation", label: "Simulator", icon: <Icons.Simulator size={20} /> },
     { id: "predictions", label: t.ai, icon: <Icons.Ai size={20} /> },
-    { id: "analytics", label: t.analytics, icon: <Icons.Analytics size={20} /> },
+    { id: "map", label: t.map, icon: <Icons.Map size={20} /> },
   ]
 
   const OFFLINE_DOCK_APPS = [
     { id: "predictions", label: "Cached AI", icon: <Icons.Ai size={20} /> },
     { id: "mesh", label: "P2P Mesh", icon: <Icons.Bluetooth size={20} /> },
+    { id: "simulation", label: "Simulator", icon: <Icons.Simulator size={20} /> },
     { id: "shelters", label: "Shelters", icon: <Icons.Map size={20} /> },
     { id: "contacts", label: "SOS Calls", icon: <Icons.Phone size={20} /> },
-    { id: "safety", label: "GPS Sat.", icon: <Icons.Safety size={20} /> },
   ]
 
   const DOCK_APPS = isOffline ? OFFLINE_DOCK_APPS : ONLINE_DOCK_APPS
@@ -1881,7 +2112,7 @@ export default function AppMobile() {
             <AnalyticsView t={t} onBack={() => setActiveView("home")} />
           )}
           {activeView === "simulation" && (
-            <SimulatorView t={t} onBack={() => setActiveView("home")} />
+            <SimulatorView t={t} onBack={() => setActiveView("home")} onOpenSOS={() => setShowSOSModal(true)} />
           )}
           {activeView === "alerts" && (
             <AlertsView t={t} onBack={() => setActiveView("home")} onOpenSOS={() => setShowSOSModal(true)} />
