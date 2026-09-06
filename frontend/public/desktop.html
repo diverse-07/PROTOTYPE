@@ -123,7 +123,7 @@
     </div>
     <div class="flex items-center space-x-4 shrink-0">
       <div class="flex items-center space-x-2 border border-gray-200 rounded p-1 bg-gray-50/80">
-        <img alt="Team AEGIS" class="w-12 h-12 rounded-full border border-amber-600/30 object-cover shadow-2xs" src="/logo.jpg"/>
+        <img alt="Team AEGIS" class="w-12 h-12 rounded-full border border-amber-600/30 object-cover shadow-2xs" src="/logo.jpg" onerror="this.onerror=null;this.src='./logo.jpg'"/>
         <div class="text-left pr-1 hidden sm:block">
           <div class="text-[9px] text-gray-500 font-semibold uppercase tracking-wider">Developed By</div>
           <div class="text-xs font-bold text-[#0b2545] leading-tight">Team AEGIS</div>
@@ -138,7 +138,7 @@
           <div class="text-[9px] text-green-700 font-medium">MoE / AICTE / MDoNER</div>
         </div>
       </div>
-      <div class="border-l border-gray-300 pl-3 hidden sm:flex flex-col text-right">
+      <div class="border-l border-gray-300 pl-3 flex flex-col text-right shrink-0">
         <span class="text-[10px] text-gray-500 font-bold tracking-wider uppercase">Indian Standard Time</span>
         <span class="font-mono text-xs font-bold text-[#0b2545] tracking-tight" id="live-ist-clock">--:--:-- IST | --</span>
         <span class="text-[10px] text-green-700 font-semibold flex items-center justify-end space-x-1">
@@ -153,29 +153,29 @@
 <!-- 4. OFFICIAL HORIZONTAL NAVIGATION BAR (TAB SWITCHER) -->
 <nav class="bg-[#113f67] text-white border-b-2 border-amber-500 text-sm shadow-sm sticky top-0 z-40">
   <div class="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between">
-    <div class="flex items-center space-x-1 overflow-x-auto py-0 scrollbar-none" id="main-nav-links">
-      <button data-tab="dashboard" class="nav-tab bg-[#0b2545] border-b-2 border-amber-400 text-amber-200 font-bold px-3.5 py-2.5 text-xs tracking-wide uppercase transition-colors" onclick="switchTab('dashboard')">
+    <div class="flex items-center space-x-1 overflow-x-auto py-0 scrollbar-none flex-nowrap" id="main-nav-links">
+      <button data-tab="dashboard" class="nav-tab bg-[#0b2545] border-b-2 border-amber-400 text-amber-200 font-bold px-3.5 py-2.5 text-xs tracking-wide uppercase transition-colors whitespace-nowrap shrink-0" onclick="switchTab('dashboard')">
         Dashboard
       </button>
-      <button data-tab="risk-map" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors" onclick="switchTab('risk-map')">
+      <button data-tab="risk-map" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors whitespace-nowrap shrink-0" onclick="switchTab('risk-map')">
         Geospatial Risk Map
       </button>
-      <button data-tab="sensors" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors" onclick="switchTab('sensors')">
+      <button data-tab="sensors" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors whitespace-nowrap shrink-0" onclick="switchTab('sensors')">
         Geotechnical Telemetry
       </button>
-      <button data-tab="predictions" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors" onclick="switchTab('predictions')">
+      <button data-tab="predictions" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors whitespace-nowrap shrink-0" onclick="switchTab('predictions')">
         AI Predictions
       </button>
-      <button data-tab="simulation" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors" onclick="switchTab('simulation')">
+      <button data-tab="simulation" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors whitespace-nowrap shrink-0" onclick="switchTab('simulation')">
         Scenario Simulator
       </button>
-      <button data-tab="citizen" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors" onclick="switchTab('citizen')">
+      <button data-tab="citizen" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors whitespace-nowrap shrink-0" onclick="switchTab('citizen')">
         Citizen Advisory
       </button>
-      <button data-tab="reports" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors" onclick="switchTab('reports')">
+      <button data-tab="reports" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors whitespace-nowrap shrink-0" onclick="switchTab('reports')">
         Citizen Reports
       </button>
-      <button data-tab="protocols" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors" onclick="switchTab('protocols')">
+      <button data-tab="protocols" class="nav-tab hover:bg-[#0b2545] text-white px-3.5 py-2.5 text-xs tracking-wide uppercase font-medium transition-colors whitespace-nowrap shrink-0" onclick="switchTab('protocols')">
         SOPs &amp; Protocols
       </button>
     </div>
@@ -952,7 +952,7 @@
         <div class="text-white font-bold uppercase tracking-wider text-[11px]">Development Partners</div>
         <div class="flex items-center space-x-3 pt-1">
           <div class="bg-white/10 p-1.5 rounded border border-white/20 flex items-center space-x-2">
-            <img alt="Team AEGIS" class="w-8 h-8 rounded-full object-cover" src="/logo.jpg"/>
+            <img alt="Team AEGIS" class="w-8 h-8 rounded-full object-cover" src="/logo.jpg" onerror="this.onerror=null;this.src='./logo.jpg'"/>
             <div><div class="text-white font-bold text-[11px]">Team AEGIS</div><div class="text-[9px] text-amber-300">Lead Tech Team</div></div>
           </div>
           <div class="bg-white/10 p-1.5 rounded border border-white/20 flex items-center space-x-2">

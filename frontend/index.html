@@ -6,6 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>NER Landslide Early Warning System | Team AEGIS - MDoNER</title>
     <script>
+      // Immediate routing for web visitors:
+      // The website is strictly for AUTHORITIES (MDoNER / Government of India).
+      // If opened in any web browser (Chrome on Android, Chrome on Windows, Safari, etc.),
+      // route immediately to the Authority Portal (desktop.html).
+      (function() {
+        var isCapacitorNative = false;
+        try {
+          if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function') {
+            isCapacitorNative = window.Capacitor.isNativePlatform();
+          }
+        } catch(e) {}
+
+        var isForcedApp = window.location.search.indexOf('mode=native_app') !== -1;
+
+        if (!isCapacitorNative && !isForcedApp) {
+          if (window.location.pathname.indexOf('desktop.html') === -1) {
+            window.location.replace('./desktop.html' + window.location.search + window.location.hash);
+          }
+        }
+      })();
+
       window.onerror = function(msg, url, line, col, error) {
         var el = document.getElementById('debug-error-box');
         if (!el) {
