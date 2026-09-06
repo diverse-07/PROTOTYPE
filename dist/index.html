@@ -287,7 +287,7 @@
           </div>
           <div class="flex items-center space-x-1 text-xs">
             <button class="px-2.5 py-1 font-semibold rounded bg-[#113f67] text-white border border-[#113f67]" id="btn-topo" onclick="switchBaseMap('topo')">Topo View</button>
-            <button class="px-2.5 py-1 font-medium rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-300" id="btn-sat" onclick="switchBaseMap('sat')">Satellite View</button>
+            <button class="px-2.5 py-1 font-medium rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-300" id="btn-sat" onclick="switchBaseMap('sat')">Satellite (Labelled)</button>
             <button class="px-2 py-1 font-medium rounded bg-white hover:bg-gray-100 text-gray-600 border border-gray-300" onclick="resetMapView()" title="Reset Map View">
               <span class="material-symbols-outlined text-xs">restart_alt</span>
             </button>
@@ -423,7 +423,7 @@
         </div>
         <div class="flex items-center space-x-2 text-xs">
           <button class="px-3 py-1.5 font-semibold rounded bg-[#113f67] text-white border border-[#113f67]" id="btn-topo-full" onclick="switchBaseMap('topo')">Topo Layer</button>
-          <button class="px-3 py-1.5 font-medium rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-300" id="btn-sat-full" onclick="switchBaseMap('sat')">Satellite Layer</button>
+          <button class="px-3 py-1.5 font-medium rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-300" id="btn-sat-full" onclick="switchBaseMap('sat')">Satellite (Labelled)</button>
           <button class="px-3 py-1.5 font-medium rounded bg-white hover:bg-gray-100 text-gray-700 border border-gray-300" onclick="resetMapView()">Reset Extent</button>
         </div>
       </div>
@@ -1528,11 +1528,12 @@
 
   function createTileLayers() {
     const topoUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
-    const satUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+    // Fully Labelled High-Resolution Satellite Hybrid (Cities, Highways, Borders, Districts)
+    const satHybridUrl = 'https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
     topoLayer = L.tileLayer(topoUrl, { maxZoom: 18, attribution: false });
-    satLayer = L.tileLayer(satUrl, { maxZoom: 18, attribution: false });
+    satLayer = L.tileLayer(satHybridUrl, { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: false });
     fullTopoLayer = L.tileLayer(topoUrl, { maxZoom: 18, attribution: false });
-    fullSatLayer = L.tileLayer(satUrl, { maxZoom: 18, attribution: false });
+    fullSatLayer = L.tileLayer(satHybridUrl, { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: false });
   }
 
   function initMap() {
