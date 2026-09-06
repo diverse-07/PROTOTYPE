@@ -110,6 +110,12 @@ export default function App() {
     }
   }, [])
 
+  // Toast handler
+  const showToast = useCallback((msg) => {
+    setToastMsg(msg)
+    setTimeout(() => setToastMsg(""), 3500)
+  }, [])
+
   // Web Audio Emergency Siren Synthesizer
   const toggleSirenAudio = useCallback((start) => {
     try {
@@ -228,11 +234,6 @@ export default function App() {
       setLiveRain(v => Math.min(25, Math.max(5, v + (Math.random()-0.45)*1.5)))
     }, 2500)
     return () => clearInterval(t)
-  }, [])
-
-  const showToast = useCallback((msg) => {
-    setToastMsg(msg)
-    setTimeout(() => setToastMsg(""), 3500)
   }, [])
 
   const handleProcessCoordinate = useCallback(async (lat, lng, label = null) => {
