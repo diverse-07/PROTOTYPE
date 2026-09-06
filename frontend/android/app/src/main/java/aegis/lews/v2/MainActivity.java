@@ -17,8 +17,43 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        enableLockScreenWake();
+        createEmergencyNotificationChannel();
         setupWebView();
         requestPermissionsOnStartup();
+    }
+
+    private void enableLockScreenWake() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true);
+            setTurnScreenOn(true);
+        } else {
+            getWindow().addFlags(
+                android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+                android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+                android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+            );
+        }
+    }
+
+    private void createEmergencyNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            android.app.NotificationChannel channel = new android.app.NotificationChannel(
+                "aegis_emergency_siren",
+                "AEGIS Disaster Emergency Siren",
+                android.app.NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Critical Early Warning System Evacuation Sirens & Alerts");
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{1000, 300, 1000, 300, 1500});
+            channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+            channel.setBypassDnd(true);
+            android.app.NotificationManager manager = getSystemService(android.app.NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(channel);
+            }
+        }
     }
 
     private void setupWebView() {
@@ -30,6 +65,10 @@ public class MainActivity extends BridgeActivity {
             settings.setAllowFileAccess(true);
             settings.setAllowContentAccess(true);
             settings.setGeolocationEnabled(true);
+            settings.setMediaPlaybackRequiresUserGesture(false);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            }
 
             webView.setWebChromeClient(new WebChromeClient() {
                 @Override
@@ -46,6 +85,12 @@ public class MainActivity extends BridgeActivity {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
             permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
+
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.POST_NOTIFICATIONS);
+            }
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

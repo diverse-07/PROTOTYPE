@@ -3264,3 +3264,63 @@ body, input, button, select, textarea {
   flex-direction: column;
   gap: 10px;
 }
+
+/* DYNAMIC NETWORK STATUS BANNERS */
+.net-offline-alert-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fef2f2;
+  border-bottom: 1.5px solid #f87171;
+  padding: 8px 14px;
+  font-size: 11px;
+  color: #991b1b;
+  animation: bannerFadeIn 0.3s ease;
+}
+.net-offline-alert-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.net-offline-badge {
+  background: #b91c1c;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.net-online-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0fdf4;
+  border-bottom: 1px solid #bbf7d0;
+  padding: 7px 14px;
+  font-size: 11px;
+  color: #166534;
+  animation: bannerFadeIn 0.3s ease;
+}
+.net-online-status-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.net-online-badge {
+  background: #15803d;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+@keyframes bannerFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

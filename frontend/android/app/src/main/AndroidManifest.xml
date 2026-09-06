@@ -36,9 +36,13 @@
         </provider>
     </application>
 
-    <!-- Permissions -->
+    <!-- Network & Internet Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <!-- Android 13+ Notification Permission (CRITICAL for sirens and alerts) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Location Permissions for GPS Safety Radar -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -51,7 +55,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
-    <!-- Audio & Alert WakeLock -->
+    <!-- Audio, Alert Vibration, WakeLock & Background Emergency Service -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 </manifest>
