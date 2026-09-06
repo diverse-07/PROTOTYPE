@@ -1872,6 +1872,86 @@ function OfflineDisasterPortal({ t, activeTab, onSelectTab, onSwitchOnline }) {
   )
 }
 
+
+// REAL-TIME AUDIBLE SIREN & VIBRATION SYNTHESIZER
+let emergencyAudioCtx = null;
+let emergencyOscillator = null;
+let emergencyGain = null;
+let sirenInterval = null;
+let vibrationInterval = null;
+
+function startDeviceSiren() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!emergencyAudioCtx) {
+      emergencyAudioCtx = new AudioCtx();
+    }
+    if (emergencyAudioCtx.state === 'suspended') {
+      emergencyAudioCtx.resume();
+    }
+
+    if (emergencyOscillator) {
+      try { emergencyOscillator.stop(); } catch(e) {}
+    }
+
+    emergencyOscillator = emergencyAudioCtx.createOscillator();
+    emergencyGain = emergencyAudioCtx.createGain();
+    emergencyGain.gain.setValueAtTime(0.9, emergencyAudioCtx.currentTime);
+
+    emergencyOscillator.type = 'sawtooth';
+    emergencyOscillator.frequency.setValueAtTime(800, emergencyAudioCtx.currentTime);
+
+    emergencyOscillator.connect(emergencyGain);
+    emergencyGain.connect(emergencyAudioCtx.destination);
+    emergencyOscillator.start();
+
+    // Wailing frequency sweep (750Hz <-> 1250Hz) - NDMA/EAS Disaster Siren
+    let high = false;
+    if (sirenInterval) clearInterval(sirenInterval);
+    sirenInterval = setInterval(() => {
+      if (!emergencyAudioCtx || !emergencyOscillator) return;
+      const targetFreq = high ? 750 : 1250;
+      emergencyOscillator.frequency.exponentialRampToValueAtTime(targetFreq, emergencyAudioCtx.currentTime + 0.35);
+      high = !high;
+    }, 400);
+
+    // Continuous Phone Vibration
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate([1000, 300, 1000, 300, 1500, 500]);
+      if (vibrationInterval) clearInterval(vibrationInterval);
+      vibrationInterval = setInterval(() => {
+        if (navigator.vibrate) {
+          navigator.vibrate([1000, 300, 1000, 300, 1500, 500]);
+        }
+      }, 4600);
+    }
+  } catch(err) {
+    console.error('Audio siren error:', err);
+  }
+}
+
+function stopDeviceSiren() {
+  if (sirenInterval) {
+    clearInterval(sirenInterval);
+    sirenInterval = null;
+  }
+  if (vibrationInterval) {
+    clearInterval(vibrationInterval);
+    vibrationInterval = null;
+  }
+  if (emergencyOscillator) {
+    try {
+      emergencyOscillator.stop();
+      emergencyOscillator.disconnect();
+    } catch(e) {}
+    emergencyOscillator = null;
+  }
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    navigator.vibrate(0);
+  }
+}
+
 export default function AppMobile() {
   const savedLang = typeof window !== "undefined" ? localStorage.getItem("aegis_lang") : null
   const savedUser = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("aegis_user") || "null") : null
@@ -1892,6 +1972,7 @@ export default function AppMobile() {
   const [sosCellSms, setSosCellSms] = useState(true)
   const [isOffline, setIsOffline] = useState(typeof navigator !== "undefined" ? !navigator.onLine : false)
   const [offlineTab, setOfflineTab] = useState("predictions")
+  const [incomingSiren, setIncomingSiren] = useState(null)
 
   useEffect(() => {
     const onOnline = () => {
@@ -1911,6 +1992,100 @@ export default function AppMobile() {
       window.removeEventListener("offline", onOffline)
     }
   }, [])
+
+  // REAL-TIME CITIZEN SIREN DISPATCH LISTENER (SSE & FALLBACK POLLING)
+  useEffect(() => {
+    // 1. Request Notification permission
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        Notification.requestPermission().catch(() => {})
+      }
+    }
+
+    // 2. Unlock Audio Context on first interaction
+    const unlockAudio = () => {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext
+      if (AudioCtx) {
+        const ctx = new AudioCtx()
+        ctx.resume().then(() => ctx.close()).catch(() => {})
+      }
+      window.removeEventListener("click", unlockAudio)
+      window.removeEventListener("touchstart", unlockAudio)
+    }
+    window.addEventListener("click", unlockAudio, { once: true })
+    window.addEventListener("touchstart", unlockAudio, { once: true })
+
+    // 3. Connect to live ntfy.sh SSE stream
+    let es = null
+    try {
+      es = new EventSource("https://ntfy.sh/ner_landslide_alert/sse")
+      es.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          if (data.event === "message" && data.message) {
+            if (data.message === "AEGIS_SILENCE_ALL_SIRENS") {
+              stopDeviceSiren()
+              setIncomingSiren(null)
+              return
+            }
+            // Trigger automatic siren and vibration on phone!
+            startDeviceSiren()
+            setIncomingSiren({
+              title: data.title || "MDoNER CRITICAL EVACUATION SIREN",
+              message: data.message,
+              zone: "Jaintia Hills Sector 8 (NH-44 Corridor)",
+              time: new Date().toLocaleTimeString("en-IN")
+            })
+            // Post Native Notification
+            if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+              try {
+                new Notification("🚨 AEGIS RED ALERT: EVACUATION SIREN", {
+                  body: data.message,
+                  icon: "/logo.jpg",
+                  tag: "aegis_emergency_siren",
+                  requireInteraction: true,
+                  vibrate: [1000, 300, 1000, 300, 1500]
+                })
+              } catch(e) {}
+            }
+          }
+        } catch(e) {}
+      }
+    } catch(err) {
+      console.error("SSE connection error:", err)
+    }
+
+    // 4. Also poll backend /api/alerts/active_siren every 3s as fallback
+    let lastHandledId = null
+    const sirenPoll = setInterval(async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/alerts/active_siren")
+        if (res.ok) {
+          const s = await res.json()
+          if (s.active && s.id !== lastHandledId) {
+            lastHandledId = s.id
+            startDeviceSiren()
+            setIncomingSiren({
+              title: "MDoNER CRITICAL EVACUATION SIREN",
+              message: s.message || "Immediate Evacuation Siren Dispatched by Central Command.",
+              zone: s.zone || "Jaintia Hills (NH-44)",
+              time: new Date().toLocaleTimeString("en-IN")
+            })
+          } else if (!s.active && incomingSiren) {
+            stopDeviceSiren()
+            setIncomingSiren(null)
+          }
+        }
+      } catch(e) {}
+    }, 3000)
+
+    return () => {
+      if (es) es.close()
+      clearInterval(sirenPoll)
+      stopDeviceSiren()
+    }
+  }, [])
+
 
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en
 
@@ -2497,6 +2672,83 @@ export default function AppMobile() {
             <button className="btn btn-outline" style={{ marginTop: "16px", width: "100%" }} onClick={() => setShowHelpModal(false)}>
               Close Help
             </button>
+          </div>
+        </div>
+      )}
+
+      
+      {/* 🚨 FULL-SCREEN CRITICAL SIREN TAKEOVER MODAL */}
+      {incomingSiren && (
+        <div className="siren-takeover-overlay">
+          <div className="siren-takeover-box">
+            <div className="siren-strobe-strip" />
+            
+            <div className="siren-pulse-icon-wrap">
+              <span className="siren-wave wave-1" />
+              <span className="siren-wave wave-2" />
+              <div className="siren-pulse-badge">
+                <Icons.Alerts size={32} color="#ffffff" />
+              </div>
+            </div>
+
+            <div className="siren-authority-tag">
+              <span>GOVERNMENT OF INDIA &bull; MDoNER DISASTER COMMAND</span>
+            </div>
+
+            <div className="siren-title">CRITICAL EVACUATION SIREN ACTIVE</div>
+            <div className="siren-zone">{incomingSiren.zone}</div>
+
+            <div className="siren-msg-box">
+              <div className="siren-msg-indicator">
+                <span className="siren-audio-bar bar-1" />
+                <span className="siren-audio-bar bar-2" />
+                <span className="siren-audio-bar bar-3" />
+                <span className="siren-audio-bar bar-4" />
+                <span className="siren-audio-bar bar-2" />
+              </div>
+              <p>{incomingSiren.message}</p>
+              <div className="siren-dispatch-time">Dispatched: {incomingSiren.time} &bull; Audible Alarm &amp; Vibration On</div>
+            </div>
+
+            <div className="siren-actions-col">
+              <button
+                className="btn btn-warning"
+                style={{ background: "#f59e0b", color: "#000", fontWeight: "800", padding: "14px", fontSize: "13.5px", boxShadow: "0 4px 20px rgba(245, 158, 11, 0.4)" }}
+                onClick={() => {
+                  stopDeviceSiren()
+                  setIncomingSiren(null)
+                  setToastMsg("Siren Silenced. Please proceed towards designated safe bedrock shelter immediately.")
+                  setTimeout(() => setToastMsg(""), 5000)
+                }}
+              >
+                🔕 SILENCE SIREN &amp; CONFIRM EVACUATION
+              </button>
+
+              <button
+                className="btn btn-primary"
+                style={{ background: "#059669", fontWeight: "700", padding: "12px" }}
+                onClick={() => {
+                  stopDeviceSiren()
+                  setIncomingSiren(null)
+                  if (isOffline) {
+                    setOfflineTab("shelters")
+                  } else {
+                    setActiveView("safety")
+                  }
+                }}
+              >
+                🧭 Navigate to Nearest Shelter (Dawki School - 840m)
+              </button>
+
+              <a
+                href="tel:1078"
+                className="btn btn-outline"
+                style={{ color: "#ffffff", borderColor: "rgba(255,255,255,0.4)", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "10px" }}
+              >
+                <Icons.Phone size={15} color="#ffffff" />
+                <span>Call NDRF 24x7 Control Room (1078)</span>
+              </a>
+            </div>
           </div>
         </div>
       )}

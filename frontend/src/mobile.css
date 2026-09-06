@@ -3107,3 +3107,160 @@ body, input, button, select, textarea {
   font-size: 10px;
   color: #047857;
 }
+
+/* FULL-SCREEN SIREN TAKEOVER STYLES */
+.siren-takeover-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: sirenFlashOverlay 0.8s infinite alternate ease-in-out;
+}
+@keyframes sirenFlashOverlay {
+  0% { background: rgba(185, 28, 28, 0.94); }
+  100% { background: rgba(15, 23, 42, 0.96); }
+}
+
+.siren-takeover-box {
+  background: #0f172a;
+  border: 2.5px solid #ef4444;
+  border-radius: 24px;
+  max-width: 420px;
+  width: 100%;
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 0 60px rgba(239, 68, 68, 0.6), inset 0 0 25px rgba(239, 68, 68, 0.25);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+  animation: boxPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes boxPop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.siren-strobe-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #ef4444);
+  background-size: 200% 100%;
+  animation: scanShimmer 0.8s infinite linear;
+}
+
+.siren-pulse-icon-wrap {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.siren-pulse-badge {
+  width: 68px;
+  height: 68px;
+  background: #b91c1c;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 30px #ef4444;
+  z-index: 2;
+  animation: sirenPulse 0.6s infinite alternate;
+}
+@keyframes sirenPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.15); }
+}
+
+.siren-wave {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid #ef4444;
+  animation: sirenWaveOut 1.4s infinite cubic-bezier(0.25, 1, 0.5, 1);
+}
+.siren-wave.wave-1 { width: 84px; height: 84px; animation-delay: 0s; }
+.siren-wave.wave-2 { width: 84px; height: 84px; animation-delay: 0.7s; }
+@keyframes sirenWaveOut {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.3); opacity: 0; }
+}
+
+.siren-authority-tag {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #fca5a5;
+  margin-bottom: 6px;
+}
+
+.siren-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.siren-zone {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fde047;
+  margin-bottom: 14px;
+}
+
+.siren-msg-box {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+.siren-msg-box p {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #fecaca;
+  margin: 6px 0;
+}
+.siren-dispatch-time {
+  font-size: 10px;
+  color: #f87171;
+  font-family: Consolas, monospace;
+}
+
+.siren-msg-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 16px;
+}
+.siren-audio-bar {
+  width: 3px;
+  background: #ef4444;
+  border-radius: 2px;
+  animation: audioBarDance 0.5s infinite ease-in-out alternate;
+}
+.siren-audio-bar.bar-1 { height: 6px; animation-delay: 0.1s; }
+.siren-audio-bar.bar-2 { height: 14px; animation-delay: 0.3s; }
+.siren-audio-bar.bar-3 { height: 10px; animation-delay: 0.2s; }
+.siren-audio-bar.bar-4 { height: 16px; animation-delay: 0.4s; }
+@keyframes audioBarDance {
+  0% { transform: scaleY(0.3); }
+  100% { transform: scaleY(1); }
+}
+
+.siren-actions-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
