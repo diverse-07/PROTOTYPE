@@ -56,19 +56,14 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* CRITICAL: Fix map scroll overwrite and container bleed */
+  /* Clean map containers */
   #gis-map, #gis-map-full {
     overflow: hidden !important;
-    isolation: isolate !important;
-    z-index: 10 !important;
-    contain: layout paint;
+    position: relative;
+    z-index: 1;
   }
   .leaflet-container {
-    z-index: 10 !important;
-    contain: layout paint;
-  }
-  .leaflet-pane {
-    contain: paint;
+    font-family: inherit;
   }
 </style>
 </head>
@@ -169,7 +164,7 @@
 </header>
 
 <!-- 4. OFFICIAL HORIZONTAL NAVIGATION BAR (TAB SWITCHER) -->
-<nav class="bg-[#113f67] text-white border-b-2 border-amber-500 text-sm shadow-sm sticky top-0 z-[1001]">
+<nav class="bg-[#113f67] text-white border-b-2 border-amber-500 text-sm shadow-sm sticky top-0 z-[1001]" style="position: sticky; top: 0; z-index: 2000 !important;">
   <div class="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between">
     <div class="flex items-center space-x-1 overflow-x-auto py-0 scrollbar-none flex-nowrap" id="main-nav-links">
       <button data-tab="dashboard" class="nav-tab bg-[#0b2545] border-b-2 border-amber-400 text-amber-200 font-bold px-3.5 py-2.5 text-xs tracking-wide uppercase transition-colors whitespace-nowrap shrink-0" onclick="switchTab('dashboard')">
@@ -298,7 +293,7 @@
             </button>
           </div>
         </div>
-        <div class="relative w-full h-[400px] sm:h-[450px] bg-slate-100 overflow-hidden" id="gis-map" style="overflow: hidden; isolation: isolate; z-index: 10;">
+        <div class="relative w-full h-[400px] sm:h-[450px] bg-slate-100" id="gis-map">
           <!-- Mobile Corridor Toggle Button -->
           <button class="sm:hidden absolute top-2 right-2 z-[400] bg-white/95 border border-gray-300 px-2.5 py-1 rounded shadow text-[10px] font-bold text-[#0b2545] flex items-center space-x-1.5 backdrop-blur-xs hover:bg-gray-50" onclick="toggleCorridorsDrawer()">
             <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
@@ -448,7 +443,7 @@
       </div>
 
       <!-- Dedicated Risk Map Viewport -->
-      <div class="relative w-full h-[420px] sm:h-[540px] bg-slate-100 rounded border border-gray-300 overflow-hidden" id="gis-map-full" style="overflow: hidden; isolation: isolate; z-index: 10;">
+      <div class="relative w-full h-[420px] sm:h-[540px] bg-slate-100 rounded border border-gray-300" id="gis-map-full">
         <div class="absolute bottom-2 left-2 z-[400] bg-white/90 text-gray-700 text-[11px] font-mono px-2 py-0.5 rounded border border-gray-300 pointer-events-none">GSI NLSM National Grid: WGS-84 Datum | Satellite Remote Sensing &amp; Macro-Polygons Active (Zero-Hardware)</div>
       </div>
 
@@ -1550,8 +1545,6 @@
         zoomControl: true,
         attributionControl: false,
         tap: false,
-        scrollWheelZoom: false,
-        preferCanvas: true,
         maxBounds: [[20.0, 87.0], [30.5, 98.0]],
         minZoom: 5.5
       }).setView([25.5, 92.5], 7);
@@ -1581,8 +1574,6 @@
       zoomControl: true,
       attributionControl: false,
       tap: false,
-      scrollWheelZoom: false,
-      preferCanvas: true,
       maxBounds: [[20.0, 87.0], [30.5, 98.0]],
       minZoom: 5.5
     }).setView([25.5, 92.5], 7);
@@ -1610,7 +1601,6 @@
         opacity: 0.85,
         fillColor: z.color,
         fillOpacity: 0.35,
-        smoothFactor: 1.5,
         className: 'gsi-hazard-polygon'
       }).addTo(targetMap);
 
@@ -2088,7 +2078,11 @@
     }
   }
 
-  window.addEventListener('DOMContentLoaded', initMap);
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', initMap);
+  } else {
+    initMap();
+  }
 </script>
 </body>
 </html>
