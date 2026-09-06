@@ -2115,6 +2115,20 @@ export default function AppMobile() {
       }
     }
 
+    if (typeof window !== "undefined") {
+      window.triggerNativeAegisAlert = (msg) => {
+        handleIncomingAlert({
+          title: "MDoNER CRITICAL EVACUATION SIREN",
+          message: msg || "Immediate Evacuation Siren Dispatched by Central Command.",
+          time: Math.floor(Date.now() / 1000)
+        });
+      };
+      window.silenceNativeAegisAlert = () => {
+        stopDeviceSiren();
+        setIncomingSiren(null);
+      };
+    }
+
     // PRIMARY: Native Persistent WebSocket (<100ms delivery, with ?since=2m catchup)
     const connectWS = () => {
       try {

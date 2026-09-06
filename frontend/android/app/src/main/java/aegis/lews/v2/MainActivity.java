@@ -1,9 +1,13 @@
 package aegis.lews.v2;
 
 import android.Manifest;
+import android.app.KeyguardManager;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.WindowManager;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -12,46 +16,79 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
 import java.util.ArrayList;
+import org.json.JSONObject;
 
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         enableLockScreenWake();
-        createEmergencyNotificationChannel();
         setupWebView();
         requestPermissionsOnStartup();
+
+        // Start native background siren service immediately
+        AegisSirenService.start(this);
+
+        handleIncomingIntent(getIntent());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        enableLockScreenWake();
+        handleIncomingIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        enableLockScreenWake();
+        handleIncomingIntent(intent);
     }
 
     private void enableLockScreenWake() {
-        getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
             setTurnScreenOn(true);
+            KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+            if (km != null) {
+                km.requestDismissKeyguard(this, null);
+            }
         } else {
             getWindow().addFlags(
-                android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
-                android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
-                android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             );
         }
     }
 
-    private void createEmergencyNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            android.app.NotificationChannel channel = new android.app.NotificationChannel(
-                "aegis_emergency_siren",
-                "AEGIS Disaster Emergency Siren",
-                android.app.NotificationManager.IMPORTANCE_HIGH
-            );
-            channel.setDescription("Critical Early Warning System Evacuation Sirens & Alerts");
-            channel.enableVibration(true);
-            channel.setVibrationPattern(new long[]{1000, 300, 1000, 300, 1500});
-            channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
-            channel.setBypassDnd(true);
-            android.app.NotificationManager manager = getSystemService(android.app.NotificationManager.class);
-            if (manager != null) {
-                manager.createNotificationChannel(channel);
+    private void handleIncomingIntent(Intent intent) {
+        if (intent == null) return;
+
+        if (intent.getBooleanExtra("aegis_emergency_siren", false)) {
+            String msg = intent.getStringExtra("aegis_message");
+            if (msg == null) msg = "Immediate Evacuation Siren Dispatched by Central Command.";
+            final String safeMsg = msg;
+            if (this.bridge != null && this.bridge.getWebView() != null) {
+                this.bridge.getWebView().post(() -> {
+                    this.bridge.getWebView().evaluateJavascript(
+                        "if (window.triggerNativeAegisAlert) { window.triggerNativeAegisAlert(" + JSONObject.quote(safeMsg) + "); }",
+                        null
+                    );
+                });
+            }
+        } else if (intent.getBooleanExtra("aegis_silence", false)) {
+            if (this.bridge != null && this.bridge.getWebView() != null) {
+                this.bridge.getWebView().post(() -> {
+                    this.bridge.getWebView().evaluateJavascript(
+                        "if (window.silenceNativeAegisAlert) { window.silenceNativeAegisAlert(); }",
+                        null
+                    );
+                });
             }
         }
     }
