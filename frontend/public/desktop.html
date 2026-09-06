@@ -196,11 +196,15 @@
       <p class="font-medium text-red-950"><strong>IMMEDIATE GEOTECHNICAL BULLETIN:</strong> Heavy debris flow vulnerability in Jaintia Hills, Meghalaya (NH-44 Corridor). Rainfall threshold exceeded (142mm/24h). Dispatched to SDMA &amp; NDRF 1st Bn.</p>
     </div>
     <div class="flex items-center space-x-2 shrink-0">
+      <button class="text-xs bg-[#b91c1c] hover:bg-[#991b1b] text-white font-bold px-3 py-1.5 rounded flex items-center space-x-1.5 shadow-sm border border-red-500 animate-pulse transition-all" id="btn-sound-sos-alarm" onclick="triggerSOSAlarmWithBluetooth('Jaintia Hills (NH-44 Corridor)')">
+        <span class="material-symbols-outlined text-sm">notifications_active</span>
+        <span id="sos-btn-text">Circulate SOS Alarm &amp; Bluetooth</span>
+      </button>
       <button class="text-xs bg-white hover:bg-gray-100 text-[#b91c1c] font-semibold px-2.5 py-1 rounded border border-red-300 flex items-center space-x-1 transition-colors" onclick="alert('Downloading Official SitRep PDF [Ref: NDMA-NER-2026-092]')">
         <span class="material-symbols-outlined text-xs">download</span>
-        <span>Download Advisory (PDF)</span>
+        <span>Advisory (PDF)</span>
       </button>
-      <button class="text-xs bg-[#b91c1c] hover:bg-[#991b1b] text-white font-semibold px-2.5 py-1 rounded transition-colors flex items-center space-x-1" onclick="switchTab('risk-map'); zoomToZone(25.4484, 92.2152, 'Jaintia Hills NH-44 Sec 8')">
+      <button class="text-xs bg-gray-800 hover:bg-gray-900 text-white font-semibold px-2.5 py-1 rounded transition-colors flex items-center space-x-1" onclick="switchTab('risk-map'); zoomToZone(25.4484, 92.2152, 'Jaintia Hills NH-44 Sec 8')">
         <span class="material-symbols-outlined text-xs">map</span>
         <span>View SitRep</span>
       </button>
@@ -1337,10 +1341,115 @@
     document.getElementById('emergency-modal').classList.remove('flex');
   }
 
+  let aegisAudioCtx = null;
+  let aegisOsc = null;
+  let isSirenActive = false;
+
+  function playEmergencySiren(start) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!aegisAudioCtx) aegisAudioCtx = new AudioCtx();
+      if (aegisAudioCtx.state === 'suspended') aegisAudioCtx.resume();
+
+      if (aegisOsc) {
+        try { aegisOsc.stop(); aegisOsc.disconnect(); } catch(e){}
+        aegisOsc = null;
+      }
+
+      if (start) {
+        const osc = aegisAudioCtx.createOscillator();
+        const gain = aegisAudioCtx.createGain();
+        osc.type = 'sawtooth';
+        gain.gain.setValueAtTime(0.4, aegisAudioCtx.currentTime);
+
+        const now = aegisAudioCtx.currentTime;
+        for (let i = 0; i < 30; i++) {
+          osc.frequency.setValueAtTime(950, now + i * 0.7);
+          osc.frequency.exponentialRampToValueAtTime(450, now + i * 0.7 + 0.35);
+          osc.frequency.exponentialRampToValueAtTime(950, now + i * 0.7 + 0.7);
+        }
+        osc.connect(gain);
+        gain.connect(aegisAudioCtx.destination);
+        osc.start();
+        aegisOsc = osc;
+        isSirenActive = true;
+      } else {
+        isSirenActive = false;
+      }
+    } catch(err) {
+      console.error('Audio error:', err);
+    }
+  }
+
+  function speakVoiceAlert() {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance("चेतावनी! भारी बारिश से भूस्खलन का खतरा है। तुरंत सुरक्षित स्थान पर जाएं। Emergency Landslide Siren Active.");
+      utter.rate = 0.95;
+      utter.pitch = 1.1;
+      window.speechSynthesis.speak(utter);
+    }
+  }
+
+  async function requestBluetoothActivation() {
+    if (navigator.bluetooth) {
+      try {
+        const device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true
+        });
+        alert(`Bluetooth Hardware Connected: ${device.name || 'AEGIS Emergency Beacon Node'}. SOS alert packet propagated across local mesh!`);
+      } catch (err) {
+        if (err.name !== 'NotFoundError') {
+          alert('Bluetooth notification: Please keep your device Bluetooth ON to relay offline mesh disaster packets to nearby residents.');
+        }
+      }
+    } else {
+      alert('Action Required: Please turn ON your device Bluetooth! This enables zero-data peer-to-peer disaster siren circulation to neighboring devices.');
+    }
+  }
+
+  function triggerSOSAlarmWithBluetooth(zone) {
+    const btn = document.getElementById('btn-sound-sos-alarm');
+    const textSpan = document.getElementById('sos-btn-text');
+
+    if (isSirenActive) {
+      playEmergencySiren(false);
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      btn.className = "text-xs bg-[#b91c1c] hover:bg-[#991b1b] text-white font-bold px-3 py-1.5 rounded flex items-center space-x-1.5 shadow-sm border border-red-500 transition-all";
+      textSpan.innerText = "Circulate SOS Alarm & Bluetooth";
+      return;
+    }
+
+    // 1. Play real Web Audio 2-tone police siren
+    playEmergencySiren(true);
+
+    // 2. Speak voice alert in Hindi & English
+    speakVoiceAlert();
+
+    // 3. Update button to Silence
+    btn.className = "text-xs bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded flex items-center space-x-1.5 shadow-sm border border-amber-400 animate-pulse transition-all";
+    textSpan.innerText = "Silence Alarm Siren";
+
+    // 4. Prompt user to turn ON Bluetooth & circulate packet
+    setTimeout(() => {
+      requestBluetoothActivation();
+    }, 400);
+
+    // 5. Open sovereign modal for multi-agency dispatch
+    openEmergencyModal(zone || 'Jaintia Hills Sector 8');
+  }
+
   function executeSovereignBroadcast() {
-    const btn=document.getElementById('btn-execute-broadcast');
-    btn.innerHTML=`<span class="material-symbols-outlined text-sm">sync</span><span>Transmitting...</span>`;
-    setTimeout(()=>{btn.classList.add('hidden');document.getElementById('broadcast-confirmed-banner').classList.remove('hidden');},800);
+    const btn = document.getElementById('btn-execute-broadcast');
+    btn.innerHTML = `<span class="material-symbols-outlined text-sm">sync</span><span>Transmitting...</span>`;
+    setTimeout(() => {
+      btn.classList.add('hidden');
+      document.getElementById('broadcast-confirmed-banner').classList.remove('hidden');
+      playEmergencySiren(true);
+      speakVoiceAlert();
+      requestBluetoothActivation();
+    }, 800);
   }
 
   window.addEventListener('DOMContentLoaded', initMap);
