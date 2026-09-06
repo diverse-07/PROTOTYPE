@@ -196,9 +196,9 @@
       <p class="font-medium text-red-950"><strong>IMMEDIATE GEOTECHNICAL BULLETIN:</strong> Heavy debris flow vulnerability in Jaintia Hills, Meghalaya (NH-44 Corridor). Rainfall threshold exceeded (142mm/24h). Dispatched to SDMA &amp; NDRF 1st Bn.</p>
     </div>
     <div class="flex items-center space-x-2 shrink-0">
-      <button class="text-xs bg-[#b91c1c] hover:bg-[#991b1b] text-white font-bold px-3 py-1.5 rounded flex items-center space-x-1.5 shadow-sm border border-red-500 animate-pulse transition-all" id="btn-sound-sos-alarm" onclick="triggerSOSAlarmWithBluetooth('Jaintia Hills (NH-44 Corridor)')">
+      <button class="text-xs bg-[#b91c1c] hover:bg-[#991b1b] text-white font-bold px-3 py-1.5 rounded flex items-center space-x-1.5 shadow-sm border border-red-500 animate-pulse transition-all" id="btn-sound-sos-alarm" onclick="triggerSOSAlarm('Jaintia Hills (NH-44 Corridor)')">
         <span class="material-symbols-outlined text-sm">notifications_active</span>
-        <span id="sos-btn-text">Circulate SOS Alarm &amp; Bluetooth</span>
+        <span id="sos-btn-text">🚨 Sound SOS Siren &amp; Dispatch</span>
       </button>
       <button class="text-xs bg-white hover:bg-gray-100 text-[#b91c1c] font-semibold px-2.5 py-1 rounded border border-red-300 flex items-center space-x-1 transition-colors" onclick="alert('Downloading Official SitRep PDF [Ref: NDMA-NER-2026-092]')">
         <span class="material-symbols-outlined text-xs">download</span>
@@ -1392,24 +1392,7 @@
     }
   }
 
-  async function requestBluetoothActivation() {
-    if (navigator.bluetooth) {
-      try {
-        const device = await navigator.bluetooth.requestDevice({
-          acceptAllDevices: true
-        });
-        alert(`Bluetooth Hardware Connected: ${device.name || 'AEGIS Emergency Beacon Node'}. SOS alert packet propagated across local mesh!`);
-      } catch (err) {
-        if (err.name !== 'NotFoundError') {
-          alert('Bluetooth notification: Please keep your device Bluetooth ON to relay offline mesh disaster packets to nearby residents.');
-        }
-      }
-    } else {
-      alert('Action Required: Please turn ON your device Bluetooth! This enables zero-data peer-to-peer disaster siren circulation to neighboring devices.');
-    }
-  }
-
-  function triggerSOSAlarmWithBluetooth(zone) {
+  function triggerSOSAlarm(zone) {
     const btn = document.getElementById('btn-sound-sos-alarm');
     const textSpan = document.getElementById('sos-btn-text');
 
@@ -1417,7 +1400,7 @@
       playEmergencySiren(false);
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       btn.className = "text-xs bg-[#b91c1c] hover:bg-[#991b1b] text-white font-bold px-3 py-1.5 rounded flex items-center space-x-1.5 shadow-sm border border-red-500 transition-all";
-      textSpan.innerText = "Circulate SOS Alarm & Bluetooth";
+      textSpan.innerText = "🚨 Sound SOS Siren & Dispatch";
       return;
     }
 
@@ -1431,12 +1414,7 @@
     btn.className = "text-xs bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded flex items-center space-x-1.5 shadow-sm border border-amber-400 animate-pulse transition-all";
     textSpan.innerText = "Silence Alarm Siren";
 
-    // 4. Prompt user to turn ON Bluetooth & circulate packet
-    setTimeout(() => {
-      requestBluetoothActivation();
-    }, 400);
-
-    // 5. Open sovereign modal for multi-agency dispatch
+    // 4. Open sovereign modal for multi-agency dispatch
     openEmergencyModal(zone || 'Jaintia Hills Sector 8');
   }
 
@@ -1448,7 +1426,6 @@
       document.getElementById('broadcast-confirmed-banner').classList.remove('hidden');
       playEmergencySiren(true);
       speakVoiceAlert();
-      requestBluetoothActivation();
     }, 800);
   }
 
