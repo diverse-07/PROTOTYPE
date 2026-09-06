@@ -628,14 +628,14 @@ function HomeView({ t, onOpenSection, onOpenSOS }) {
   }, [])
 
   const APP_TILES = [
-    { id: "safety", name: t.safety, icon: <Icons.Safety size={24} color="#ffffff" />, type: "safety" },
-    { id: "predictions", name: t.ai, icon: <Icons.Ai size={24} color="#ffffff" />, type: "ai" },
-    { id: "map", name: t.map, icon: <Icons.Map size={24} color="#ffffff" />, type: "map" },
-    { id: "sensors", name: t.sensors, icon: <Icons.Sensors size={24} color="#ffffff" />, type: "sensors" },
-    { id: "analytics", name: t.analytics, icon: <Icons.Analytics size={24} color="#ffffff" />, type: "analytics" },
-    { id: "simulation", name: t.simulator, icon: <Icons.Simulator size={24} color="#ffffff" />, type: "simulator" },
-    { id: "alerts", name: t.alerts, icon: <Icons.Alerts size={24} color="#ffffff" />, type: "alerts", badge: "7" },
-    { id: "report", name: t.report, icon: <Icons.Report size={24} color="#ffffff" />, type: "report" },
+    { id: "safety", name: t.safety, icon: <Icons.Safety size={24} color="currentColor" />, type: "safety" },
+    { id: "predictions", name: t.ai, icon: <Icons.Ai size={24} color="currentColor" />, type: "ai" },
+    { id: "map", name: t.map, icon: <Icons.Map size={24} color="currentColor" />, type: "map" },
+    { id: "sensors", name: t.sensors, icon: <Icons.Sensors size={24} color="currentColor" />, type: "sensors" },
+    { id: "analytics", name: t.analytics, icon: <Icons.Analytics size={24} color="currentColor" />, type: "analytics" },
+    { id: "simulation", name: t.simulator, icon: <Icons.Simulator size={24} color="currentColor" />, type: "simulator" },
+    { id: "alerts", name: t.alerts, icon: <Icons.Alerts size={24} color="currentColor" />, type: "alerts", badge: "7" },
+    { id: "report", name: t.report, icon: <Icons.Report size={24} color="currentColor" />, type: "report" },
   ]
 
   return (
@@ -1102,19 +1102,19 @@ function SimulatorView({ t, onBack, onOpenSOS }) {
 
   let tier = "EQUILIBRIUM"
   let tierColor = "#15803d"
-  let trackGradient = "linear-gradient(90deg, #15803d, #22c55e)"
+  let trackColor = "#15803d"
   if (mult > 0.8 && mult <= 1.2) {
     tier = "NORMAL MONSOON"
     tierColor = "#059669"
-    trackGradient = "linear-gradient(90deg, #15803d 0%, #059669 100%)"
+    trackColor = "#059669"
   } else if (mult > 1.2 && mult <= 1.7) {
     tier = "HIGH CLOUDBURST RISK"
-    tierColor = "#ea580c"
-    trackGradient = "linear-gradient(90deg, #15803d 0%, #d97706 40%, #ea580c 100%)"
+    tierColor = "#d97706"
+    trackColor = "#d97706"
   } else if (mult > 1.7) {
-    tier = "CATASTROPHIC SURGE"
+    tier = "CRITICAL SURGE"
     tierColor = "#b91c1c"
-    trackGradient = "linear-gradient(90deg, #15803d 0%, #d97706 25%, #ea580c 55%, #b91c1c 100%)"
+    trackColor = "#b91c1c"
   }
 
   const handlePreset = (val, key) => {
@@ -1170,7 +1170,7 @@ function SimulatorView({ t, onBack, onOpenSOS }) {
                 setActivePreset("custom")
               }}
               className="sick-range-input"
-              style={{ background: trackGradient }}
+              style={{ background: trackColor }}
             />
           </div>
           <div className="sick-slider-ticks">
@@ -1703,9 +1703,6 @@ function OfflineDisasterPortal({ t, activeTab, onSelectTab, onSwitchOnline }) {
           {/* Mesh Radar Widget */}
           <div className="mesh-radar-card">
             <div className={`mesh-radar-circle ${scanning ? "scanning" : ""}`}>
-              <div className="radar-blip blip-1" />
-              <div className="radar-blip blip-2" />
-              <div className="radar-blip blip-3" />
               <Icons.Bluetooth size={32} color="#ffffff" />
             </div>
             <div className="mesh-radar-info">
