@@ -649,20 +649,20 @@ function HomeView({ t, onOpenSection, onOpenSOS }) {
           </div>
           <span style={{ fontSize: 10, color: "var(--navy)", fontWeight: 700 }}>NLSM LEVEL-3</span>
         </div>
-        <div className="hero-widget-title">Jaintia Hills (NH-44 Corridor)</div>
-        <div className="hero-widget-desc">{t.warningText}</div>
+        <div className="hero-widget-title">Jaintia Hills Sector (NH-44 Frontier Corridor)</div>
+        <div className="hero-widget-desc">Immediate debris flow watch issued under GSI NLSM macro-zonation guidelines. Ground pore saturation threshold exceeded. Pre-emptive convoy regulation active.</div>
         <div className="hero-widget-metrics">
           <div className="hero-metric-box">
-            <div className="hero-metric-val" style={{ color: "#b91c1c" }}>94%</div>
-            <div className="hero-metric-lbl">Risk Prob.</div>
+            <div className="hero-metric-val" style={{ color: "#b91c1c", fontVariantNumeric: "tabular-nums" }}>94%</div>
+            <div className="hero-metric-lbl">Failure Prob.</div>
           </div>
           <div className="hero-metric-box">
-            <div className="hero-metric-val" style={{ color: "#d97706" }}>{liveDisp.toFixed(1)} mm</div>
-            <div className="hero-metric-lbl">Shear Rate</div>
+            <div className="hero-metric-val" style={{ color: "#d97706", fontVariantNumeric: "tabular-nums" }}>{liveDisp.toFixed(1)} mm/mo</div>
+            <div className="hero-metric-lbl">InSAR Creep</div>
           </div>
           <div className="hero-metric-box">
-            <div className="hero-metric-val" style={{ color: "#1e40af" }}>{liveRain.toFixed(0)} mm</div>
-            <div className="hero-metric-lbl">Live Rain</div>
+            <div className="hero-metric-val" style={{ color: "#1e40af", fontVariantNumeric: "tabular-nums" }}>{liveRain.toFixed(0)} mm/h</div>
+            <div className="hero-metric-lbl">Radar Precip.</div>
           </div>
         </div>
       </div>
@@ -691,11 +691,7 @@ function HomeView({ t, onOpenSection, onOpenSOS }) {
             onChange={e => setQuickMult(parseFloat(e.target.value))} 
             className="sick-range-input mini"
             style={{
-              background: quickMult > 1.7 
-                ? "linear-gradient(90deg, #15803d 0%, #d97706 30%, #b91c1c 100%)"
-                : quickMult > 1.2
-                ? "linear-gradient(90deg, #15803d 0%, #d97706 100%)"
-                : "linear-gradient(90deg, #15803d, #22c55e)"
+              background: quickMult > 1.7 ? "#b91c1c" : quickMult > 1.2 ? "#d97706" : "#15803d"
             }}
           />
           <div className="quick-stress-labels">
@@ -2025,7 +2021,7 @@ export default function AppMobile() {
                 <span>AEGIS</span>
                 <span className="mobile-brand-badge">NER-LEWS</span>
               </div>
-              <div className="mobile-brand-sub">MDoNER Landslide AI</div>
+              <div className="mobile-brand-sub">MDoNER · GSI Telemetry Platform</div>
             </div>
           </div>
 
