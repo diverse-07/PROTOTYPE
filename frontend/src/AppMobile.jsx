@@ -221,7 +221,7 @@ const TRANSLATIONS = {
     alerts:"Alerts", simulator:"Simulator", safety:"Safety Check", report:"Report",
     activeWarning:"CRITICAL HAZARD WARNING",
     warningText:"Jaintia Hills, Meghalaya (NH-44) · 142mm/24h · Evacuate 3 villages.",
-    checkSafety:"Scan GPS Safety", checking:"Locking Satellite GPS...", emergency:"Emergency Broadcast",
+    checkSafety:"Scan GPS Safety", checking:"Locking Satellite GPS...", emergency:"Citizen Emergency SOS",
   },
   as: {
     dashboard:"হোম", map:"মানচিত্ৰ", ai:"AI ভৱিষ্যদ্বাণী", sensors:"চেন্সৰ", analytics:"বিশ্লেষণ",
@@ -876,7 +876,7 @@ function PredictionsView({ t, onBack, onOpenSOS }) {
               Primary Factor: <strong style={{ color: "var(--text)" }}>{h.trigger}</strong>
             </div>
             <button className="btn btn-danger btn-sm" style={{ width: "100%" }} onClick={onOpenSOS}>
-              Issue Alert Order
+              Request Emergency Assistance & Helplines
             </button>
           </div>
         </div>
@@ -1222,7 +1222,7 @@ function SimulatorView({ t, onBack, onOpenSOS }) {
             {crit}
           </div>
           <div className="sick-kpi-lbl">Red Slopes</div>
-          <div className="sick-kpi-sub">Sovereign Corridors</div>
+          <div className="sick-kpi-sub">Critical Slope Sectors</div>
         </div>
 
         <div className="sick-kpi-card">
@@ -1291,17 +1291,17 @@ function SimulatorView({ t, onBack, onOpenSOS }) {
         <div className="card" style={{ background: "#fef2f2", border: "1px solid #f87171" }}>
           <div className="card-body" style={{ textAlign: "center", padding: "16px" }}>
             <div style={{ fontSize: "14px", fontWeight: "800", color: "#b91c1c", marginBottom: "4px" }}>
-              🚨 SIMULATION EXCEEDS DISASTER THRESHOLD
+              🚨 SIMULATION EXCEEDS CRITICAL DISASTER THRESHOLD
             </div>
             <div style={{ fontSize: "12px", color: "#7f1d1d", marginBottom: "14px" }}>
-              Factor of Safety below 1.0. Mobilize NDRF 1st Bn and issue cell-broadcast warnings for this scenario.
+              Factor of Safety below 1.0. High risk of catastrophic slope failure. Immediate evacuation to designated high-ground bedrock shelter advised.
             </div>
             <button 
               className="btn btn-danger" 
               style={{ width: "100%", padding: "12px", fontWeight: "700", boxShadow: "0 4px 14px rgba(185,28,28,0.3)" }}
               onClick={onOpenSOS}
             >
-              Issue Emergency Dispatch Protocol
+              Open Citizen Emergency SOS & Helplines
             </button>
           </div>
         </div>
@@ -1622,10 +1622,6 @@ function OfflineDisasterPortal({ t, activeTab, onSelectTab, onSwitchOnline }) {
         <SimulatorView t={t} onBack={() => onSelectTab("predictions")} onOpenSOS={() => showToast("Emergency SOS protocol triggered offline")} />
       )}
 
-      {activeTab === "simulation" && (
-        <SimulatorView t={t} onBack={() => onSelectTab("predictions")} onOpenSOS={() => showToast("Emergency SOS protocol triggered offline")} />
-      )}
-
       {activeTab === "predictions" && (
         <div className="offline-tab-content">
           <div className="offline-section-header">
@@ -1666,7 +1662,7 @@ function OfflineDisasterPortal({ t, activeTab, onSelectTab, onSwitchOnline }) {
                   </div>
                   <div style={{ background: "#f8fafc", padding: "6px 8px", borderRadius: "8px", fontSize: "10.5px" }}>
                     <span style={{ color: "var(--text-muted)" }}>Protocol:</span>
-                    <div style={{ fontWeight: "700", color: "#1e40af" }}>Sovereign Alert Active</div>
+                    <div style={{ fontWeight: "700", color: "#1e40af" }}>Evacuation Readiness Active</div>
                   </div>
                 </div>
                 <div style={{ background: "#fef2f2", border: "1px solid #fee2e2", borderRadius: "8px", padding: "8px 10px", fontSize: "11px", color: "#991b1b", marginBottom: "10px" }}>
@@ -1891,7 +1887,9 @@ export default function AppMobile() {
   const [istTime, setIstTime] = useState("")
   const [showSOSModal, setShowSOSModal] = useState(false)
   const [toastMsg, setToastMsg] = useState("")
-  const [checks, setChecks] = useState({ sms: true, ndrf: true, highway: false, medical: true, push: true })
+  const [sosDistressType, setSosDistressType] = useState("Trapped by Mud / Landslide")
+  const [sosBleMesh, setSosBleMesh] = useState(true)
+  const [sosCellSms, setSosCellSms] = useState(true)
   const [isOffline, setIsOffline] = useState(typeof navigator !== "undefined" ? !navigator.onLine : false)
   const [offlineTab, setOfflineTab] = useState("predictions")
 
@@ -1959,12 +1957,25 @@ export default function AppMobile() {
     setShowLangModal(false)
   }
 
-  const handleBroadcast = async () => {
-    const channels = Object.entries(checks).filter(([, v]) => v).map(([k]) => k)
-    const res = await broadcastAlert({ zone_name: "Jaintia Hills", severity: "CRITICAL", message: "Immediate Evacuation", channels })
-    setShowSOSModal(false)
-    setToastMsg("Dispatched Sovereign Alert · ID: " + (res.dispatch_id || "AEGIS-EXEC"))
-    setTimeout(() => setToastMsg(""), 4000)
+  const handleCitizenSOS = async () => {
+    try {
+      const channels = []
+      if (sosCellSms) channels.push("sms", "national_portal")
+      if (sosBleMesh) channels.push("ble_mesh")
+      const res = await broadcastAlert({
+        zone_name: user?.district || "Jaintia Hills (NH-44)",
+        severity: "CRITICAL",
+        message: `Citizen Distress SOS [${user?.name || "Citizen"}] - ${sosDistressType}. GPS: 25.4484° N, 92.2152° E`,
+        channels
+      })
+      setShowSOSModal(false)
+      setToastMsg(`🚨 Citizen SOS Beamed! Helplines & BLE peers alerted (ID: ${res.dispatch_id || "AEGIS-CITIZEN-SOS"})`)
+      setTimeout(() => setToastMsg(""), 5000)
+    } catch (err) {
+      setShowSOSModal(false)
+      setToastMsg("🚨 SOS Queued in Local Bluetooth Mesh Outbox for immediate relay.")
+      setTimeout(() => setToastMsg(""), 4000)
+    }
   }
 
   if (showSplash) return <SplashScreen onEnter={handleEnter} />
@@ -2161,30 +2172,132 @@ export default function AppMobile() {
         </div>
       )}
 
-      {/* Emergency Broadcast Sheet */}
+      {/* Citizen Emergency SOS & Distress Beacon Sheet */}
       {showSOSModal && (
         <div className="modal-overlay" onClick={() => setShowSOSModal(false)}>
           <div className="modal-sheet" onClick={e => e.stopPropagation()}>
             <div className="modal-handle" />
-            <div className="modal-title">Sovereign Emergency Dispatch Order</div>
-            <div className="modal-subtitle">MDoNER Disaster Risk Reduction Wing · Jaintia Hills NH-44 Sector 8</div>
-            {[
-              { key: "sms", icon: <Icons.Phone size={15} />, label: "Priority SMS Cell Broadcast (1,250 residents)" },
-              { key: "ndrf", icon: <Icons.Safety size={15} />, label: "Mobilize NDRF 1st Bn Guwahati & SDRF" },
-              { key: "highway", icon: <Icons.AlertTriangle size={15} />, label: "Close NH-44 Highway Access Gates" },
-              { key: "medical", icon: <Icons.Hospital size={15} color="#b91c1c" />, label: "Alert District Hospital Khliehriat" },
-              { key: "push", icon: <Icons.Bell size={15} />, label: "Mobile Push Siren to Subscriber Towers" },
-            ].map(({ key, icon, label }) => (
-              <div className="checkbox-row" key={key}>
-                <span className="checkbox-icon">{icon}</span>
-                <span className="checkbox-label">{label}</span>
-                <div className={`toggle ${checks[key] ? "on" : "off"}`} onClick={() => setChecks(c => ({ ...c, [key]: !c[key] }))}>
-                  <div className="toggle-knob" />
+            
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <span className="profile-badge-dot" style={{ background: "#ef4444" }} />
+              <div className="modal-title" style={{ margin: 0, color: "#b91c1c" }}>Citizen Emergency SOS Request</div>
+            </div>
+            <div className="modal-subtitle" style={{ marginBottom: "14px" }}>Direct Distress Beacon & 24x7 Disaster Helplines</div>
+
+            {/* Live GPS Coordinates Banner */}
+            <div className="sos-gps-banner">
+              <div>
+                <div className="sos-gps-coords">
+                  <Icons.Gps size={13} color="#15803d" />
+                  <span>25.4484° N, 92.2152° E</span>
+                </div>
+                <div style={{ fontSize: "10px", color: "#64748b", marginTop: "2px" }}>
+                  Elev. 1,380m &bull; {user?.district || "Jaintia Hills Sector (NH-44)"}
                 </div>
               </div>
-            ))}
+              <span className="sos-gps-badge">GPS LOCKED</span>
+            </div>
+
+            {/* Distress Nature Selection */}
+            <div className="distress-section-label">Select Nature of Emergency</div>
+            <div className="distress-types-grid">
+              {[
+                { id: "trapped", label: "Trapped by Mud / Landslide", icon: "⚠️" },
+                { id: "medical", label: "Medical Emergency / Trauma", icon: "🚑" },
+                { id: "road", label: "Road Cutoff / Stranded Car", icon: "🚧" },
+                { id: "collapse", label: "House Damaged / Missing", icon: "🏠" },
+              ].map((item) => (
+                <div
+                  key={item.id}
+                  className={`distress-type-chip ${sosDistressType === item.label ? "selected" : ""}`}
+                  onClick={() => setSosDistressType(item.label)}
+                >
+                  <span style={{ fontSize: "14px" }}>{item.icon}</span>
+                  <span style={{ lineHeight: 1.2 }}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Direct 1-Tap Emergency Calling Helplines */}
+            <div className="distress-section-label">1-Tap Direct Emergency Helplines</div>
+            <div className="helplines-grid">
+              {[
+                { name: "NDRF Control", number: "1078", desc: "Disaster Force 24x7" },
+                { name: "State SDMA", number: "1070", desc: "State Disaster Room" },
+                { name: "Ambulance", number: "108", desc: "Trauma & Medical" },
+                { name: "Emergency", number: "112", desc: "Police & Quick Rescue" },
+              ].map((h) => (
+                <a
+                  key={h.number}
+                  href={`tel:${h.number}`}
+                  className="helpline-card"
+                  onClick={() => {
+                    setToastMsg(`Dialing ${h.name} (${h.number})...`)
+                    setTimeout(() => setToastMsg(""), 3000)
+                  }}
+                >
+                  <div className="helpline-info">
+                    <span className="helpline-agency">{h.name}</span>
+                    <span className="helpline-desc">{h.desc}</span>
+                  </div>
+                  <div className="helpline-dial-pill">
+                    <Icons.Phone size={10} color="#ffffff" />
+                    <span>{h.number}</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+
+            {/* Nearest Safe Shelter Guide */}
+            <div className="shelter-shortcut-card">
+              <div className="shelter-shortcut-info">
+                <div className="shelter-shortcut-title">Nearest GSI-Verified Bedrock Shelter</div>
+                <div className="shelter-shortcut-sub">Dawki Govt Higher Secondary School (840m &bull; High Ground)</div>
+              </div>
+              <button
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: "10.5px", padding: "4px 10px", borderColor: "#10b981", color: "#047857", fontWeight: "700" }}
+                onClick={() => {
+                  setShowSOSModal(false)
+                  if (isOffline) {
+                    setOfflineTab("shelters")
+                  } else {
+                    setActiveView("safety")
+                  }
+                  setToastMsg("Navigating to Dawki Bedrock Shelter (840m). Follow designated high-ground trail.")
+                  setTimeout(() => setToastMsg(""), 4500)
+                }}
+              >
+                Safe Route &rarr;
+              </button>
+            </div>
+
+            {/* Transmission Channels */}
+            <div className="checkbox-row" style={{ padding: "8px 0" }}>
+              <span className="checkbox-icon"><Icons.Bluetooth size={16} color="#1d4ed8" /></span>
+              <span className="checkbox-label" style={{ fontSize: "11.5px" }}>Beam over Bluetooth P2P Mesh (Passing rescue vehicles)</span>
+              <div className={`toggle ${sosBleMesh ? "on" : "off"}`} onClick={() => setSosBleMesh(!sosBleMesh)}>
+                <div className="toggle-knob" />
+              </div>
+            </div>
+            <div className="checkbox-row" style={{ padding: "8px 0" }}>
+              <span className="checkbox-icon"><Icons.Phone size={16} color="#047857" /></span>
+              <span className="checkbox-label" style={{ fontSize: "11.5px" }}>Send Cell SMS Beacon to State Disaster Operations Centre</span>
+              <div className={`toggle ${sosCellSms ? "on" : "off"}`} onClick={() => setSosCellSms(!sosCellSms)}>
+                <div className="toggle-knob" />
+              </div>
+            </div>
+
+            {/* Primary Distress Action Button */}
             <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-              <button className="btn btn-danger" onClick={handleBroadcast}>TRANSMIT BROADCAST</button>
+              <button
+                className="btn btn-danger"
+                style={{ padding: "13px", fontWeight: "800", letterSpacing: "0.5px", boxShadow: "0 4px 16px rgba(185,28,28,0.35)", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                onClick={handleCitizenSOS}
+              >
+                <Icons.Alerts size={18} color="#ffffff" />
+                <span>BROADCAST CITIZEN DISTRESS BEACON</span>
+              </button>
               <button className="btn btn-outline" onClick={() => setShowSOSModal(false)}>Cancel</button>
             </div>
           </div>

@@ -2964,3 +2964,146 @@ body, input, button, select, textarea {
   margin: 0 auto 16px !important;
 }
 
+
+/* CITIZEN EMERGENCY SOS MODAL STYLES */
+.sos-gps-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.sos-gps-coords {
+  font-family: Consolas, "SF Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f2942;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sos-gps-badge {
+  font-size: 10px;
+  font-weight: 800;
+  background: #dcfce7;
+  color: #15803d;
+  padding: 2px 8px;
+  border-radius: 100px;
+  letter-spacing: 0.5px;
+}
+
+.distress-section-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.distress-types-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.distress-type-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+.distress-type-chip:active {
+  transform: scale(0.98);
+}
+.distress-type-chip.selected {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #991b1b;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+}
+
+.helplines-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.helpline-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.helpline-card:active {
+  transform: scale(0.97);
+  background: #f1f5f9;
+}
+.helpline-info {
+  display: flex;
+  flex-direction: column;
+}
+.helpline-agency {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #0f2942;
+}
+.helpline-desc {
+  font-size: 9.5px;
+  color: #64748b;
+}
+.helpline-dial-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #0f2942;
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.shelter-shortcut-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+.shelter-shortcut-info {
+  display: flex;
+  flex-direction: column;
+}
+.shelter-shortcut-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #065f46;
+}
+.shelter-shortcut-sub {
+  font-size: 10px;
+  color: #047857;
+}
