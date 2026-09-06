@@ -1,1 +1,9 @@
-[build]`n  publish = "dist"`n  command = "cd frontend && npm install && npm run build && node -e \"\"\"const fs=require(`'fs`'); fs.cpSync(`'dist`', `'../dist`', {recursive:true});\"\"\""`n`n[[redirects]]`n  from = "/*"`n  to = "/index.html"`n  status = 200`n
+[build]
+  base = "frontend"
+  publish = "dist"
+  command = "npm run build"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
