@@ -2167,10 +2167,39 @@ export default function AppMobile() {
       } catch(e) {}
     }, 3000)
 
+    // Instant catchup when phone wakes from lockscreen / background
+    const onVisibilityChange = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        try {
+          fetch("https://ntfy.sh/ner_landslide_alert/json?poll=1&since=45s")
+            .then(res => res.text())
+            .then(text => {
+              const lines = text.trim().split('\n').filter(Boolean)
+              for (const line of lines) {
+                try {
+                  const item = JSON.parse(line)
+                  if (item.event === "message") handleIncomingAlert(item)
+                } catch(e) {}
+              }
+            }).catch(() => {})
+        } catch(e) {}
+
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          connectWS()
+        }
+      }
+    }
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", onVisibilityChange)
+    }
+
     return () => {
       if (ws) ws.close()
       if (es) es.close()
       clearInterval(cloudPoll)
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", onVisibilityChange)
+      }
       stopDeviceSiren()
     }
   }, [])
@@ -2819,7 +2848,7 @@ export default function AppMobile() {
       
       {/* 🚨 FULL-SCREEN CRITICAL SIREN TAKEOVER MODAL */}
       {incomingSiren && (
-        <div className="siren-takeover-overlay">
+        <div className="siren-takeover-overlay" onClick={initAndUnlockAudio} onTouchStart={initAndUnlockAudio}>
           <div className="siren-takeover-box">
             <div className="siren-strobe-strip" />
             
