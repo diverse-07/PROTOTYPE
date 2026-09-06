@@ -1,0 +1,1 @@
+{"name":"aegis-lews-root","version":"2.0.0","scripts":{"build":"cd frontend && npm install && npm run build"}}
