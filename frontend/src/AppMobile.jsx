@@ -1880,7 +1880,28 @@ let emergencyGain = null;
 let sirenInterval = null;
 let vibrationInterval = null;
 
+function initAndUnlockAudio() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      if (!emergencyAudioCtx) {
+        emergencyAudioCtx = new AudioCtx();
+      }
+      if (emergencyAudioCtx.state === 'suspended') {
+        emergencyAudioCtx.resume();
+      }
+    }
+  } catch(e) {}
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('click', initAndUnlockAudio);
+  window.addEventListener('touchstart', initAndUnlockAudio);
+  window.addEventListener('pointerdown', initAndUnlockAudio);
+}
+
 function startDeviceSiren() {
+  initAndUnlockAudio();
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
@@ -1931,6 +1952,17 @@ function startDeviceSiren() {
         }
       }, 4600);
     }
+
+    // Spoken Audio Emergency Evacuation Warning
+    try {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance("Critical Alert! Landslide Evacuation Siren Active. Move to safe high ground shelter immediately.");
+        u.rate = 1.0;
+        u.pitch = 1.1;
+        window.speechSynthesis.speak(u);
+      }
+    } catch(e) {}
   } catch(err) {
     console.error('Audio siren error:', err);
   }
@@ -2029,7 +2061,7 @@ export default function AppMobile() {
     }
   }, [])
 
-  // REAL-TIME CITIZEN SIREN DISPATCH LISTENER (SSE & FALLBACK POLLING)
+  // REAL-TIME CITIZEN SIREN DISPATCH LISTENER (WEBSOCKET + SSE + CLOUD JSON POLL)
   useEffect(() => {
     // 1. Request Notification permission
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -2038,20 +2070,9 @@ export default function AppMobile() {
       }
     }
 
-    // 2. Unlock Audio Context on first interaction
-    const unlockAudio = () => {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext
-      if (AudioCtx) {
-        const ctx = new AudioCtx()
-        ctx.resume().then(() => ctx.close()).catch(() => {})
-      }
-      window.removeEventListener("click", unlockAudio)
-      window.removeEventListener("touchstart", unlockAudio)
-    }
-    window.addEventListener("click", unlockAudio, { once: true })
-    window.addEventListener("touchstart", unlockAudio, { once: true })
+    initAndUnlockAudio();
 
-    // 3. Connect to ultra-low-latency WebSocket + SSE stream (sub-500ms delivery)
+    // 2. Connect to ultra-low-latency WebSocket + SSE + HTTP Poll
     let ws = null
     let es = null
     let lastMsgId = null
@@ -2061,11 +2082,15 @@ export default function AppMobile() {
       if (data.id && data.id === lastMsgId) return
       lastMsgId = data.id || Date.now()
 
-      if (data.message === "AEGIS_SILENCE_ALL_SIRENS") {
+      if (data.message === "AEGIS_SILENCE_ALL_SIRENS" || (data.title && data.title.includes("AEGIS_SILENCE"))) {
         stopDeviceSiren()
         setIncomingSiren(null)
         return
       }
+
+      // Check age: skip if message is older than 2 minutes
+      const nowSec = Math.floor(Date.now() / 1000)
+      if (data.time && (nowSec - data.time) > 120) return
 
       // INSTANT SIREN TRIGGER (0ms delay)
       startDeviceSiren()
@@ -2090,10 +2115,10 @@ export default function AppMobile() {
       }
     }
 
-    // PRIMARY: Persistent WebSocket for instant <100ms push
+    // PRIMARY: Native Persistent WebSocket (<100ms delivery, with ?since=2m catchup)
     const connectWS = () => {
       try {
-        ws = new WebSocket("wss://ntfy.sh/ner_landslide_alert/ws")
+        ws = new WebSocket("wss://ntfy.sh/ner_landslide_alert/ws?since=2m")
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data)
@@ -2112,7 +2137,7 @@ export default function AppMobile() {
 
     // SECONDARY: Fallback SSE stream
     try {
-      es = new EventSource("https://ntfy.sh/ner_landslide_alert/sse")
+      es = new EventSource("https://ntfy.sh/ner_landslide_alert/sse?since=2m")
       es.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data)
@@ -2123,25 +2148,20 @@ export default function AppMobile() {
       }
     } catch(err) {}
 
-    // 4. Also poll backend /api/alerts/active_siren every 3s as fallback
-    let lastHandledId = null
-    const sirenPoll = setInterval(async () => {
+    // TERTIARY: Direct Cloud HTTP Poll every 3s (guaranteed fallback on any 4G/WiFi network)
+    const cloudPoll = setInterval(async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/alerts/active_siren")
+        const res = await fetch("https://ntfy.sh/ner_landslide_alert/json?poll=1&since=30s")
         if (res.ok) {
-          const s = await res.json()
-          if (s.active && s.id !== lastHandledId) {
-            lastHandledId = s.id
-            startDeviceSiren()
-            setIncomingSiren({
-              title: "MDoNER CRITICAL EVACUATION SIREN",
-              message: s.message || "Immediate Evacuation Siren Dispatched by Central Command.",
-              zone: s.zone || "Jaintia Hills (NH-44)",
-              time: new Date().toLocaleTimeString("en-IN")
-            })
-          } else if (!s.active && incomingSiren) {
-            stopDeviceSiren()
-            setIncomingSiren(null)
+          const text = await res.text()
+          const lines = text.trim().split('\n').filter(Boolean)
+          for (const line of lines) {
+            try {
+              const item = JSON.parse(line)
+              if (item.event === "message") {
+                handleIncomingAlert(item)
+              }
+            } catch(e) {}
           }
         }
       } catch(e) {}
@@ -2150,7 +2170,7 @@ export default function AppMobile() {
     return () => {
       if (ws) ws.close()
       if (es) es.close()
-      clearInterval(sirenPoll)
+      clearInterval(cloudPoll)
       stopDeviceSiren()
     }
   }, [])
@@ -2169,6 +2189,7 @@ export default function AppMobile() {
   }, [])
 
   const handleEnter = (selectedLang, userPayload) => {
+    initAndUnlockAudio();
     setLang(selectedLang)
     if (userPayload) setUser(userPayload)
     if (typeof window !== "undefined") {

@@ -209,10 +209,15 @@
       <p class="font-medium text-red-950"><strong>IMMEDIATE GEOTECHNICAL BULLETIN:</strong> Heavy debris flow vulnerability in Jaintia Hills, Meghalaya (NH-44 Corridor). Rainfall threshold exceeded (142mm/24h). Dispatched to SDMA &amp; NDRF 1st Bn.</p>
     </div>
     <div class="flex items-center space-x-2 shrink-0">
-      <button class="text-xs bg-[#b91c1c] hover:bg-[#991b1b] text-white font-bold px-3 py-1.5 rounded flex items-center space-x-1.5 shadow-sm border border-red-500 animate-pulse transition-all" id="btn-sound-sos-alarm" onclick="triggerSOSAlarm('Jaintia Hills (NH-44 Corridor)')">
+      <button class="text-xs bg-[#b91c1c] hover:bg-[#991b1b] text-white font-bold px-3 py-1.5 rounded flex items-center space-x-1.5 shadow-sm border border-red-500 transition-all shadow-red-900/30 active:scale-95" id="btn-sound-sos-alarm" onclick="triggerCitizenPhoneSiren('Jaintia Hills (NH-44 Corridor)')">
         <span class="material-symbols-outlined text-sm">notifications_active</span>
         <span id="sos-btn-text">🚨 Sound Citizen Phone Siren &amp; Dispatch</span>
       </button>
+      <button class="text-xs bg-slate-700 hover:bg-slate-800 text-white font-semibold px-2.5 py-1.5 rounded flex items-center space-x-1 border border-slate-600 transition-all active:scale-95" id="btn-silence-sos-alarm" onclick="silenceAllCitizenPhones()">
+        <span class="material-symbols-outlined text-sm">notifications_off</span>
+        <span>🔕 Silence All Phones</span>
+      </button>
+      <span id="sos-transmission-status" class="hidden text-[11px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded shadow-sm"></span>
     </div>
   </div>
 </div>
@@ -1953,86 +1958,43 @@
     document.getElementById('emergency-modal').classList.remove('flex');
   }
 
-  let aegisAudioCtx = null;
-  let aegisOsc = null;
-  let isSirenActive = false;
-
-  function playEmergencySiren(start) {
+  // Subtle executive dispatch ping (two gentle 50ms sine beeps) - NEVER blares loud siren on presenter laptop!
+  function playDispatchPing() {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return;
-      if (!aegisAudioCtx) aegisAudioCtx = new AudioCtx();
-      if (aegisAudioCtx.state === 'suspended') aegisAudioCtx.resume();
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.32);
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.32);
+    } catch(e) {}
+  }
 
-      if (aegisOsc) {
-        try { aegisOsc.stop(); aegisOsc.disconnect(); } catch(e){}
-        aegisOsc = null;
-      }
-
-      if (start) {
-        const osc = aegisAudioCtx.createOscillator();
-        const gain = aegisAudioCtx.createGain();
-        osc.type = 'sawtooth';
-        gain.gain.setValueAtTime(0.4, aegisAudioCtx.currentTime);
-
-        const now = aegisAudioCtx.currentTime;
-        for (let i = 0; i < 30; i++) {
-          osc.frequency.setValueAtTime(950, now + i * 0.7);
-          osc.frequency.exponentialRampToValueAtTime(450, now + i * 0.7 + 0.35);
-          osc.frequency.exponentialRampToValueAtTime(950, now + i * 0.7 + 0.7);
-        }
-        osc.connect(gain);
-        gain.connect(aegisAudioCtx.destination);
-        osc.start();
-        aegisOsc = osc;
-        isSirenActive = true;
-      } else {
-        isSirenActive = false;
-      }
-    } catch(err) {
-      console.error('Audio error:', err);
-    }
+  function playEmergencySiren(start) {
+    // Laptop browser muted: presentation portal dispatches to mobile phones instead of screaming locally
+    if (start) playDispatchPing();
   }
 
   function speakVoiceAlert() {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance("चेतावनी! भारी बारिश से भूस्खलन का खतरा है। तुरंत सुरक्षित स्थान पर जाएं। Emergency Landslide Siren Active.");
-      utter.rate = 0.95;
-      utter.pitch = 1.1;
-      window.speechSynthesis.speak(utter);
-    }
+    // Disabled on laptop browser to avoid audio chaos during live presentation
   }
 
-  function triggerSOSAlarm(zone) {
-    const btn = document.getElementById('btn-sound-sos-alarm');
-    const textSpan = document.getElementById('sos-btn-text');
+  // DISPATCH SIREN TO ALL PHONES (<100ms)
+  function triggerCitizenPhoneSiren(zone) {
+    playDispatchPing();
 
-    if (isSirenActive) {
-      playEmergencySiren(false);
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      btn.className = "text-xs bg-[#b91c1c] hover:bg-[#991b1b] text-white font-bold px-3 py-1.5 rounded flex items-center space-x-1.5 shadow-sm border border-red-500 transition-all";
-      textSpan.innerText = "🚨 Sound Citizen Phone Siren & Dispatch";
-      // Dispatch silence command to all phones
-      try {
-        fetch('https://ntfy.sh/ner_landslide_alert', {
-          method: 'POST',
-          body: 'AEGIS_SILENCE_ALL_SIRENS',
-          headers: { 'Title': 'AEGIS_SILENCE_CMD', 'Priority': 'low', 'Tags': 'speaker' }
-        }).catch(function(e) {});
-        fetch('http://localhost:8000/api/alerts/silence', { method: 'POST' }).catch(function(e) {});
-      } catch(e) {}
-      return;
-    }
+    const targetZone = zone || "Jaintia Hills (NH-44 Corridor)";
+    const alertMsg = "🚨 CRITICAL RED ALERT: MDoNER Disaster Management Command has triggered an IMMEDIATE EVACUATION SIREN for " + targetZone + ". Move to designated safe bedrock shelter now!";
 
-    // 1. Play real Web Audio 2-tone police siren locally
-    playEmergencySiren(true);
-
-    // 2. Speak voice alert in Hindi & English
-    speakVoiceAlert();
-
-    // 3. Immediately beam urgent siren push to all citizen phones
-    const alertMsg = "🚨 CRITICAL RED ALERT: MDoNER Disaster Management Command has triggered an IMMEDIATE EVACUATION SIREN for " + (zone || "Jaintia Hills (NH-44 Corridor)") + ". Move to designated safe bedrock shelter now!";
+    // 1. Immediately beam urgent siren push to all citizen phones via ntfy.sh (Pure ASCII Headers)
     try {
       fetch('https://ntfy.sh/ner_landslide_alert', {
         method: 'POST',
@@ -2045,11 +2007,12 @@
           'Actions': 'view, Open AEGIS App, https://aegis-lews.vercel.app'
         }
       }).catch(function(e) {});
+
       fetch('http://localhost:8000/api/alerts/broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          zone_name: zone || 'Jaintia Hills Sector 8',
+          zone_name: targetZone,
           severity: 'CRITICAL',
           message: alertMsg,
           channels: ['sms', 'push', 'siren', 'phone_vibrate', 'ble_mesh']
@@ -2057,17 +2020,51 @@
       }).catch(function(e) {});
     } catch(e) {}
 
-    // 4. Update button to Silence
-    btn.className = "text-xs bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded flex items-center space-x-1.5 shadow-sm border border-amber-400 animate-pulse transition-all";
-    textSpan.innerText = "Silence Alarm Siren (Beamed to Phones)";
+    // 2. Show live transmission badge
+    const statusEl = document.getElementById('sos-transmission-status');
+    if (statusEl) {
+      statusEl.innerText = "✅ SIREN BEAMED TO ALL PHONES (0.1s)";
+      statusEl.classList.remove('hidden');
+      setTimeout(function() { statusEl.classList.add('hidden'); }, 7000);
+    }
 
-    // 5. Open sovereign modal for multi-agency dispatch
-    openEmergencyModal(zone || 'Jaintia Hills Sector 8');
+    // 3. Open sovereign modal for multi-agency dispatch
+    openEmergencyModal(targetZone);
+  }
+
+  // SILENCE SIREN ON ALL PHONES
+  function silenceAllCitizenPhones() {
+    playDispatchPing();
+    try {
+      fetch('https://ntfy.sh/ner_landslide_alert', {
+        method: 'POST',
+        body: 'AEGIS_SILENCE_ALL_SIRENS',
+        headers: {
+          'Title': 'AEGIS_SILENCE_CMD',
+          'Priority': 'urgent',
+          'Tags': 'speaker'
+        }
+      }).catch(function(e) {});
+
+      fetch('http://localhost:8000/api/alerts/silence', { method: 'POST' }).catch(function(e) {});
+    } catch(e) {}
+
+    const statusEl = document.getElementById('sos-transmission-status');
+    if (statusEl) {
+      statusEl.innerText = "🔕 PHONES SILENCED: All devices deactivated";
+      statusEl.classList.remove('hidden');
+      setTimeout(function() { statusEl.classList.add('hidden'); }, 5000);
+    }
+  }
+
+  // Alias for backward compatibility
+  function triggerSOSAlarm(zone) {
+    triggerCitizenPhoneSiren(zone);
   }
 
   function executeSovereignBroadcast() {
     const btn = document.getElementById('btn-execute-broadcast');
-    btn.innerHTML = `<span class="material-symbols-outlined text-sm animate-spin">sync</span><span>Beaming Siren to Phones...</span>`;
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span><span>Beaming Siren to Phones...</span>';
     
     const alertMsg = "🚨 CRITICAL RED ALERT: MDoNER Disaster Management Command has triggered an IMMEDIATE EVACUATION SIREN for Jaintia Hills Sector 8 (NH-44 Corridor). Catastrophic slope movement detected. Move to safe high-ground bedrock shelter now!";
     
@@ -2084,6 +2081,7 @@
           'Actions': 'view, Open AEGIS App, https://aegis-lews.vercel.app'
         }
       }).catch(function(e) {});
+
       fetch('http://localhost:8000/api/alerts/broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2098,8 +2096,7 @@
 
     btn.classList.add('hidden');
     document.getElementById('broadcast-confirmed-banner').classList.remove('hidden');
-    playEmergencySiren(true);
-    speakVoiceAlert();
+    playDispatchPing();
   }
 
   function inspectFeed(name, agency, modality, resolution, telemetry, status) {

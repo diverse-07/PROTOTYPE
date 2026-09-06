@@ -72,7 +72,7 @@ async def broadcast_alert(payload: AlertPayload):
                 "https://ntfy.sh/ner_landslide_alert",
                 data=f"AEGIS RED SIREN ALERT: {payload.severity} | {payload.zone_name} | {safe_msg} | ID:{dispatch_id}".encode("utf-8"),
                 headers={
-                    "Title": f"🚨 AEGIS EMERGENCY SIREN - {payload.zone_name}",
+                    "Title": f"AEGIS EMERGENCY SIREN - {payload.zone_name}",
                     "Priority": "urgent",
                     "Tags": "warning,rotating_light,skull",
                     "Sound": "alarm",
