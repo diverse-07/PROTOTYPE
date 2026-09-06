@@ -2038,7 +2038,7 @@
         method: 'POST',
         body: alertMsg,
         headers: {
-          'Title': '🚨 AEGIS RED ALERT: EVACUATION SIREN ACTIVE',
+          'Title': 'AEGIS RED ALERT: EVACUATION SIREN ACTIVE',
           'Priority': 'urgent',
           'Tags': 'warning,rotating_light,skull',
           'Sound': 'alarm',
@@ -2077,7 +2077,7 @@
         method: 'POST',
         body: alertMsg,
         headers: {
-          'Title': '🚨 AEGIS RED ALERT: EVACUATION SIREN ACTIVE',
+          'Title': 'AEGIS RED ALERT: EVACUATION SIREN ACTIVE',
           'Priority': 'urgent',
           'Tags': 'warning,rotating_light,skull',
           'Sound': 'alarm',
@@ -2096,12 +2096,10 @@
       }).catch(function(e) {});
     } catch(err) {}
 
-    setTimeout(() => {
-      btn.classList.add('hidden');
-      document.getElementById('broadcast-confirmed-banner').classList.remove('hidden');
-      playEmergencySiren(true);
-      speakVoiceAlert();
-    }, 600);
+    btn.classList.add('hidden');
+    document.getElementById('broadcast-confirmed-banner').classList.remove('hidden');
+    playEmergencySiren(true);
+    speakVoiceAlert();
   }
 
   function inspectFeed(name, agency, modality, resolution, telemetry, status) {

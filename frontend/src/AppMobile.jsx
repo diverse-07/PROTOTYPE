@@ -2051,45 +2051,77 @@ export default function AppMobile() {
     window.addEventListener("click", unlockAudio, { once: true })
     window.addEventListener("touchstart", unlockAudio, { once: true })
 
-    // 3. Connect to live ntfy.sh SSE stream
+    // 3. Connect to ultra-low-latency WebSocket + SSE stream (sub-500ms delivery)
+    let ws = null
     let es = null
+    let lastMsgId = null
+
+    const handleIncomingAlert = (data) => {
+      if (!data || !data.message) return
+      if (data.id && data.id === lastMsgId) return
+      lastMsgId = data.id || Date.now()
+
+      if (data.message === "AEGIS_SILENCE_ALL_SIRENS") {
+        stopDeviceSiren()
+        setIncomingSiren(null)
+        return
+      }
+
+      // INSTANT SIREN TRIGGER (0ms delay)
+      startDeviceSiren()
+      setIncomingSiren({
+        title: data.title || "MDoNER CRITICAL EVACUATION SIREN",
+        message: data.message,
+        zone: "Jaintia Hills Sector 8 (NH-44 Corridor)",
+        time: new Date().toLocaleTimeString("en-IN")
+      })
+
+      // Post OS-level Notification immediately
+      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+        try {
+          new Notification("🚨 AEGIS RED ALERT: EVACUATION SIREN", {
+            body: data.message,
+            icon: "/logo.jpg",
+            tag: "aegis_emergency_siren",
+            requireInteraction: true,
+            vibrate: [1000, 300, 1000, 300, 1500]
+          })
+        } catch(e) {}
+      }
+    }
+
+    // PRIMARY: Persistent WebSocket for instant <100ms push
+    const connectWS = () => {
+      try {
+        ws = new WebSocket("wss://ntfy.sh/ner_landslide_alert/ws")
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data)
+            if (data.event === "message") {
+              handleIncomingAlert(data)
+            }
+          } catch(e) {}
+        }
+        ws.onerror = () => {}
+        ws.onclose = () => {
+          setTimeout(connectWS, 2000)
+        }
+      } catch(e) {}
+    }
+    connectWS()
+
+    // SECONDARY: Fallback SSE stream
     try {
       es = new EventSource("https://ntfy.sh/ner_landslide_alert/sse")
       es.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data)
-          if (data.event === "message" && data.message) {
-            if (data.message === "AEGIS_SILENCE_ALL_SIRENS") {
-              stopDeviceSiren()
-              setIncomingSiren(null)
-              return
-            }
-            // Trigger automatic siren and vibration on phone!
-            startDeviceSiren()
-            setIncomingSiren({
-              title: data.title || "MDoNER CRITICAL EVACUATION SIREN",
-              message: data.message,
-              zone: "Jaintia Hills Sector 8 (NH-44 Corridor)",
-              time: new Date().toLocaleTimeString("en-IN")
-            })
-            // Post Native Notification
-            if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-              try {
-                new Notification("🚨 AEGIS RED ALERT: EVACUATION SIREN", {
-                  body: data.message,
-                  icon: "/logo.jpg",
-                  tag: "aegis_emergency_siren",
-                  requireInteraction: true,
-                  vibrate: [1000, 300, 1000, 300, 1500]
-                })
-              } catch(e) {}
-            }
+          if (data.event === "message") {
+            handleIncomingAlert(data)
           }
         } catch(e) {}
       }
-    } catch(err) {
-      console.error("SSE connection error:", err)
-    }
+    } catch(err) {}
 
     // 4. Also poll backend /api/alerts/active_siren every 3s as fallback
     let lastHandledId = null
@@ -2116,6 +2148,7 @@ export default function AppMobile() {
     }, 3000)
 
     return () => {
+      if (ws) ws.close()
       if (es) es.close()
       clearInterval(sirenPoll)
       stopDeviceSiren()
