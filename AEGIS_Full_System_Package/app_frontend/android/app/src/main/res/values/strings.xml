@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AEGIS Disaster Monitor</string>
+    <string name="title_activity_main">AEGIS Disaster Monitor</string>
+    <string name="package_name">in.gov.mdoner.aegis</string>
+    <string name="custom_url_scheme">in.gov.mdoner.aegis</string>
+</resources>

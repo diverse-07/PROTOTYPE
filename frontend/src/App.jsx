@@ -1,36 +1,127 @@
-import React from 'react'
-import { Capacitor } from '@capacitor/core'
-import AppMobile from './AppMobile'
+import React, { useState, useEffect } from "react"
+import { Capacitor } from "@capacitor/core"
+import ErrorBoundary from "./ErrorBoundary"
+import AppMobile from "./AppMobile"
+import AppDesktop from "./AppDesktop"
+
+function detectIsMobile() {
+  if (typeof window === "undefined") return false
+
+  // 1. Native Capacitor platform (Android APK)
+  if (
+    Capacitor.isNativePlatform() ||
+    (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())
+  ) {
+    return true
+  }
+
+  // 2. Local asset protocols
+  if (window.location.protocol === "capacitor:" || window.location.protocol === "file:") {
+    return true
+  }
+
+  // 3. Explicit query parameters
+  const search = window.location.search || ""
+  if (search.includes("mode=mobile") || search.includes("mode=native_app") || search.includes("app=true")) {
+    return true
+  }
+  if (search.includes("mode=desktop")) {
+    return false
+  }
+
+  // 4. Viewport & user-agent check
+  return (
+    window.innerWidth <= 768 ||
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  )
+}
 
 export default function App() {
-  // Check if running inside the native Android APK or mobile app container:
-  // 1. Capacitor native platform (Realme GT, Android/iOS runtime)
-  // 2. Local asset protocol (capacitor:, file:)
-  // 3. Explicit mobile query parameter (?mode=mobile, ?mode=native_app, ?app=true)
-  const isNativeApp = typeof window !== 'undefined' && (
-    Capacitor.isNativePlatform() ||
-    (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
-    window.location.protocol === 'capacitor:' ||
-    window.location.protocol === 'file:' ||
-    window.location.search.includes('mode=native_app') ||
-    window.location.search.includes('mode=mobile') ||
-    window.location.search.includes('app=true')
-  );
+  const [isMobileView, setIsMobileView] = useState(detectIsMobile)
 
-  // If inside the native Android APK, ALWAYS render the native mobile app
-  if (isNativeApp) {
-    return <AppMobile />;
-  }
+  // Re-check on viewport resize (unless in native APK)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) return
 
-  // If in a standard web browser on desktop, redirect to the Authority Desktop Portal (website stays untouched)
-  if (typeof window !== 'undefined') {
-    if (!window.location.pathname.includes('desktop.html')) {
-      const search = window.location.search || '';
-      const hash = window.location.hash || '';
-      window.location.replace('./desktop.html' + search + hash);
-      return null;
+    const onResize = () => {
+      const search = window.location.search || ""
+      if (!search.includes("mode=")) {
+        setIsMobileView(detectIsMobile())
+      }
     }
-  }
+    window.addEventListener("resize", onResize)
+    return () => window.removeEventListener("resize", onResize)
+  }, [])
 
-  return <AppMobile />;
+  // Floating switcher pill in browser mode (allows judges / reviewers to switch between Citizen Mobile and Authority Portal)
+  const isNative = typeof window !== "undefined" && Capacitor.isNativePlatform()
+
+  return (
+    <ErrorBoundary>
+      <div className="aegis-app-root">
+        {/* Floating View Switcher Pill for web browsers */}
+        {!isNative && (
+          <aside
+            aria-label="Portal View Switcher"
+            style={{
+              position: "fixed",
+              bottom: "16px",
+              right: "16px",
+              zIndex: 99999,
+              background: "rgba(11, 37, 69, 0.94)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.25)",
+              borderRadius: "30px",
+              padding: "4px 6px",
+              boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px"
+            }}
+          >
+            <button
+              onClick={() => setIsMobileView(false)}
+              style={{
+                background: !isMobileView ? "#1e40af" : "transparent",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "20px",
+                padding: "6px 12px",
+                fontSize: "11px",
+                fontWeight: "700",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px"
+              }}
+            >
+              <span>💻</span> <span>Authority Portal</span>
+            </button>
+            <button
+              onClick={() => setIsMobileView(true)}
+              style={{
+                background: isMobileView ? "#059669" : "transparent",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "20px",
+                padding: "6px 12px",
+                fontSize: "11px",
+                fontWeight: "700",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px"
+              }}
+            >
+              <span>📱</span> <span>Citizen App</span>
+            </button>
+          </aside>
+        )}
+
+        {isMobileView ? <AppMobile /> : <AppDesktop />}
+      </div>
+    </ErrorBoundary>
+  )
 }

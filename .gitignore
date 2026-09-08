@@ -7,3 +7,14 @@ __pycache__/
 .DS_Store
 *.pdf
 project_dossier.html
+
+# Caches & temporary files
+.freebuff/
+.ppt_work/
+*.png
+local.properties
+.gradle/
+build/
+AEGIS_Full_System_Package.zip
+test_watermark*
+wm_slide*

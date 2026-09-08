@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react"
 import { MapContainer, TileLayer, Polygon, CircleMarker, Popup, useMap } from "react-leaflet"
-import { getWeather, broadcastAlert } from "./api/client"
+import { getWeather, broadcastAlert, dispatchBleBroadcast, getBleGatewayNodes } from "./api/client"
 
 function ZoomWatcher({ onZoomChange }) {
   const map = useMap()
@@ -50,6 +50,15 @@ const SENSORS = [
   { lat:27.59, lng:91.86, name:"SNR-AR-008 Tawang", status:"Online", reading:"68mm/24hr -2C" },
 ]
 
+const BLE_PRESETS_LIST = [
+  { code: 1, label: "Immediate Evacuation", text: "EVACUATE IMMEDIATELY: Debris flow expected in 15 mins. Move to safe ground." },
+  { code: 2, label: "Debris Flow Imminent", text: "DEBRIS FLOW IMMINENT: Heavy rainfall detected. Stay clear of natural drainage channels." },
+  { code: 3, label: "Road & Highway Blocked", text: "ROAD BLOCKED: Rockfall at highway corridor. Traffic suspended." },
+  { code: 4, label: "Move to Bedrock Shelter", text: "SHELTER IN PLACE: Seek designated bedrock refuge center." },
+  { code: 5, label: "Flash Flood Runoff Alert", text: "FLASH FLOOD WARNING: Rapid runoff rising in valley floor." },
+  { code: 6, label: "Bridge Washed Out", text: "BRIDGE WASHED OUT: Do not attempt crossing." },
+]
+
 const INDIA_BOUNDS = [[6.0, 68.0], [38.0, 98.0]]
 const NER_CENTER = [25.5, 92.8]
 const TERRAIN_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
@@ -71,6 +80,14 @@ export default function AppDesktop() {
   const [rainfallMultiplier, setRainfallMultiplier] = useState(1.0)
   const [showMonitoringSensors, setShowMonitoringSensors] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [showBleModal, setShowBleModal] = useState(false)
+  const [bleZone, setBleZone] = useState("Jaintia Hills")
+  const [bleSeverity, setBleSeverity] = useState("CRITICAL")
+  const [blePresetCode, setBlePresetCode] = useState(1)
+  const [bleMessage, setBleMessage] = useState("EVACUATE IMMEDIATELY: Debris flow expected in 15 mins. Move to safe ground.")
+  const [bleGateways, setBleGateways] = useState([])
+  const [isBleDispatching, setIsBleDispatching] = useState(false)
+  const [sendBleMesh, setSendBleMesh] = useState(true)
   const [toastMsg, setToastMsg] = useState("")
   const [sendSms, setSendSms] = useState(true)
   const [notifyNdrf, setNotifyNdrf] = useState(true)
@@ -138,6 +155,47 @@ export default function AppDesktop() {
     } else { process(26.1445,91.7362) }
   }, [])
 
+  const fetchGateways = useCallback(async () => {
+    try {
+      const data = await getBleGatewayNodes()
+      if (data && data.nodes) setBleGateways(data.nodes)
+    } catch (e) {}
+  }, [])
+
+  useEffect(() => {
+    fetchGateways()
+    const interval = setInterval(fetchGateways, 8000)
+    return () => clearInterval(interval)
+  }, [fetchGateways])
+
+  const handleSelectBlePreset = (code) => {
+    setBlePresetCode(code)
+    const found = BLE_PRESETS_LIST.find(p => p.code === code)
+    if (found) {
+      setBleMessage(found.text)
+    }
+  }
+
+  const handleDispatchBleBroadcast = async () => {
+    setIsBleDispatching(true)
+    try {
+      const res = await dispatchBleBroadcast({
+        zone_name: bleZone,
+        severity: bleSeverity,
+        risk_score: bleSeverity === "CRITICAL" ? 88 : (bleSeverity === "HIGH" ? 72 : 55),
+        preset_code: blePresetCode,
+        message: bleMessage,
+        target_gateway: "all"
+      })
+      setShowBleModal(false)
+      showToast(`üì° BLE Broadcast Dispatched to Primary Phone! ID: ${res.dispatch_id || "BLE-RELAY"} (${res.primary_gateways_notified || 1} Gateway notified)`)
+    } catch (err) {
+      showToast("Failed to dispatch BLE broadcast.")
+    } finally {
+      setIsBleDispatching(false)
+    }
+  }
+
   const handleExecuteEmergency = useCallback(async () => {
     const channels = []
     if (sendSms) channels.push("sms")
@@ -145,10 +203,23 @@ export default function AppDesktop() {
     if (closeHighway) channels.push("highway")
     if (alertHospital) channels.push("medical")
     if (sendPush) channels.push("push")
+    if (sendBleMesh) channels.push("ble_mesh")
+
     const res = await broadcastAlert({ zone_name:"Jaintia Hills", severity:"CRITICAL", message:"Evacuate immediately. Debris flow imminent.", channels, population_affected:1250 })
+
+    if (sendBleMesh) {
+      dispatchBleBroadcast({
+        zone_name: "Jaintia Hills",
+        severity: "CRITICAL",
+        risk_score: 87,
+        preset_code: 1,
+        message: "Evacuate immediately. Debris flow imminent."
+      })
+    }
+
     setShowModal(false)
-    showToast("Emergency dispatched. ID: " + (res.dispatch_id||"AEGIS-EXEC"))
-  }, [sendSms,notifyNdrf,closeHighway,alertHospital,sendPush,showToast])
+    showToast("Emergency dispatched. ID: " + (res.dispatch_id||"AEGIS-EXEC") + (sendBleMesh ? " (BLE Mesh Active)" : ""))
+  }, [sendSms,notifyNdrf,closeHighway,alertHospital,sendPush,sendBleMesh,showToast])
 
   const handleReportSubmit = useCallback((e) => {
     e.preventDefault()
@@ -194,8 +265,9 @@ export default function AppDesktop() {
         {activeTab==="dashboard" && <section>
           <div className="alert-strip">
             <span className="live-dot"/>
-            <div style={{flex:1}}><strong>Active Warning:</strong> High landslide risk ‘«ˆ Jaintia Hills, Meghalaya. 180mm/24hr. AI confidence: 87%. Evacuation advisory issued for 3 villages.</div>
+            <div style={{flex:1}}><strong>Active Warning:</strong> High landslide risk ‚Äî Jaintia Hills, Meghalaya. 180mm/24hr. AI confidence: 87%. Evacuation advisory issued for 3 villages.</div>
             <button className="portal-btn portal-btn-red portal-btn-sm" onClick={()=>setActiveTab("alerts")}>View Alerts</button>
+            <button className="portal-btn portal-btn-sm" style={{background:"#0284c7",color:"white",fontWeight:600,display:"flex",alignItems:"center",gap:4}} onClick={()=>setShowBleModal(true)}>üì° Start BLE Message Broadcast</button>
           </div>
           <div className="stat-row">
             <div className="stat-box red"><div className="label">Critical Zones</div><div className="value">12</div><div className="sub">+3 since yesterday</div></div>
@@ -208,7 +280,7 @@ export default function AppDesktop() {
             {/* DASHBOARD MAP */}
             <div className="portal-card">
               <div className="card-title">
-                <span><span className="live-dot"/> Live Risk Map ‘«ˆ NER Susceptibility Zones</span>
+                <span><span className="live-dot"/> Live Risk Map ÔøΩÔøΩÔøΩ NER Susceptibility Zones</span>
                 <div style={{display:"flex",gap:6}}>
                   <button className={"portal-btn portal-btn-sm"+(mapType==="terrain"?" portal-btn-blue":"")} onClick={()=>setMapType("terrain")}>Terrain</button>
                   <button className={"portal-btn portal-btn-sm"+(mapType==="satellite"?" portal-btn-blue":"")} onClick={()=>setMapType("satellite")}>Satellite</button>
@@ -245,7 +317,7 @@ export default function AppDesktop() {
                 {userSafetyResult&&<div className="safety-card" style={{borderColor:userSafetyResult.color,background:userSafetyResult.color+"18"}}>
                   <div style={{fontSize:32,marginBottom:8}}>{userSafetyResult.status==="SAFE"?"\u2705":userSafetyResult.status==="CRITICAL"?"\uD83D\uDEA8":"\u26A0\uFE0F"}</div>
                   <div style={{fontSize:18,fontWeight:800,color:userSafetyResult.color,marginBottom:4}}>
-                    {userSafetyResult.status==="SAFE"?"YOU ARE IN A SAFE ZONE":userSafetyResult.status==="CRITICAL"?"CRITICAL LANDSLIDE RISK":"CAUTION ‘«ˆ WATCH ZONE"}
+                    {userSafetyResult.status==="SAFE"?"YOU ARE IN A SAFE ZONE":userSafetyResult.status==="CRITICAL"?"CRITICAL LANDSLIDE RISK":"CAUTION ÔøΩÔøΩÔøΩ WATCH ZONE"}
                   </div>
                   <div style={{fontSize:12,color:"#555",marginBottom:12}}>{userSafetyResult.message}</div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
@@ -269,7 +341,7 @@ export default function AppDesktop() {
               <div style={{display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
                 <strong style={{fontSize:13,color:"#1a3c6e",whiteSpace:"nowrap"}}>
                   Rainfall Stress-Test: {rainfallMultiplier.toFixed(1)}x
-                  {rainfallMultiplier>1.5?" ‘«ˆ EXTREME CLOUDBURST SIMULATION":rainfallMultiplier>1?" ‘«ˆ Elevated Monsoon":"‘«ˆ Baseline"}
+                  {rainfallMultiplier>1.5?" ÔøΩÔøΩÔøΩ EXTREME CLOUDBURST SIMULATION":rainfallMultiplier>1?" ÔøΩÔøΩÔøΩ Elevated Monsoon":"ÔøΩÔøΩÔøΩ Baseline"}
                 </strong>
                 <input type="range" min={0.5} max={2.5} step={0.1} value={rainfallMultiplier} onChange={e=>setRainfallMultiplier(parseFloat(e.target.value))} style={{flex:1,minWidth:180,accentColor:"#c59b27"}}/>
                 <button className="portal-btn portal-btn-sm" onClick={()=>setRainfallMultiplier(1.0)}>Reset</button>
@@ -278,7 +350,7 @@ export default function AppDesktop() {
           </div>
           <div className="portal-card">
             <div className="card-title">
-              GIS Risk Map ‘«ˆ NER Landslide Susceptibility (AI-LEWS)
+              GIS Risk Map ÔøΩÔøΩÔøΩ NER Landslide Susceptibility (AI-LEWS)
               <div style={{display:"flex",gap:6}}>
                 <button className={"portal-btn portal-btn-sm"+(showMonitoringSensors?" portal-btn-blue":"")} onClick={()=>setShowMonitoringSensors(v=>!v)}>
                   {showMonitoringSensors?"Hide Sensors":"Show Sensors"}
@@ -298,7 +370,7 @@ export default function AppDesktop() {
                   return <Polygon key={"m"+z.id} positions={z.coords} pathOptions={{color:c,fillColor:c,fillOpacity:0.52,weight:1.5}}>
                     <Popup><div style={{minWidth:220}}>
                       <span style={{display:"inline-block",padding:"2px 8px",borderRadius:3,fontSize:11,fontWeight:700,color:"#fff",background:c,marginBottom:6}}>
-                        {sim>=80?"CRITICAL":sim>=65?"HIGH":sim>=45?"MODERATE":sim>=25?"LOW":"SAFE"} ‘«ˆ {sim}%
+                        {sim>=80?"CRITICAL":sim>=65?"HIGH":sim>=45?"MODERATE":sim>=25?"LOW":"SAFE"} ÔøΩÔøΩÔøΩ {sim}%
                       </span>
                       <h4 style={{margin:"0 0 4px",color:"#1a3c6e"}}>{z.name}</h4>
                       <p style={{fontSize:11,color:"#555",lineHeight:1.4}}>{z.description}</p>
@@ -360,9 +432,10 @@ export default function AppDesktop() {
         {/* ===== ALERTS ===== */}
         {activeTab==="alerts"&&<section>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-            <h3 style={{fontSize:16,fontWeight:600,color:"#1a3c6e"}}>Active Alerts ‘«ˆ NER Region</h3>
+            <h3 style={{fontSize:16,fontWeight:600,color:"#1a3c6e"}}>Active Alerts ‚Äî NER Region</h3>
             <div style={{display:"flex",gap:8}}>
               <button className="portal-btn portal-btn-red portal-btn-sm" onClick={()=>setShowModal(true)}>Send Mass Alert</button>
+              <button className="portal-btn portal-btn-sm" style={{background:"#0284c7",color:"white",fontWeight:600,display:"flex",alignItems:"center",gap:6}} onClick={()=>setShowBleModal(true)}>üì° Start BLE Message Broadcast</button>
               <button className="portal-btn portal-btn-sm" onClick={()=>showToast("Exported to CSV.")}>Export CSV</button>
             </div>
           </div>
@@ -403,12 +476,12 @@ export default function AppDesktop() {
             <div className="stat-box blue"><div className="label">Total Deployed</div><div className="value">347</div><div className="sub">NER network</div></div>
           </div>
           <div className="sensor-boxes">
-            <div className="sensor-box"><div className="s-label">Soil Moisture ‘«ˆ SNR-ML-001</div><div className="s-value">{liveSoil.toFixed(1)}%</div><div className="s-unit">Jaintia Hills, Meghalaya ‘«ˆ LIVE</div></div>
-            <div className="sensor-box"><div className="s-label">Slope Displacement ‘«ˆ SNR-SK-004</div><div className="s-value">{liveDisp.toFixed(2)}mm</div><div className="s-unit">North Sikkim Inclinometer ‘«ˆ LIVE</div></div>
-            <div className="sensor-box"><div className="s-label">Rainfall Intensity ‘«ˆ SNR-ML-002</div><div className="s-value">{liveRain.toFixed(1)}mm/hr</div><div className="s-unit">Sohra Tipping Gauge ‘«ˆ LIVE</div></div>
+            <div className="sensor-box"><div className="s-label">Soil Moisture ÔøΩÔøΩÔøΩ SNR-ML-001</div><div className="s-value">{liveSoil.toFixed(1)}%</div><div className="s-unit">Jaintia Hills, Meghalaya ÔøΩÔøΩÔøΩ LIVE</div></div>
+            <div className="sensor-box"><div className="s-label">Slope Displacement ÔøΩÔøΩÔøΩ SNR-SK-004</div><div className="s-value">{liveDisp.toFixed(2)}mm</div><div className="s-unit">North Sikkim Inclinometer ÔøΩÔøΩÔøΩ LIVE</div></div>
+            <div className="sensor-box"><div className="s-label">Rainfall Intensity ÔøΩÔøΩÔøΩ SNR-ML-002</div><div className="s-value">{liveRain.toFixed(1)}mm/hr</div><div className="s-unit">Sohra Tipping Gauge ÔøΩÔøΩÔøΩ LIVE</div></div>
           </div>
           <div className="portal-card">
-            <div className="card-title">Sensor Network Status ‘«ˆ NER</div>
+            <div className="card-title">Sensor Network Status ÔøΩÔøΩÔøΩ NER</div>
             <table className="portal-table">
               <thead><tr><th>Sensor ID</th><th>Location</th><th>State</th><th>Type</th><th>Status</th><th>Last Reading</th></tr></thead>
               <tbody>
@@ -436,7 +509,7 @@ export default function AppDesktop() {
         {/* ===== RAINFALL ===== */}
         {activeTab==="rainfall"&&<section>
           <div className="portal-card">
-            <div className="card-title">7-Day Rainfall ‘«ˆ Jaintia Hills, Meghalaya (mm)</div>
+            <div className="card-title">7-Day Rainfall ÔøΩÔøΩÔøΩ Jaintia Hills, Meghalaya (mm)</div>
             <div className="card-body">
               <div style={{display:"flex",alignItems:"flex-end",gap:8,height:200,marginBottom:16}}>
                 {[["27 Aug",45,"#27ae60"],["28 Aug",62,"#2980b9"],["29 Aug",88,"#2980b9"],["30 Aug",120,"#e67e22"],["31 Aug",95,"#e67e22"],["1 Sep",145,"#c0392b"],["2 Sep",180,"#c0392b"]].map(([day,val,col])=>(
@@ -447,11 +520,11 @@ export default function AppDesktop() {
                   </div>
                 ))}
               </div>
-              <p style={{fontSize:12,color:"#c0392b",fontWeight:600}}>Total 7-day accumulation: 735mm ‘«ˆ 340% of seasonal normal. Critical landslide threshold breached.</p>
+              <p style={{fontSize:12,color:"#c0392b",fontWeight:600}}>Total 7-day accumulation: 735mm ÔøΩÔøΩÔøΩ 340% of seasonal normal. Critical landslide threshold breached.</p>
             </div>
           </div>
           <div className="portal-card">
-            <div className="card-title">Current 24h Rainfall ‘«ˆ NER Station Network</div>
+            <div className="card-title">Current 24h Rainfall ÔøΩÔøΩÔøΩ NER Station Network</div>
             <div className="card-body">
               {[["Sohra / Cherrapunji, Meghalaya","180mm","#c0392b",90],["Jaintia Hills, Meghalaya","155mm","#c0392b",78],["North Sikkim","120mm","#e67e22",60],["Kohima, Nagaland","76mm","#e67e22",38],["Imphal East, Manipur","45mm","#27ae60",23]].map(([loc,val,col,pct])=>(
                 <div key={loc} style={{marginBottom:8}}>
@@ -524,7 +597,7 @@ export default function AppDesktop() {
           </div>
           <div className="two-col-eq">
             <div className="portal-card">
-              <div className="card-title">State-wise Alerts ‘«ˆ 2026 Monsoon Season</div>
+              <div className="card-title">State-wise Alerts ÔøΩÔøΩÔøΩ 2026 Monsoon Season</div>
               <div className="card-body">
                 {[["Meghalaya",92,"#c0392b"],["Sikkim",78,"#e67e22"],["Mizoram",65,"#e67e22"],["Nagaland",54,"#2980b9"],["Manipur",48,"#2980b9"],["Assam",42,"#2980b9"],["Arunachal Pradesh",30,"#27ae60"],["Tripura",18,"#27ae60"]].map(([st,v,c])=>(
                   <div key={st} style={{marginBottom:8}}>
@@ -560,26 +633,26 @@ export default function AppDesktop() {
           <div style={{display:"flex",alignItems:"center",gap:12}}>
             <img src="/logo.jpg" alt="AEGIS" style={{width:36,height:36,borderRadius:"50%",border:"1.5px solid #c59b27"}}/>
             <div>
-              <strong style={{color:"#fff",fontSize:13}}>NER-LEWS v2.0 ‘«ˆ Team AEGIS</strong>
-              <div style={{color:"#cbd5e1",fontSize:11}}>Smart India Hackathon Initiative ‘«ˆ Disaster Risk Reduction</div>
+              <strong style={{color:"#fff",fontSize:13}}>NER-LEWS v2.0 ÔøΩÔøΩÔøΩ Team AEGIS</strong>
+              <div style={{color:"#cbd5e1",fontSize:11}}>Smart India Hackathon Initiative ÔøΩÔøΩÔøΩ Disaster Risk Reduction</div>
             </div>
           </div>
-          <div style={{color:"#94a3b8",fontSize:11}}>Data: GSI NLSM ‘«ˆ IMD AWS ‘«ˆ Open-Meteo ‘«ˆ In-Situ Geotechnical Telemetry</div>
+          <div style={{color:"#94a3b8",fontSize:11}}>Data: GSI NLSM ÔøΩÔøΩÔøΩ IMD AWS ÔøΩÔøΩÔøΩ Open-Meteo ÔøΩÔøΩÔøΩ In-Situ Geotechnical Telemetry</div>
           <div style={{color:"#c59b27",fontWeight:600}}>Government of India {new Date().getFullYear()}</div>
         </div>
       </footer>
 
-      {/* ===== EMERGENCY MODAL ‘«ˆ 5 clean checkboxes, zero API keys ===== */}
+      {/* ===== EMERGENCY MODAL ÔøΩÔøΩÔøΩ 5 clean checkboxes, zero API keys ===== */}
       {showModal&&<div className="modal-bg show">
         <div className="modal-box">
           <div className="modal-head">
-            <h3>Emergency Response ‘«ˆ Jaintia Hills</h3>
+            <h3>Emergency Response ÔøΩÔøΩÔøΩ Jaintia Hills</h3>
             <button className="modal-close" onClick={()=>setShowModal(false)}>x</button>
           </div>
           <div className="modal-content">
             <div style={{background:"#f9f9f9",padding:12,borderRadius:4,marginBottom:14}}>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:13}}>
-                <div><span style={{color:"#888"}}>Risk Level:</span> <strong style={{color:"#c0392b"}}>CRITICAL ‘«ˆ 87%</strong></div>
+                <div><span style={{color:"#888"}}>Risk Level:</span> <strong style={{color:"#c0392b"}}>CRITICAL ÔøΩÔøΩÔøΩ 87%</strong></div>
                 <div><span style={{color:"#888"}}>ETA:</span> <strong>4-6 hours</strong></div>
                 <div><span style={{color:"#888"}}>Population:</span> <strong>1,250 residents</strong></div>
                 <div><span style={{color:"#888"}}>Villages:</span> <strong>Shnongpdeng, Dawki, Laitkynsew</strong></div>
@@ -593,6 +666,7 @@ export default function AppDesktop() {
                 [closeHighway,setCloseHighway,"Close NH-44 Highway","Deploy traffic diversion barriers immediately"],
                 [alertHospital,setAlertHospital,"Alert Medical Facilities","Dawki Civil Hospital and Relief Camp"],
                 [sendPush,setSendPush,"Mobile Push Alert and Emergency Siren","Direct broadcast to all subscriber cell towers"],
+                [sendBleMesh,setSendBleMesh,"Offline BLE Radio Mesh Broadcast","Commands Primary Phone to broadcast 2.4GHz BLE signal to citizens with no SIM/Wi-Fi"],
               ].map(([val,setter,title,desc])=>(
                 <label key={title} style={{display:"flex",alignItems:"center",gap:8,fontSize:13,padding:8,background:"#f9f9f9",borderRadius:3,cursor:"pointer",border:"1px solid #eee"}}>
                   <input type="checkbox" checked={val} onChange={e=>setter(e.target.checked)}/>
@@ -607,6 +681,141 @@ export default function AppDesktop() {
           </div>
         </div>
       </div>}
+
+      {/* ===== BLE MESSAGE BROADCAST MODAL (WEB TO OFFLINE MESH) ===== */}
+      {showBleModal && (
+        <div className="modal-bg show">
+          <div className="modal-box" style={{maxWidth: 580}}>
+            <div className="modal-head" style={{background:"#0d2240",color:"white",padding:"14px 18px",borderRadius:"6px 6px 0 0"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{background:"#0284c7",padding:"6px 10px",borderRadius:4,fontSize:18}}>üì°</div>
+                <div>
+                  <h3 style={{margin:0,fontSize:16,color:"#fff"}}>Start BLE Message Broadcast</h3>
+                  <div style={{fontSize:11,color:"#93c5fd"}}>Web Trigger ‚ûî Primary Phone Relay ‚ûî 2.4GHz BLE Radio to Offline Citizens (No SIM / Wi-Fi)</div>
+                </div>
+              </div>
+              <button className="modal-close" onClick={()=>setShowBleModal(false)} style={{color:"#fff"}}>x</button>
+            </div>
+            
+            <div className="modal-content" style={{padding:20}}>
+              {/* PRIMARY PHONE GATEWAY STATUS */}
+              <div style={{background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:6,padding:"10px 14px",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <span style={{display:"inline-block",width:10,height:10,borderRadius:"50%",background:"#16a34a",boxShadow:"0 0 8px #16a34a"}} />
+                  <div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#166534"}}>
+                      {bleGateways.length > 0 ? `${bleGateways.length} Primary Gateway Phone(s) Connected` : "Primary Gateway Phone (Listening on Web Channel)"}
+                    </div>
+                    <div style={{fontSize:11,color:"#15803d"}}>
+                      Hardware BLE Advertiser Ready ‚Ä¢ Android 2.4GHz Radio Bridge
+                    </div>
+                  </div>
+                </div>
+                <button className="portal-btn portal-btn-sm" onClick={fetchGateways} style={{fontSize:10,padding:"3px 8px"}}>Refresh</button>
+              </div>
+
+              {/* TARGET ZONE & SEVERITY */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+                <div>
+                  <label style={{fontSize:11,fontWeight:700,color:"#475569",display:"block",marginBottom:4}}>TARGET HAZARD ZONE</label>
+                  <select 
+                    value={bleZone} 
+                    onChange={e => setBleZone(e.target.value)}
+                    style={{width:"100%",padding:"8px 10px",borderRadius:4,border:"1px solid #cbd5e1",fontSize:13}}
+                  >
+                    {ZONES.map(z => <option key={z.id} value={z.name}>{z.name} ({z.risk})</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{fontSize:11,fontWeight:700,color:"#475569",display:"block",marginBottom:4}}>SEVERITY LEVEL</label>
+                  <select 
+                    value={bleSeverity} 
+                    onChange={e => setBleSeverity(e.target.value)}
+                    style={{width:"100%",padding:"8px 10px",borderRadius:4,border:"1px solid #cbd5e1",fontSize:13,fontWeight:700,color:bleSeverity==="CRITICAL"?"#dc2626":"#d97706"}}
+                  >
+                    <option value="CRITICAL">üî¥ CRITICAL (Level 4 - Instant Siren)</option>
+                    <option value="HIGH">üü† HIGH (Level 3 - Warning Siren)</option>
+                    <option value="MODERATE">üü° MODERATE (Level 2 - Advisory)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* HIGH PRIORITY PRESET DIRECTIVES */}
+              <div style={{marginBottom:14}}>
+                <label style={{fontSize:11,fontWeight:700,color:"#475569",display:"block",marginBottom:4}}>
+                  HIGH-PRIORITY DISASTER PRESET (Instant 1-Byte Compressed Transmission)
+                </label>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(2, 1fr)",gap:6}}>
+                  {BLE_PRESETS_LIST.map(p => (
+                    <button
+                      key={p.code}
+                      type="button"
+                      onClick={() => handleSelectBlePreset(p.code)}
+                      style={{
+                        padding:"8px 10px",
+                        fontSize:11,
+                        fontWeight:600,
+                        textAlign:"left",
+                        borderRadius:4,
+                        border: blePresetCode === p.code ? "2px solid #0284c7" : "1px solid #e2e8f0",
+                        background: blePresetCode === p.code ? "#e0f2fe" : "#f8fafc",
+                        color: blePresetCode === p.code ? "#0369a1" : "#334155",
+                        cursor:"pointer"
+                      }}
+                    >
+                      #{p.code} {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* MESSAGE TEXTAREA */}
+              <div style={{marginBottom:16}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                  <label style={{fontSize:11,fontWeight:700,color:"#475569"}}>BROADCAST MESSAGE PAYLOAD</label>
+                  <span style={{fontSize:10,color:"#0284c7",fontWeight:600}}>
+                    Optimized 24-byte BLE PDU + GATT Char 0xAE62 ({bleMessage.length} chars)
+                  </span>
+                </div>
+                <textarea
+                  rows={3}
+                  value={bleMessage}
+                  onChange={e => setBleMessage(e.target.value)}
+                  style={{width:"100%",padding:10,borderRadius:4,border:"1px solid #cbd5e1",fontSize:13,boxSizing:"border-box",lineHeight:1.4}}
+                  placeholder="Enter life-safety evacuation directive..."
+                />
+              </div>
+
+              {/* PAYLOAD TELEMETRY CARD */}
+              <div style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:4,padding:"8px 12px",marginBottom:16,fontSize:11,color:"#64748b"}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
+                  <span>BLE Packet Standard:</span>
+                  <strong style={{color:"#0f172a"}}>AEGIS 2.4GHz ServiceData (0xAE61)</strong>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between"}}>
+                  <span>Transmission Flow:</span>
+                  <strong style={{color:"#059669"}}>Web &rarr; Backend API &rarr; Primary Phone &rarr; 0 KB Radio Broadcast</strong>
+                </div>
+              </div>
+
+              {/* ACTION BUTTONS */}
+              <div style={{display:"flex",gap:10}}>
+                <button 
+                  className="portal-btn" 
+                  onClick={handleDispatchBleBroadcast} 
+                  disabled={isBleDispatching}
+                  style={{flex:1,padding:12,background:"#0284c7",color:"white",fontWeight:700,fontSize:14,borderRadius:4,boxShadow:"0 4px 12px rgba(2,132,199,0.3)"}}
+                >
+                  {isBleDispatching ? "‚è≥ Dispatched to Primary Phone..." : "üì° Transmit Web-to-BLE Broadcast"}
+                </button>
+                <button className="portal-btn" onClick={()=>setShowBleModal(false)} style={{padding:"12px 18px"}}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===== TOAST ===== */}
       <div style={{position:"fixed",bottom:20,right:20,background:"#27ae60",color:"white",padding:"10px 18px",borderRadius:4,fontSize:13,fontWeight:500,transform:toastMsg?"translateY(0)":"translateY(80px)",opacity:toastMsg?1:0,transition:"all 0.3s ease",zIndex:9999,boxShadow:"0 4px 12px rgba(0,0,0,0.15)",maxWidth:340,lineHeight:1.4}}>

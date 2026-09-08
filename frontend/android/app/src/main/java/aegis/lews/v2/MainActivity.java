@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import org.json.JSONObject;
 
 public class MainActivity extends BridgeActivity {
+    private AegisBleMeshManager bleMeshManager;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,10 +28,24 @@ public class MainActivity extends BridgeActivity {
         setupWebView();
         requestPermissionsOnStartup();
 
+        // Initialize BLE Mesh Manager and attach Javascript bridge
+        if (this.bridge != null && this.bridge.getWebView() != null) {
+            bleMeshManager = new AegisBleMeshManager(this, this.bridge.getWebView());
+            this.bridge.getWebView().addJavascriptInterface(bleMeshManager, "AegisBleBridge");
+        }
+
         // Start native background siren service immediately
         AegisSirenService.start(this);
 
         handleIncomingIntent(getIntent());
+    }
+
+    @Override
+    public void onDestroy() {
+        if (bleMeshManager != null) {
+            bleMeshManager.cleanup();
+        }
+        super.onDestroy();
     }
 
     @Override
@@ -140,6 +156,23 @@ public class MainActivity extends BridgeActivity {
 
         if (!permissions.isEmpty()) {
             ActivityCompat.requestPermissions(this, permissions.toArray(new String[0]), 101);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == AegisBleMeshManager.REQ_CODE_BLE_PERMS || requestCode == 101) {
+            boolean allGranted = true;
+            for (int res : grantResults) {
+                if (res != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+            if (bleMeshManager != null) {
+                bleMeshManager.onPermissionsUpdated(allGranted);
+            }
         }
     }
 }
