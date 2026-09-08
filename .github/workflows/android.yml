@@ -26,8 +26,8 @@ jobs:
     - name: Setup Java
       uses: actions/setup-java@v5
       with:
-        distribution: 'zulu'
-        java-version: '21'
+        distribution: 'temurin'
+        java-version: '17'
 
     - name: Install Dependencies
       working-directory: ./frontend
@@ -50,3 +50,15 @@ jobs:
       with:
         name: AEGIS-Offline-App
         path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+
+    - name: Create GitHub Release with APK
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v2.0.0-apk
+        name: "AEGIS LEWS v2.0.0 Production Prototype APK"
+        files: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+        body: |
+          ### AEGIS NER-LEWS v2.0 Production Android APK
+          - **Offline Bluetooth P2P Mesh:** Operates 100% autonomously with 0 KB internet, no SIM card, and no Wi-Fi.
+          - **Web-to-Offline BLE Broadcast Bridge:** Web dashboard triggers broadcast on primary gateway phone, which beams to nearby offline citizen devices.
+          - **Emergency Audio-Visual Siren:** Low-latency air-gapped distress beacon detection with automatic takeover siren and bedrock shelter guidance.
