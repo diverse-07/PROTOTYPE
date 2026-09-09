@@ -23,6 +23,14 @@ export function getApiBaseUrl() {
         return clean;
       }
 
+      if (import.meta.env.VITE_API_URL) {
+        let clean = import.meta.env.VITE_API_URL.trim().replace(/\/$/, "");
+        if (!clean.endsWith("/api") && !clean.includes("/api/")) {
+          clean += "/api";
+        }
+        return clean;
+      }
+
       const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
       if (isNative) {
         return "http://10.0.2.2:8000/api";
