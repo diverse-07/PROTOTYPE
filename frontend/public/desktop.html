@@ -3,6 +3,14 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script>
+  // Redirect legacy desktop.html traffic into the new 3D Framer Web Portal
+  if (window.location.pathname.endsWith("desktop.html")) {
+    const s = window.location.search || "";
+    const cleanSearch = s ? s.replace(/[?&]mode=desktop/, "") : "";
+    window.location.replace("./" + (cleanSearch ? cleanSearch : "?mode=desktop") + window.location.hash);
+  }
+</script>
 <title>NER-LEWS 2.0 | Ministry of Development of North Eastern Region | Govt of India</title>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>

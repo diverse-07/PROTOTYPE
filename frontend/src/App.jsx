@@ -65,15 +65,16 @@ export default function App() {
             aria-label="Portal View Switcher"
             style={{
               position: "fixed",
-              bottom: "16px",
-              right: "16px",
+              bottom: "18px",
+              right: "20px",
               zIndex: 99999,
-              background: "rgba(11, 37, 69, 0.94)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.25)",
+              background: "rgba(8, 12, 20, 0.88)",
+              backdropFilter: "blur(24px) saturate(180%)",
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              border: "1px solid rgba(255, 255, 255, 0.14)",
               borderRadius: "30px",
               padding: "4px 6px",
-              boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
+              boxShadow: "0 16px 36px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.15)",
               display: "flex",
               alignItems: "center",
               gap: "4px"
@@ -82,40 +83,42 @@ export default function App() {
             <button
               onClick={() => setIsMobileView(false)}
               style={{
-                background: !isMobileView ? "#1e40af" : "transparent",
+                background: !isMobileView ? "linear-gradient(135deg, #0284c7, #0369a1)" : "transparent",
                 color: "#ffffff",
-                border: "none",
+                border: !isMobileView ? "1px solid rgba(255,255,255,0.2)" : "none",
                 borderRadius: "20px",
-                padding: "6px 12px",
+                padding: "6px 14px",
                 fontSize: "11px",
                 fontWeight: "700",
                 cursor: "pointer",
                 transition: "all 0.2s",
                 display: "flex",
                 alignItems: "center",
-                gap: "5px"
+                gap: "6px",
+                boxShadow: !isMobileView ? "0 4px 12px rgba(2,132,199,0.3)" : "none"
               }}
             >
-              <span>💻</span> <span>Authority Portal</span>
+              <span>💻</span> <span>3D Web Portal</span>
             </button>
             <button
               onClick={() => setIsMobileView(true)}
               style={{
-                background: isMobileView ? "#059669" : "transparent",
+                background: isMobileView ? "linear-gradient(135deg, #059669, #047857)" : "transparent",
                 color: "#ffffff",
-                border: "none",
+                border: isMobileView ? "1px solid rgba(255,255,255,0.2)" : "none",
                 borderRadius: "20px",
-                padding: "6px 12px",
+                padding: "6px 14px",
                 fontSize: "11px",
                 fontWeight: "700",
                 cursor: "pointer",
                 transition: "all 0.2s",
                 display: "flex",
                 alignItems: "center",
-                gap: "5px"
+                gap: "6px",
+                boxShadow: isMobileView ? "0 4px 12px rgba(5,150,105,0.3)" : "none"
               }}
             >
-              <span>📱</span> <span>Citizen App</span>
+              <span>📱</span> <span>Citizen Mobile</span>
             </button>
           </aside>
         )}
