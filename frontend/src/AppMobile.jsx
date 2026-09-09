@@ -2214,6 +2214,13 @@ function stopDeviceSiren() {
     clearInterval(vibrationInterval);
     vibrationInterval = null;
   }
+  if (emergencyGain && emergencyAudioCtx) {
+    try {
+      emergencyGain.gain.setValueAtTime(0, emergencyAudioCtx.currentTime);
+      emergencyGain.disconnect();
+    } catch(e) {}
+    emergencyGain = null;
+  }
   if (emergencyOscillator) {
     try {
       emergencyOscillator.stop();
@@ -2323,10 +2330,24 @@ export default function AppMobile() {
         }
       } catch(e) {}
     }
+    const alertMsg = payload.message || "EVACUATE IMMEDIATELY: Debris flow expected in 15 mins.";
+    const zoneName = payload.zone || "Jaintia Hills Sector 8";
+
     setIsWebRelayBroadcasting(true)
     setWebRelayInfo(payload)
     setShowPermissionPrompt(false)
-    setToastMsg(`📡 PRIMARY RELAY ACTIVE: Broadcasting "${(payload.message||'').slice(0, 24)}..." over 2.4GHz BLE Radio!`)
+
+    // START SIREN & FULL-SCREEN EMERGENCY TAKEOVER ON PRIMARY PHONE!
+    startDeviceSiren(alertMsg)
+    setIncomingSiren({
+      title: "🚨 PRIMARY GATEWAY: ACTIVE SIREN & BLE BROADCAST",
+      message: alertMsg,
+      zone: `Zone: ${zoneName} · Primary Radio Gateway Transmitting`,
+      time: new Date().toLocaleTimeString("en-IN"),
+      isPrimaryGateway: true
+    })
+
+    setToastMsg(`🚨 PRIMARY GATEWAY SIREN & RADIO ACTIVE: Broadcasting over 2.4GHz BLE!`)
     setTimeout(() => setToastMsg(""), 5000)
   }, [])
 
@@ -3658,6 +3679,26 @@ export default function AppMobile() {
             </div>
 
             <div className="siren-actions-col">
+              {incomingSiren.isPrimaryGateway && (
+                <div style={{
+                  background: "rgba(2, 132, 199, 0.2)",
+                  border: "1px solid #38bdf8",
+                  borderRadius: "10px",
+                  padding: "10px 12px",
+                  marginBottom: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  textAlign: "left"
+                }}>
+                  <span style={{ fontSize: "22px" }}>📡</span>
+                  <div style={{ fontSize: "11.5px", color: "#bae6fd", lineHeight: "1.35" }}>
+                    <strong style={{ color: "#38bdf8", display: "block" }}>PRIMARY GATEWAY TRANSMITTER ACTIVE</strong>
+                    This phone received the command from the web and is actively broadcasting 2.4GHz BLE radio waves to alert offline citizens nearby!
+                  </div>
+                </div>
+              )}
+
               {incomingSiren.isMeshRelay && (
                 <div style={{
                   background: "rgba(16, 185, 129, 0.2)",

@@ -95,6 +95,8 @@ public class MainActivity extends BridgeActivity {
             String msg = intent.getStringExtra("aegis_message");
             if (msg == null) msg = "Immediate Evacuation Siren Dispatched by Central Command.";
             final String safeMsg = msg;
+            intent.removeExtra("aegis_emergency_siren");
+            intent.removeExtra("aegis_message");
             if (this.bridge != null && this.bridge.getWebView() != null) {
                 this.bridge.getWebView().post(() -> {
                     this.bridge.getWebView().evaluateJavascript(
@@ -104,6 +106,7 @@ public class MainActivity extends BridgeActivity {
                 });
             }
         } else if (intent.getBooleanExtra("aegis_silence", false)) {
+            intent.removeExtra("aegis_silence");
             if (this.bridge != null && this.bridge.getWebView() != null) {
                 this.bridge.getWebView().post(() -> {
                     this.bridge.getWebView().evaluateJavascript(

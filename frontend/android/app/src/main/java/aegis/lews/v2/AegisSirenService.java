@@ -311,11 +311,19 @@ public class AegisSirenService extends Service {
         } catch (Exception ignored) {}
     }
 
-    private void stopNativeSirenTone() {
+    private synchronized void stopNativeSirenTone() {
         try {
             if (sirenAudioTrack != null) {
-                sirenAudioTrack.stop();
-                sirenAudioTrack.release();
+                try {
+                    sirenAudioTrack.pause();
+                    sirenAudioTrack.flush();
+                } catch (Exception ignored) {}
+                try {
+                    sirenAudioTrack.stop();
+                } catch (Exception ignored) {}
+                try {
+                    sirenAudioTrack.release();
+                } catch (Exception ignored) {}
                 sirenAudioTrack = null;
             }
         } catch (Exception ignored) {}
@@ -336,13 +344,6 @@ public class AegisSirenService extends Service {
             if (nm != null) {
                 nm.cancel(NOTIF_SIREN_ID);
             }
-        } catch (Exception ignored) {}
-
-        try {
-            Intent silenceIntent = new Intent(this, MainActivity.class);
-            silenceIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            silenceIntent.putExtra("aegis_silence", true);
-            startActivity(silenceIntent);
         } catch (Exception ignored) {}
     }
 

@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.json.JSONArray;
@@ -72,6 +73,8 @@ public class AegisBleMeshManager {
 
     private final Map<String, JSONObject> discoveredPeers = new ConcurrentHashMap<>();
     private final Map<String, Long> lastAlertTriggerTimes = new ConcurrentHashMap<>();
+    private final Set<String> userSilencedSignatures = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private volatile long userSilencedTimestamp = 0;
 
     public AegisBleMeshManager(MainActivity activity, WebView webView) {
         this.activity = activity;
@@ -287,6 +290,11 @@ public class AegisBleMeshManager {
             requestEnableBluetooth();
             return "{\"status\":\"bluetooth_disabled\",\"message\":\"Bluetooth radio is off. Prompted user to enable.\"}";
         }
+
+        // Trigger hardware siren on the primary phone immediately!
+        String sirenMsg = message != null && !message.isEmpty() ? message : "CRITICAL EVACUATION ALARM";
+        AegisSirenService.startSirenDirectly(activity, sirenMsg);
+
         return startHardwareBroadcast(TYPE_WEB_RELAY, "GATEWAY-RELAY", zoneName, riskScore, presetCode, severityCode, lat, lng, message);
     }
 
@@ -299,6 +307,10 @@ public class AegisBleMeshManager {
     @JavascriptInterface
     public void silenceNativeSiren() {
         try {
+            userSilencedTimestamp = System.currentTimeMillis();
+            if (currentSosText != null && !currentSosText.isEmpty()) {
+                userSilencedSignatures.add(currentSosText.trim().toLowerCase());
+            }
             AegisSirenService.stopSirenDirectly(activity);
         } catch (Exception e) {
             Log.e(TAG, "Failed to silence native siren", e);
@@ -656,6 +668,15 @@ public class AegisBleMeshManager {
                 String msg = parsed.optString("message", "");
                 String directive = parsed.optString("fullDirective", "");
                 if (currentSosText.equalsIgnoreCase(msg) || currentSosText.equalsIgnoreCase(directive)) {
+                    shouldTriggerAlarm = false;
+                }
+            }
+
+            // Do not re-trigger siren if user explicitly tapped silence within the last 5 minutes
+            if (shouldTriggerAlarm && (now - userSilencedTimestamp < 300000)) {
+                String eventMsg = parsed.optString("message", "").trim().toLowerCase();
+                String directiveMsg = parsed.optString("fullDirective", "").trim().toLowerCase();
+                if (userSilencedSignatures.contains(eventMsg) || userSilencedSignatures.contains(directiveMsg) || !userSilencedSignatures.isEmpty()) {
                     shouldTriggerAlarm = false;
                 }
             }
