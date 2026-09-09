@@ -1,0 +1,11 @@
+﻿.git
+node_modules
+frontend/
+dist/
+venv/
+__pycache__/
+*.png
+*.pptx
+*.pdf
+*.zip
+*.apk
