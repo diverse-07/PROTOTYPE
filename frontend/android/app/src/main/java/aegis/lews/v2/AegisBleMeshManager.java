@@ -68,6 +68,7 @@ public class AegisBleMeshManager {
     private boolean isAdvertising = false;
     private boolean isScanning = false;
     private String currentSosText = "";
+    private volatile short currentBroadcastNodeHash = 0;
 
     private final Map<String, JSONObject> discoveredPeers = new ConcurrentHashMap<>();
     private final Map<String, Long> lastAlertTriggerTimes = new ConcurrentHashMap<>();
@@ -305,6 +306,15 @@ public class AegisBleMeshManager {
     }
 
     @JavascriptInterface
+    public void stopMeshRelay() {
+        try {
+            stopHardwareBroadcast();
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to stop mesh relay", e);
+        }
+    }
+
+    @JavascriptInterface
     public void triggerNativeSiren(String message) {
         try {
             AegisSirenService.startSirenDirectly(activity, message);
@@ -349,6 +359,9 @@ public class AegisBleMeshManager {
         }
 
         this.currentSosText = message != null ? message : "";
+        if (nodeId != null) {
+            this.currentBroadcastNodeHash = (short) Math.abs(nodeId.hashCode() & 0x7FFF);
+        }
         setupGattServer(this.currentSosText);
 
         byte[] payload = encodePacket(type, nodeId, riskScore, presetCode, severityCode, lat, lng, message != null ? message : zoneName);
@@ -390,6 +403,7 @@ public class AegisBleMeshManager {
                 }
             } catch (Exception ignored) {}
             isAdvertising = false;
+            this.currentBroadcastNodeHash = 0;
             Log.d(TAG, "BLE Hardware Broadcast stopped");
         }
         if (gattServer != null) {
@@ -501,6 +515,12 @@ public class AegisBleMeshManager {
             byte type = buf.get();
             int riskScore = buf.get() & 0xFF;
             short nodeHash = buf.getShort();
+
+            // Self-packet echo prevention: ignore packets transmitted by this device
+            if (isAdvertising && currentBroadcastNodeHash != 0 && nodeHash == currentBroadcastNodeHash) {
+                return null;
+            }
+
             int latInt = buf.getInt();
             int lngInt = buf.getInt();
             byte packedMeta = buf.get();
@@ -631,11 +651,39 @@ public class AegisBleMeshManager {
             Long lastTrigger = lastAlertTriggerTimes.get(alertKey);
             boolean shouldTriggerAlarm = isEmergency && (lastTrigger == null || (now - lastTrigger) > 3500);
 
+            // Do not re-trigger siren if we are already actively broadcasting this exact alert
+            if (shouldTriggerAlarm && isAdvertising && currentSosText != null && !currentSosText.isEmpty()) {
+                String msg = parsed.optString("message", "");
+                String directive = parsed.optString("fullDirective", "");
+                if (currentSosText.equalsIgnoreCase(msg) || currentSosText.equalsIgnoreCase(directive)) {
+                    shouldTriggerAlarm = false;
+                }
+            }
+
             if (shouldTriggerAlarm) {
                 lastAlertTriggerTimes.put(alertKey, now);
                 // DIRECT HARDWARE NATIVE SIREN TRIGGER: Wakes screen, raises volume to max, wails siren audio & vibrates
                 String alertMsg = parsed.optString("fullDirective", parsed.optString("message", "CRITICAL EVACUATION ALARM"));
                 AegisSirenService.startSirenDirectly(activity, alertMsg);
+
+                // AUTOMATIC MULTI-HOP MESH RELAY:
+                // An offline device that catches the emergency packet immediately switches into
+                // BLE Advertiser mode to propagate the alert to other nearby offline citizens!
+                if (!isAdvertising) {
+                    try {
+                        byte incomingType = (byte) typeCode;
+                        int riskScore = parsed.optInt("riskScore", 85);
+                        int presetCode = parsed.optInt("presetCode", 1);
+                        int severityCode = parsed.optInt("severityCode", 4);
+                        double lat = parsed.optDouble("lat", 25.4484);
+                        double lng = parsed.optDouble("lng", 92.2152);
+                        String msg = parsed.optString("message", alertMsg);
+                        startHardwareBroadcast(incomingType, "MESH-RELAY", "RELAY", riskScore, presetCode, severityCode, lat, lng, msg);
+                        Log.i(TAG, "Multi-hop BLE mesh relay triggered automatically for incoming alert!");
+                    } catch (Exception relayEx) {
+                        Log.w(TAG, "Could not auto-start multi-hop BLE relay", relayEx);
+                    }
+                }
             }
 
             final String jsonStr = parsed.toString();
@@ -647,6 +695,7 @@ public class AegisBleMeshManager {
                 // If emergency SOS, warning, or WebRelay packet, trigger immediate packet listener
                 if (isEmergency) {
                     webView.evaluateJavascript("if (window.onAegisBlePacketReceived) { window.onAegisBlePacketReceived(" + jsonStr + "); }", null);
+                    webView.evaluateJavascript("if (window.triggerNativeAegisAlert) { window.triggerNativeAegisAlert(" + jsonStr + "); }", null);
                 }
             });
         } catch (Exception e) {

@@ -2237,9 +2237,10 @@ function stopDeviceSiren() {
 
 export default function AppMobile() {
   const savedLang = typeof window !== "undefined" ? localStorage.getItem("aegis_lang") : null
+  const defaultUser = { name: "Harsh Pathak", state: "Meghalaya", district: "Jaintia Hills (NH-44)", id: "NER-NODE-8842" }
   const savedUser = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("aegis_user") || "null") : null
-  const [user, setUser] = useState(savedUser || { name: "Harsh Pathak", state: "Meghalaya", district: "Jaintia Hills (NH-44)", id: "NER-NODE-8842" })
-  const [showSplash, setShowSplash] = useState(!savedUser || !savedLang)
+  const [user, setUser] = useState(savedUser || defaultUser)
+  const [showSplash, setShowSplash] = useState(false)
   const [lang, setLang] = useState(savedLang || "en")
   const [showLangModal, setShowLangModal] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
@@ -2561,23 +2562,36 @@ export default function AppMobile() {
       // Direct Hardware BLE Mesh Emergency Packet Receiver (Zero SIM, Zero Wi-Fi)
       window.onAegisBlePacketReceived = (packet) => {
         if (!packet) return;
-        const isRelay = packet.type === "WEB_RELAY" || packet.typeCode === 4;
-        const title = isRelay
-          ? "🚨 DIRECT WEB-TO-BLE RELAY (0 KB INTERNET)"
-          : "🚨 DIRECT BLUETOOTH MESH SOS (0 KB DATA)";
+        const isRelay = packet.type === "WEB_RELAY" || packet.typeCode === 4 || packet.type === "WARNING" || packet.typeCode === 2;
         const directive = packet.fullDirective || packet.presetText || packet.message || "Immediate Evacuation Directive";
-        const msg = isRelay
-          ? `[OFFLINE RADIO RELAY] ${directive} (From Primary Gateway ${packet.nodeId}, ~${packet.distStr || 'nearby'})`
-          : (packet.message
-              ? `[OFFLINE BLE MESH] ${packet.message} (From ${packet.nodeId}, ~${packet.distStr})`
-              : `[OFFLINE BLE MESH] Emergency distress beacon detected from ${packet.nodeId} (${packet.distStr})`);
+        const zoneName = packet.zone || "Jaintia Hills Sector 8 (NH-44 Corridor)";
 
-        handleIncomingAlert({
-          title: title,
-          message: msg,
-          zone: isRelay ? `Relayed via Primary Phone ${packet.nodeId} (${packet.distStr || 'nearby'})` : "Local Area Distress",
-          time: Math.floor(Date.now() / 1000)
+        // 1. Activate multi-hop relay status in UI
+        setIsWebRelayBroadcasting(true);
+        setWebRelayInfo({
+          message: directive,
+          zone: zoneName,
+          preset_code: packet.presetCode || 1,
+          severity: packet.severity || "CRITICAL",
+          isMeshRelay: true,
+          nodeId: packet.nodeId || "NEARBY-RADIO-PEER",
+          distStr: packet.distStr || "~12m"
         });
+
+        // 2. Sound hardware & web siren
+        startDeviceSiren(directive);
+
+        // 3. Immediately display Full-Screen Takeover Modal
+        setIncomingSiren({
+          title: "🚨 OFFLINE BLE MESH EMERGENCY SIREN",
+          message: directive,
+          zone: `Zone: ${zoneName} · 2.4GHz BLE Radio Relay (0 KB Net)`,
+          time: new Date().toLocaleTimeString("en-IN"),
+          isMeshRelay: true,
+          nodeId: packet.nodeId || "NEARBY-PEER",
+          distStr: packet.distStr || "~12m"
+        });
+
         if (typeof window.onBleMeshPacketGlobal === "function") {
           window.onBleMeshPacketGlobal(packet);
         }
@@ -2741,7 +2755,7 @@ export default function AppMobile() {
     }
   }
 
-  if (showSplash) return <SplashScreen onEnter={handleEnter} />
+  if (showSplash && !incomingSiren) return <SplashScreen onEnter={handleEnter} />
 
   const ONLINE_DOCK_APPS = [
     { id: "home", label: t.dashboard, icon: <Icons.Home size={20} /> },
@@ -2983,22 +2997,31 @@ export default function AppMobile() {
           </div>
         )}
 
-        {/* Active Primary Phone Gateway Broadcasting Banner */}
+        {/* Active Primary Phone Gateway / Offline Multi-Hop Mesh Relay Broadcasting Banner */}
         {isWebRelayBroadcasting && webRelayInfo && (
           <div style={{
-            background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
+            background: webRelayInfo.isMeshRelay
+              ? "linear-gradient(135deg, #065f46 0%, #047857 100%)"
+              : "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
             color: "white",
             padding: "12px 14px",
             margin: "8px 12px",
-            borderRadius: 6,
-            boxShadow: "0 4px 14px rgba(2, 132, 199, 0.35)",
-            border: "1px solid #38bdf8"
+            borderRadius: 8,
+            boxShadow: webRelayInfo.isMeshRelay
+              ? "0 4px 16px rgba(4, 120, 87, 0.4)"
+              : "0 4px 14px rgba(2, 132, 199, 0.35)",
+            border: webRelayInfo.isMeshRelay ? "1px solid #34d399" : "1px solid #38bdf8"
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span className="net-pulse-dot online" style={{ background: "#38bdf8", boxShadow: "0 0 10px #38bdf8" }} />
+                <span className="net-pulse-dot online" style={{
+                  background: webRelayInfo.isMeshRelay ? "#34d399" : "#38bdf8",
+                  boxShadow: webRelayInfo.isMeshRelay ? "0 0 10px #34d399" : "0 0 10px #38bdf8"
+                }} />
                 <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.5px" }}>
-                  PRIMARY GATEWAY: ACTIVE BLE RADIO BROADCAST
+                  {webRelayInfo.isMeshRelay
+                    ? "📡 OFFLINE MULTI-HOP RELAY ACTIVE (0 KB DATA)"
+                    : "📡 PRIMARY GATEWAY: ACTIVE BLE BROADCAST"}
                 </span>
               </div>
               <button
@@ -3018,11 +3041,11 @@ export default function AppMobile() {
                 Stop Radio
               </button>
             </div>
-            <div style={{ fontSize: 11, color: "#e0f2fe", marginBottom: 4 }}>
-              Web Directive &bull; Zone: <strong>{webRelayInfo.zone || "Jaintia Hills"}</strong> &bull; Preset #{webRelayInfo.preset_code || 1}
+            <div style={{ fontSize: 11, color: webRelayInfo.isMeshRelay ? "#d1fae5" : "#e0f2fe", marginBottom: 4 }}>
+              {webRelayInfo.isMeshRelay ? "Relaying Directive to Nearby Citizens" : "Web Directive"} &bull; Zone: <strong>{webRelayInfo.zone || "Jaintia Hills"}</strong>
             </div>
             <div style={{
-              background: "rgba(0,0,0,0.2)",
+              background: "rgba(0,0,0,0.25)",
               padding: "6px 8px",
               borderRadius: 4,
               fontSize: 11.5,
@@ -3031,8 +3054,10 @@ export default function AppMobile() {
             }}>
               "{webRelayInfo.message}"
             </div>
-            <div style={{ fontSize: 10, color: "#bae6fd", marginTop: 4 }}>
-              📡 Beaming 24-byte packets over 2.4GHz radio to offline phones in range with 0 KB internet
+            <div style={{ fontSize: 10, color: webRelayInfo.isMeshRelay ? "#a7f3d0" : "#bae6fd", marginTop: 4 }}>
+              {webRelayInfo.isMeshRelay
+                ? "⚡ Auto-relaying 20-byte radio packets over 2.4GHz BLE to alert other offline phones in range!"
+                : "📡 Beaming 20-byte packets over 2.4GHz radio to offline phones in range with 0 KB internet"}
             </div>
           </div>
         )}
@@ -3633,17 +3658,63 @@ export default function AppMobile() {
             </div>
 
             <div className="siren-actions-col">
+              {incomingSiren.isMeshRelay && (
+                <div style={{
+                  background: "rgba(16, 185, 129, 0.2)",
+                  border: "1px solid #10b981",
+                  borderRadius: "10px",
+                  padding: "10px 12px",
+                  marginBottom: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  textAlign: "left"
+                }}>
+                  <span style={{ fontSize: "22px" }}>📡</span>
+                  <div style={{ fontSize: "11.5px", color: "#d1fae5", lineHeight: "1.35" }}>
+                    <strong style={{ color: "#34d399", display: "block" }}>MULTI-HOP MESH ACTIVE (0 KB DATA)</strong>
+                    Your phone received this alert over Bluetooth radio and is now actively re-broadcasting to other offline phones nearby!
+                  </div>
+                </div>
+              )}
+
               <button
                 className="btn btn-warning"
                 style={{ background: "#f59e0b", color: "#000", fontWeight: "800", padding: "14px", fontSize: "13.5px", boxShadow: "0 4px 20px rgba(245, 158, 11, 0.4)" }}
                 onClick={() => {
                   stopDeviceSiren()
                   setIncomingSiren(null)
-                  setToastMsg("Siren Silenced. Please proceed towards designated safe bedrock shelter immediately.")
+                  setToastMsg("🔕 Siren Silenced. Multi-hop BLE relay remains active in background to warn neighbors.")
                   setTimeout(() => setToastMsg(""), 5000)
                 }}
               >
-                🔕 SILENCE SIREN &amp; CONFIRM EVACUATION
+                🔕 SILENCE SIREN (Keep Relaying to Neighbors)
+              </button>
+
+              <button
+                type="button"
+                style={{
+                  background: "#dc2626",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "10px",
+                  fontWeight: "700",
+                  padding: "11px",
+                  fontSize: "12.5px",
+                  cursor: "pointer"
+                }}
+                onClick={() => {
+                  stopDeviceSiren()
+                  if (window.AegisBleBridge && typeof window.AegisBleBridge.stopBroadcast === "function") {
+                    window.AegisBleBridge.stopBroadcast()
+                  }
+                  setIsWebRelayBroadcasting(false)
+                  setIncomingSiren(null)
+                  setToastMsg("🛑 Siren Silenced & Radio Broadcast Stopped.")
+                  setTimeout(() => setToastMsg(""), 4000)
+                }}
+              >
+                🛑 STOP ALL (Silence &amp; Stop Radio Relay)
               </button>
 
               <button
@@ -3659,7 +3730,7 @@ export default function AppMobile() {
                   }
                 }}
               >
-                🧭 Navigate to Nearest Shelter (Dawki School - 840m)
+                🧭 Navigate to Nearest Safe Shelter (Dawki School - 840m)
               </button>
 
               <a
