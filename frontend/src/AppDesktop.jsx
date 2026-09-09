@@ -1,14 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { MapContainer, TileLayer, Polygon, CircleMarker, Popup, useMap } from "react-leaflet"
+import { MapContainer, TileLayer, Polygon, CircleMarker, Popup } from "react-leaflet"
 import Globe3D from "./components/Globe3D"
 import GlassDock from "./components/GlassDock"
 import {
-  getWeather,
-  broadcastAlert,
   dispatchBleBroadcast,
-  getBleGatewayNodes,
-  getApiBaseUrl,
-  setCustomBackendUrl,
   silenceBleBroadcast
 } from "./api/client"
 
@@ -71,19 +66,28 @@ function getRiskColor(score) {
 }
 
 export default function AppDesktop() {
+  const [isMobileScreen, setIsMobileScreen] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  )
+
+  useEffect(() => {
+    const onResize = () => setIsMobileScreen(window.innerWidth < 768)
+    window.addEventListener("resize", onResize)
+    return () => window.removeEventListener("resize", onResize)
+  }, [])
+
   // Navigation & View Mode
-  const [activeView, setActiveView] = useState("globe") // 'globe' | 'gis'
+  const [activeView, setActiveView] = useState("globe")
   const [currentTime, setCurrentTime] = useState(getIST())
 
   // Geolocation & Focus Target
   const [userLocation, setUserLocation] = useState(null)
-  const [locLoading, setLocLoading] = useState(false)
   const [focusTarget, setFocusTarget] = useState({ lat: 25.5, lng: 92.8, zoom: false })
   const [selectedZone, setSelectedZone] = useState(ZONES[0])
 
-  // Drawers & Modals
-  const [telemetryOpen, setTelemetryOpen] = useState(true)
-  const [dispatchOpen, setDispatchOpen] = useState(true)
+  // Drawers & Modals (closed on mobile by default to keep 3D earth visible)
+  const [telemetryOpen, setTelemetryOpen] = useState(() => (typeof window !== "undefined" ? window.innerWidth >= 1024 : true))
+  const [dispatchOpen, setDispatchOpen] = useState(() => (typeof window !== "undefined" ? window.innerWidth >= 1024 : true))
   const [stressOpen, setStressOpen] = useState(false)
   const [sirenModalOpen, setSirenModalOpen] = useState(false)
   const [apkModalOpen, setApkModalOpen] = useState(false)
@@ -101,7 +105,7 @@ export default function AppDesktop() {
   const [isDispatching, setIsDispatching] = useState(false)
   const [toastMsg, setToastMsg] = useState("")
 
-  // Web Audio Siren Synthesizer
+  // Web Audio NDMA Frequency Modulation Sweep Siren
   const [isSirenPlaying, setIsSirenPlaying] = useState(false)
   const audioCtxRef = useRef(null)
   const oscRef = useRef(null)
@@ -116,30 +120,25 @@ export default function AppDesktop() {
 
   // Auto Detect User Location on Mount
   useEffect(() => {
-    handleLocateMe(false) // detect without forced close zoom initially
+    handleLocateMe(false)
   }, [])
 
   const handleLocateMe = (forceZoom = true) => {
-    setLocLoading(true)
     if (typeof navigator !== "undefined" && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const lat = parseFloat(pos.coords.latitude.toFixed(4))
           const lng = parseFloat(pos.coords.longitude.toFixed(4))
-          const loc = { lat, lng, city: "Current Location", state: "Live GPS", accuracy: Math.round(pos.coords.accuracy) }
+          const loc = { lat, lng, city: "Detected Position", state: "Live GPS", accuracy: Math.round(pos.coords.accuracy) }
           setUserLocation(loc)
-          setLocLoading(false)
           if (forceZoom) {
             setFocusTarget({ lat, lng, zoom: true })
             showToast("📍 Focused 3D Camera on Your Coordinates!")
           }
         },
-        (err) => {
-          // Fallback to New Delhi / NER coordinates
-          console.warn("[AEGIS] Geolocation fallback:", err.message)
+        () => {
           const fallbackLoc = { lat: 28.6139, lng: 77.2090, city: "New Delhi", state: "India", accuracy: 150 }
           setUserLocation(fallbackLoc)
-          setLocLoading(false)
           if (forceZoom) {
             setFocusTarget({ lat: fallbackLoc.lat, lng: fallbackLoc.lng, zoom: true })
             showToast("📍 Focused on New Delhi Coordinates")
@@ -147,8 +146,6 @@ export default function AppDesktop() {
         },
         { timeout: 8000, enableHighAccuracy: true }
       )
-    } else {
-      setLocLoading(false)
     }
   }
 
@@ -157,10 +154,8 @@ export default function AppDesktop() {
     setTimeout(() => setToastMsg(""), 4000)
   }
 
-  // Web Audio NDMA Frequency Modulation Sweep Siren (750Hz - 1250Hz)
   const toggleSirenAudio = () => {
     if (isSirenPlaying) {
-      // Stop Siren
       if (sirenIntervalRef.current) clearInterval(sirenIntervalRef.current)
       if (gainRef.current) gainRef.current.gain.setValueAtTime(0, audioCtxRef.current?.currentTime || 0)
       if (oscRef.current) {
@@ -172,7 +167,6 @@ export default function AppDesktop() {
       setIsSirenPlaying(false)
       showToast("🔕 Siren Tone Muted")
     } else {
-      // Start Siren
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext
         const ctx = new AudioCtx()
@@ -191,12 +185,10 @@ export default function AppDesktop() {
         oscRef.current = osc
         gainRef.current = gain
 
-        // Frequency sweep modulation
         let step = 0
         sirenIntervalRef.current = setInterval(() => {
           if (!audioCtxRef.current) return
           step += 0.05
-          // Sine sweep between 750 Hz and 1250 Hz
           const freq = 750 + 500 * Math.abs(Math.sin(step * 1.5))
           osc.frequency.setValueAtTime(freq, audioCtxRef.current.currentTime)
         }, 50)
@@ -209,15 +201,16 @@ export default function AppDesktop() {
     }
   }
 
-  // Handle Zone Selection
   const handleZoneSelect = (zone) => {
     setSelectedZone(zone)
     setBleZone(zone.name.split(",")[0])
     setFocusTarget({ lat: zone.lat || zone.coords[0][0], lng: zone.lng || zone.coords[0][1], zoom: true })
-    showToast(`🔭 3D Camera Focused on ${zone.name}`)
+    showToast(`🔭 Focused on ${zone.name}`)
+    if (isMobileScreen) {
+      setTelemetryOpen(false)
+    }
   }
 
-  // Handle Emergency Siren Dispatch
   const handleDispatch = async () => {
     setIsDispatching(true)
     try {
@@ -231,7 +224,7 @@ export default function AppDesktop() {
       }
 
       await dispatchBleBroadcast(payload)
-      showToast("🚨 EMERGENCY BROADCAST DISPATCHED TO CITIZEN PHONES!")
+      showToast("🚨 EMERGENCY BROADCAST DISPATCHED!")
     } catch (e) {
       showToast("⚠️ Dispatched via Resilient Cloud Mesh")
     } finally {
@@ -252,7 +245,6 @@ export default function AppDesktop() {
         color: "#f8fafc"
       }}
     >
-      {/* Ambient Radial Lights */}
       <div className="framer-ambient-bg" />
 
       {/* 1. TOP GLASS NAV BAR */}
@@ -260,34 +252,33 @@ export default function AppDesktop() {
         className="glass-surface"
         style={{
           position: "absolute",
-          top: "16px",
-          left: "20px",
-          right: "20px",
-          height: "64px",
-          borderRadius: "20px",
+          top: isMobileScreen ? "10px" : "16px",
+          left: isMobileScreen ? "10px" : "20px",
+          right: isMobileScreen ? "10px" : "20px",
+          height: isMobileScreen ? "54px" : "64px",
+          borderRadius: isMobileScreen ? "16px" : "20px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 24px",
+          padding: isMobileScreen ? "0 14px" : "0 24px",
           zIndex: 8000
         }}
       >
-        {/* Left: Brand / Ministry Title */}
-        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <img
             src="./aegis_logo_transparent.png"
             alt="AEGIS"
-            style={{ width: "38px", height: "38px", filter: "drop-shadow(0 0 10px rgba(56, 189, 248, 0.4))" }}
+            style={{ width: isMobileScreen ? "30px" : "38px", height: isMobileScreen ? "30px" : "38px", filter: "drop-shadow(0 0 8px rgba(56, 189, 248, 0.4))" }}
           />
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "14px", fontWeight: "800", letterSpacing: "0.5px", color: "#ffffff" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ fontSize: isMobileScreen ? "12px" : "14px", fontWeight: "800", color: "#ffffff" }}>
                 TEAM AEGIS
               </span>
               <span
                 style={{
-                  fontSize: "10px",
-                  padding: "2px 7px",
+                  fontSize: "9px",
+                  padding: "1px 6px",
                   background: "rgba(56, 189, 248, 0.15)",
                   color: "#38bdf8",
                   borderRadius: "20px",
@@ -295,72 +286,39 @@ export default function AppDesktop() {
                   fontWeight: "700"
                 }}
               >
-                NER-LEWS v2.0
+                v2.0
               </span>
             </div>
-            <p style={{ fontSize: "11px", color: "#94a3b8", margin: 0 }}>
-              AI Landslide Early Warning &amp; Offline BLE Mesh Network | MDoNER · SIH 2026
-            </p>
+            {!isMobileScreen && (
+              <p style={{ fontSize: "11px", color: "#94a3b8", margin: 0 }}>
+                AI Landslide Early Warning &amp; Offline BLE Mesh | MDoNER · SIH 2026
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Center: Live Status Telemetry Badges */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
-            className="glass-card"
-            style={{
-              padding: "5px 12px",
-              display: "flex",
-              alignItems: "center",
-              gap: "7px",
-              fontSize: "11px",
-              color: "#cbd5e1"
-            }}
-          >
-            <span className="live-dot" style={{ background: "#22c55e" }} />
-            <span>24/7 SATELLITE RADAR</span>
+        {/* Center telemetry badges (desktop only) */}
+        {!isMobileScreen && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div className="glass-card" style={{ padding: "5px 12px", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#cbd5e1" }}>
+              <span className="live-dot" style={{ background: "#22c55e" }} />
+              <span>RADAR ONLINE</span>
+            </div>
+            <div className="glass-card" style={{ padding: "5px 12px", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#cbd5e1" }}>
+              <span className="live-dot" style={{ background: "#38bdf8" }} />
+              <span>BLE MESH 4.0</span>
+            </div>
           </div>
+        )}
 
-          <div
-            className="glass-card"
-            style={{
-              padding: "5px 12px",
-              display: "flex",
-              alignItems: "center",
-              gap: "7px",
-              fontSize: "11px",
-              color: "#cbd5e1"
-            }}
-          >
-            <span className="live-dot" style={{ background: "#38bdf8" }} />
-            <span>BLE MESH 4.0 READY</span>
-          </div>
-
-          <div
-            className="glass-card"
-            style={{
-              padding: "5px 12px",
-              display: "flex",
-              alignItems: "center",
-              gap: "7px",
-              fontSize: "11px",
-              color: "#f59e0b"
-            }}
-          >
-            <span>⚡ LATENCY &lt;15ms</span>
-          </div>
-        </div>
-
-        {/* Right: View Switcher & Clock */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          {/* 3D vs 2D Toggle */}
+        <div style={{ display: "flex", alignItems: "center", gap: isMobileScreen ? "8px" : "14px" }}>
           <div
             style={{
               background: "rgba(15, 23, 42, 0.8)",
-              padding: "4px",
-              borderRadius: "14px",
+              padding: "3px",
+              borderRadius: "12px",
               display: "flex",
-              gap: "4px",
+              gap: "2px",
               border: "1px solid rgba(255, 255, 255, 0.1)"
             }}
           >
@@ -370,18 +328,14 @@ export default function AppDesktop() {
                 background: activeView === "globe" ? "linear-gradient(135deg, #0284c7, #0369a1)" : "transparent",
                 color: "#ffffff",
                 border: "none",
-                borderRadius: "10px",
-                padding: "6px 14px",
+                borderRadius: "8px",
+                padding: isMobileScreen ? "4px 8px" : "6px 12px",
                 fontSize: "11px",
                 fontWeight: "700",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-                transition: "all 0.2s"
+                cursor: "pointer"
               }}
             >
-              <span>🌍</span> <span>3D Orbit</span>
+              🌍 3D
             </button>
             <button
               onClick={() => setActiveView("gis")}
@@ -389,32 +343,30 @@ export default function AppDesktop() {
                 background: activeView === "gis" ? "linear-gradient(135deg, #0284c7, #0369a1)" : "transparent",
                 color: "#ffffff",
                 border: "none",
-                borderRadius: "10px",
-                padding: "6px 14px",
+                borderRadius: "8px",
+                padding: isMobileScreen ? "4px 8px" : "6px 12px",
                 fontSize: "11px",
                 fontWeight: "700",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-                transition: "all 0.2s"
+                cursor: "pointer"
               }}
             >
-              <span>🛰️</span> <span>2D GIS Map</span>
+              🛰️ GIS
             </button>
           </div>
 
-          {/* IST Time */}
-          <div style={{ textAlign: "right", minWidth: "120px" }}>
-            <div style={{ fontSize: "13px", fontWeight: "700", color: "#f8fafc", letterSpacing: "0.5px" }}>
-              {currentTime}
+          {!isMobileScreen && (
+            <div style={{ textAlign: "right", minWidth: "90px" }}>
+              <div style={{ fontSize: "12px", fontWeight: "700", color: "#f8fafc" }}>{currentTime}</div>
+              <div style={{ fontSize: "9px", color: "#64748b" }}>IST</div>
             </div>
-            <div style={{ fontSize: "10px", color: "#64748b" }}>INDIAN STANDARD TIME</div>
-          </div>
+          )}
 
-          {/* Citizen App Download */}
-          <button onClick={() => setApkModalOpen(true)} className="framer-btn-primary">
-            <span>📱</span> <span>Get Citizen APK</span>
+          <button
+            onClick={() => setApkModalOpen(true)}
+            className="framer-btn-primary"
+            style={{ padding: isMobileScreen ? "6px 10px" : "8px 14px", fontSize: isMobileScreen ? "11px" : "12px" }}
+          >
+            <span>📱</span> {!isMobileScreen && <span>Get APK</span>}
           </button>
         </div>
       </header>
@@ -423,7 +375,6 @@ export default function AppDesktop() {
       <main style={{ width: "100%", height: "100%", position: "relative", zIndex: 1 }}>
         {activeView === "globe" ? (
           <div style={{ width: "100%", height: "100%", position: "relative" }}>
-            {/* Three.js 3D Earth Globe */}
             <Globe3D
               userLocation={userLocation}
               zones={ZONES}
@@ -436,90 +387,63 @@ export default function AppDesktop() {
               onResetOrbit={() => setFocusTarget({ lat: 25.5, lng: 92.8, zoom: false })}
             />
 
-            {/* FLOATING "MY LOCATION" GLASS HUD (Positioned directly above the globe) */}
+            {/* "MY LOCATION" FLOATING GLASS HUD */}
             <div
               className="glass-surface"
               style={{
                 position: "absolute",
-                top: "98px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                borderRadius: "24px",
-                padding: "12px 22px",
+                top: isMobileScreen ? "72px" : "96px",
+                left: isMobileScreen ? "12px" : "50%",
+                right: isMobileScreen ? "12px" : "auto",
+                transform: isMobileScreen ? "none" : "translateX(-50%)",
+                borderRadius: "20px",
+                padding: isMobileScreen ? "10px 14px" : "10px 20px",
                 display: "flex",
+                flexWrap: "wrap",
                 alignItems: "center",
-                gap: "18px",
+                justifyContent: "space-between",
+                gap: "10px",
                 zIndex: 5000,
                 boxShadow: "0 16px 40px rgba(0,0,0,0.6)"
               }}
             >
-              {/* Radar Lock Indicator */}
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <div style={{ position: "relative", width: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <div className="radar-pulse-ring" style={{ width: "16px", height: "16px" }} />
-                  <span className="live-dot" style={{ background: "#00f0ff", width: "10px", height: "10px" }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: "10px", color: "#38bdf8", fontWeight: "700", letterSpacing: "0.5px" }}>
-                    ● GPS RADAR TELEMETRY LOCK
-                  </div>
-                  <div style={{ fontSize: "13px", fontWeight: "700", color: "#ffffff" }}>
-                    {userLocation ? `${userLocation.city || "Detected Node"}, ${userLocation.state || "India"}` : "Acquiring GPS Satellite Signal..."}
-                  </div>
-                </div>
-              </div>
-
-              {/* Coordinates & Risk Pill */}
-              <div
-                style={{
-                  background: "rgba(255, 255, 255, 0.05)",
-                  padding: "6px 14px",
-                  borderRadius: "12px",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                  fontSize: "11px"
-                }}
-              >
-                <div style={{ color: "#94a3b8" }}>
-                  LAT/LNG:{" "}
-                  <strong style={{ color: "#f8fafc" }}>
-                    {userLocation ? `${userLocation.lat}°N, ${userLocation.lng}°E` : "28.6139°N, 77.2090°E"}
-                  </strong>
-                </div>
-                <div style={{ color: "#22c55e", fontWeight: "600", marginTop: "2px" }}>
-                  ✓ Terrain Susceptibility: Low Risk
-                </div>
-              </div>
-
-              {/* Action Buttons */}
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span className="live-dot" style={{ background: "#00f0ff", width: "10px", height: "10px" }} />
+                <div>
+                  <div style={{ fontSize: "9px", color: "#38bdf8", fontWeight: "700" }}>
+                    GPS RADAR LOCK
+                  </div>
+                  <div style={{ fontSize: "12px", fontWeight: "700", color: "#ffffff" }}>
+                    {userLocation ? `${userLocation.city || "Node"}, ${userLocation.state || "India"}` : "Acquiring GPS..."}
+                  </div>
+                </div>
+              </div>
+
+              {!isMobileScreen && (
+                <div style={{ background: "rgba(255,255,255,0.05)", padding: "4px 10px", borderRadius: "10px", fontSize: "10px", color: "#94a3b8" }}>
+                  {userLocation ? `${userLocation.lat}°N, ${userLocation.lng}°E` : "28.6139°N, 77.2090°E"}
+                </div>
+              )}
+
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <button
                   onClick={() => handleLocateMe(true)}
                   className="framer-btn-primary"
-                  style={{ padding: "8px 16px" }}
+                  style={{ padding: "6px 12px", fontSize: "11px" }}
                 >
-                  <span>🔭</span> <span>Zoom Into My Location</span>
+                  <span>🔭</span> <span>Zoom In</span>
                 </button>
-
-                <button
-                  onClick={() => setActiveView("gis")}
-                  className="framer-btn-ghost"
-                  title="Switch to detailed topographical GIS satellite map"
-                >
-                  <span>🛰️</span> <span>Satellite GIS</span>
-                </button>
-
                 <button
                   onClick={() => setFocusTarget({ lat: 25.5, lng: 92.8, zoom: false })}
                   className="framer-btn-ghost"
-                  title="Reset 3D camera back to deep space orbit"
+                  style={{ padding: "6px 10px", fontSize: "11px" }}
                 >
-                  <span>🌍</span> <span>Reset Orbit</span>
+                  <span>🌍</span> <span>Orbit</span>
                 </button>
               </div>
             </div>
           </div>
         ) : (
-          /* 2D Leaflet Topographical / Satellite GIS Map */
           <div style={{ width: "100%", height: "100%", position: "relative" }}>
             <MapContainer
               center={[25.5, 92.8]}
@@ -537,7 +461,6 @@ export default function AppDesktop() {
                 opacity={0.85}
               />
 
-              {/* 16 Risk Polygons */}
               {ZONES.map((zone) => (
                 <Polygon
                   key={zone.id}
@@ -548,9 +471,7 @@ export default function AppDesktop() {
                     fillOpacity: zone.fillOpacity || 0.45,
                     weight: 2
                   }}
-                  eventHandlers={{
-                    click: () => handleZoneSelect(zone)
-                  }}
+                  eventHandlers={{ click: () => handleZoneSelect(zone) }}
                 >
                   <Popup>
                     <div style={{ padding: "4px 8px" }}>
@@ -558,77 +479,58 @@ export default function AppDesktop() {
                       <div style={{ fontSize: "11px", marginTop: "4px" }}>
                         Risk: <span style={{ color: getRiskColor(zone.score), fontWeight: "bold" }}>{zone.risk} ({zone.score}/100)</span>
                       </div>
-                      <p style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>{zone.description}</p>
                     </div>
                   </Popup>
                 </Polygon>
               ))}
 
-              {/* Sensors */}
               {SENSORS.map((s, idx) => (
                 <CircleMarker
                   key={idx}
                   center={[s.lat, s.lng]}
                   radius={6}
                   pathOptions={{ color: "#38bdf8", fillColor: "#0ea5e9", fillOpacity: 0.9, weight: 2 }}
-                >
-                  <Popup>
-                    <div style={{ fontSize: "11px" }}>
-                      <strong>{s.name}</strong>
-                      <div>Moisture: {s.moisture}</div>
-                      <div>Rain: {s.rain}</div>
-                      <div>Pore: {s.pore}</div>
-                    </div>
-                  </Popup>
-                </CircleMarker>
+                />
               ))}
 
-              {/* User Pin */}
               {userLocation && (
                 <CircleMarker
                   center={[userLocation.lat, userLocation.lng]}
                   radius={8}
                   pathOptions={{ color: "#00f0ff", fillColor: "#00f0ff", fillOpacity: 1, weight: 3 }}
-                >
-                  <Popup>
-                    <div style={{ fontSize: "11px" }}>
-                      <strong>📍 Your Location</strong>
-                      <div>{userLocation.lat}°N, {userLocation.lng}°E</div>
-                    </div>
-                  </Popup>
-                </CircleMarker>
+                />
               )}
             </MapContainer>
           </div>
         )}
       </main>
 
-      {/* 3. LEFT COLLAPSIBLE HUD: REAL-TIME HAZARD & SENSORS */}
+      {/* 3. LEFT COLLAPSIBLE HUD: 16 ZONES */}
       {telemetryOpen && (
         <aside
           aria-label="Real-Time Hazards and Sensors"
           className="glass-surface framer-scrollbar"
           style={{
             position: "absolute",
-            top: "98px",
-            bottom: "90px",
-            left: "20px",
-            width: "330px",
-            borderRadius: "22px",
-            padding: "18px",
-            zIndex: 7000,
+            top: isMobileScreen ? "auto" : "96px",
+            bottom: isMobileScreen ? "84px" : "90px",
+            left: isMobileScreen ? "12px" : "20px",
+            right: isMobileScreen ? "12px" : "auto",
+            width: isMobileScreen ? "auto" : "320px",
+            maxHeight: isMobileScreen ? "55vh" : "none",
+            borderRadius: "20px",
+            padding: "16px",
+            zIndex: 7500,
             display: "flex",
             flexDirection: "column",
-            gap: "14px",
+            gap: "12px",
             overflowY: "auto"
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span style={{ fontSize: "16px" }}>⚡</span>
-              <span style={{ fontSize: "13px", fontWeight: "700", color: "#ffffff" }}>
-                16 HAZARD CORRIDORS
-              </span>
+              <span style={{ fontSize: "13px", fontWeight: "700", color: "#ffffff" }}>16 HAZARD CORRIDORS</span>
             </div>
             <button
               onClick={() => setTelemetryOpen(false)}
@@ -638,9 +540,8 @@ export default function AppDesktop() {
             </button>
           </div>
 
-          {/* Zone list cards */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {ZONES.slice(0, 7).map((z) => {
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {ZONES.map((z) => {
               const isSel = selectedZone?.id === z.id
               return (
                 <div
@@ -648,83 +549,60 @@ export default function AppDesktop() {
                   onClick={() => handleZoneSelect(z)}
                   className="glass-card"
                   style={{
-                    padding: "10px 14px",
+                    padding: "8px 12px",
                     cursor: "pointer",
                     borderColor: isSel ? "#38bdf8" : undefined,
                     background: isSel ? "rgba(56, 189, 248, 0.12)" : undefined
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <strong style={{ fontSize: "12px", color: isSel ? "#38bdf8" : "#f1f5f9" }}>{z.name}</strong>
+                    <strong style={{ fontSize: "11px", color: isSel ? "#38bdf8" : "#f1f5f9" }}>{z.name}</strong>
                     <span
                       style={{
-                        fontSize: "10px",
+                        fontSize: "9px",
                         fontWeight: "700",
-                        padding: "2px 7px",
-                        borderRadius: "10px",
+                        padding: "1px 6px",
+                        borderRadius: "8px",
                         background: `${getRiskColor(z.score)}25`,
-                        color: getRiskColor(z.score),
-                        border: `1px solid ${getRiskColor(z.score)}50`
+                        color: getRiskColor(z.score)
                       }}
                     >
                       {z.score}/100
                     </span>
                   </div>
-                  <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>
-                    {z.risk} • {z.description.slice(0, 48)}...
-                  </div>
                 </div>
               )
             })}
           </div>
-
-          {/* Live Sensor Feed */}
-          <div style={{ marginTop: "auto", paddingTop: "12px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#38bdf8", marginBottom: "8px" }}>
-              📡 LIVE SENSOR TELEMETRY (NER)
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-              <div className="glass-card" style={{ padding: "8px 10px" }}>
-                <div style={{ fontSize: "9px", color: "#94a3b8" }}>SOIL SATURATION</div>
-                <div style={{ fontSize: "16px", fontWeight: "800", color: "#ef4444" }}>87.4%</div>
-                <div style={{ fontSize: "9px", color: "#64748b" }}>Jaintia Fault</div>
-              </div>
-              <div className="glass-card" style={{ padding: "8px 10px" }}>
-                <div style={{ fontSize: "9px", color: "#94a3b8" }}>PORE PRESSURE</div>
-                <div style={{ fontSize: "16px", fontWeight: "800", color: "#f97316" }}>62.1 kPa</div>
-                <div style={{ fontSize: "9px", color: "#64748b" }}>Sohra Escarpment</div>
-              </div>
-            </div>
-          </div>
         </aside>
       )}
 
-      {/* 4. RIGHT COLLAPSIBLE HUD: AI PREDICTION & FAST DISPATCH */}
+      {/* 4. RIGHT COLLAPSIBLE HUD: AI & DISPATCH */}
       {dispatchOpen && (
         <aside
           aria-label="AI Prediction and Siren Dispatch"
           className="glass-surface framer-scrollbar"
           style={{
             position: "absolute",
-            top: "98px",
-            bottom: "90px",
-            right: "20px",
-            width: "340px",
-            borderRadius: "22px",
-            padding: "18px",
-            zIndex: 7000,
+            top: isMobileScreen ? "auto" : "96px",
+            bottom: isMobileScreen ? "84px" : "90px",
+            right: isMobileScreen ? "12px" : "20px",
+            left: isMobileScreen ? "12px" : "auto",
+            width: isMobileScreen ? "auto" : "330px",
+            maxHeight: isMobileScreen ? "60vh" : "none",
+            borderRadius: "20px",
+            padding: "16px",
+            zIndex: 7500,
             display: "flex",
             flexDirection: "column",
-            gap: "14px",
+            gap: "12px",
             overflowY: "auto"
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span style={{ fontSize: "16px" }}>🤖</span>
-              <span style={{ fontSize: "13px", fontWeight: "700", color: "#ffffff" }}>
-                AI THREAT PREDICTOR
-              </span>
+              <span style={{ fontSize: "13px", fontWeight: "700", color: "#ffffff" }}>AI DISPATCH CONSOLE</span>
             </div>
             <button
               onClick={() => setDispatchOpen(false)}
@@ -734,116 +612,56 @@ export default function AppDesktop() {
             </button>
           </div>
 
-          {/* AI Score Card */}
-          <div
-            className="glass-card"
-            style={{
-              padding: "14px",
-              background: "linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(15, 23, 42, 0.7) 100%)",
-              borderColor: "rgba(239, 68, 68, 0.3)"
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="glass-card" style={{ padding: "12px", background: "linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(15, 23, 42, 0.7))", borderColor: "rgba(239, 68, 68, 0.3)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
               <div>
-                <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "700" }}>XGBOOST ENSEMBLE</span>
-                <div style={{ fontSize: "24px", fontWeight: "800", color: "#ffffff" }}>CRITICAL 87%</div>
+                <span style={{ fontSize: "9px", color: "#ef4444", fontWeight: "700" }}>XGBOOST ENSEMBLE</span>
+                <div style={{ fontSize: "20px", fontWeight: "800", color: "#ffffff" }}>CRITICAL 87%</div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <span style={{ fontSize: "10px", color: "#94a3b8" }}>CONFIDENCE</span>
-                <div style={{ fontSize: "15px", fontWeight: "700", color: "#22c55e" }}>98.4%</div>
+                <span style={{ fontSize: "9px", color: "#94a3b8" }}>CONFIDENCE</span>
+                <div style={{ fontSize: "14px", fontWeight: "700", color: "#22c55e" }}>98.4%</div>
               </div>
-            </div>
-
-            <div style={{ marginTop: "10px", fontSize: "11px", color: "#cbd5e1" }}>
-              Key Drivers: Continuous precipitation (180mm/24h) combined with steep Disang shale saturation.
             </div>
           </div>
 
-          {/* Direct Siren Dispatcher Console */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#38bdf8" }}>
-              🚨 1-CLICK BLE MESH SIREN DISPATCH
-            </div>
-
-            <div>
-              <label style={{ fontSize: "10px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>
-                TARGET DISASTER ZONE
-              </label>
-              <select
-                value={bleZone}
-                onChange={(e) => setBleZone(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  background: "rgba(15, 23, 42, 0.9)",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  borderRadius: "10px",
-                  color: "#ffffff",
-                  fontSize: "12px"
-                }}
-              >
-                {ZONES.map((z) => (
-                  <option key={z.id} value={z.name.split(",")[0]}>
-                    {z.name} ({z.risk})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label style={{ fontSize: "10px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>
-                EMERGENCY DIRECTIVE PRESET
-              </label>
-              <select
-                value={blePresetCode}
-                onChange={(e) => {
-                  const code = parseInt(e.target.value)
-                  setBlePresetCode(code)
-                  const p = BLE_PRESETS.find((x) => x.code === code)
-                  if (p) setBleMessage(p.text)
-                }}
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  background: "rgba(15, 23, 42, 0.9)",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  borderRadius: "10px",
-                  color: "#ffffff",
-                  fontSize: "12px"
-                }}
-              >
-                {BLE_PRESETS.map((p) => (
-                  <option key={p.code} value={p.code}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <label style={{ fontSize: "10px", color: "#94a3b8" }}>ZONE TARGET</label>
+            <select
+              value={bleZone}
+              onChange={(e) => setBleZone(e.target.value)}
+              style={{ width: "100%", padding: "8px", background: "rgba(15, 23, 42, 0.9)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#fff", fontSize: "11px" }}
+            >
+              {ZONES.map((z) => (
+                <option key={z.id} value={z.name.split(",")[0]}>
+                  {z.name} ({z.risk})
+                </option>
+              ))}
+            </select>
 
             <button
               onClick={handleDispatch}
               disabled={isDispatching}
               className="framer-btn-danger"
-              style={{ width: "100%", padding: "12px", justifyContent: "center", marginTop: "4px" }}
+              style={{ width: "100%", padding: "10px", justifyContent: "center" }}
             >
               <span>{isDispatching ? "⏳" : "🚨"}</span>
-              <span>{isDispatching ? "DISPATCHING BROADCAST..." : "DISPATCH EMERGENCY BROADCAST"}</span>
+              <span>{isDispatching ? "DISPATCHING..." : "DISPATCH BROADCAST"}</span>
             </button>
 
-            {/* Siren Tone Browser Test */}
             <button
               onClick={toggleSirenAudio}
               className={isSirenPlaying ? "framer-btn-danger" : "framer-btn-ghost"}
               style={{ width: "100%", justifyContent: "center" }}
             >
               <span>{isSirenPlaying ? "🔕" : "🔊"}</span>
-              <span>{isSirenPlaying ? "MUTE BROWSER SIREN" : "TEST NDMA AUDIO SIREN TONE"}</span>
+              <span>{isSirenPlaying ? "MUTE SIREN" : "TEST NDMA TONE"}</span>
             </button>
           </div>
         </aside>
       )}
 
-      {/* 5. FLOATING BOTTOM GLASS DOCK (Framer / macOS aesthetic) */}
+      {/* 5. FLOATING BOTTOM GLASS DOCK */}
       <GlassDock
         activeView={activeView}
         onSelectView={setActiveView}
@@ -860,7 +678,46 @@ export default function AppDesktop() {
         onToggleAutoRotate={() => setAutoRotate(!autoRotate)}
       />
 
-      {/* 6. MODAL: CLOUDBURST STRESS ENGINE */}
+      {/* 6. MODAL: CITIZEN APK */}
+      {apkModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.75)",
+            backdropFilter: "blur(14px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10000,
+            padding: "16px"
+          }}
+        >
+          <div className="glass-surface" style={{ width: "440px", maxWidth: "100%", borderRadius: "20px", padding: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+              <strong style={{ fontSize: "15px", color: "#ffffff" }}>📱 AEGIS OFFLINE MESH APK</strong>
+              <button onClick={() => setApkModalOpen(false)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "16px" }}>✕</button>
+            </div>
+            <p style={{ fontSize: "12px", color: "#cbd5e1", lineHeight: 1.5, marginBottom: "14px" }}>
+              Install on secondary offline phones. Works with <strong>0 KB net, no SIM, no Wi-Fi</strong>, receiving disaster sirens over 2.4 GHz BLE radio and relaying to other devices.
+            </p>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <a
+                href="https://github.com/diverse-07/PROTOTYPE/releases/download/v2.0.0-prototype/AEGIS_LEWS_v2.0_PROTOTYPE.apk"
+                target="_blank"
+                rel="noreferrer"
+                className="framer-btn-primary"
+                style={{ flex: 1, textDecoration: "none", justifyContent: "center", padding: "10px" }}
+              >
+                <span>⬇️</span> <span>Download APK (11.2 MB)</span>
+              </a>
+              <button onClick={() => setApkModalOpen(false)} className="framer-btn-ghost">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. MODAL: CLOUDBURST STRESS */}
       {stressOpen && (
         <div
           style={{
@@ -871,39 +728,19 @@ export default function AppDesktop() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 10000
+            zIndex: 10000,
+            padding: "16px"
           }}
         >
-          <div
-            className="glass-surface"
-            style={{
-              width: "440px",
-              borderRadius: "24px",
-              padding: "24px",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.7)"
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "20px" }}>⚡</span>
-                <strong style={{ fontSize: "16px", color: "#ffffff" }}>CLOUDBURST STRESS ENGINE</strong>
-              </div>
-              <button
-                onClick={() => setStressOpen(false)}
-                style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "18px" }}
-              >
-                ✕
-              </button>
+          <div className="glass-surface" style={{ width: "400px", maxWidth: "100%", borderRadius: "20px", padding: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+              <strong style={{ fontSize: "15px", color: "#ffffff" }}>⚡ CLOUDBURST STRESS</strong>
+              <button onClick={() => setStressOpen(false)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "16px" }}>✕</button>
             </div>
-
-            <p style={{ fontSize: "12px", color: "#94a3b8", marginBottom: "18px" }}>
-              Simulate high-intensity monsoon downpours across North Eastern mountain corridors to observe real-time AI threshold escalations.
-            </p>
-
-            <div style={{ marginBottom: "20px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "12px", color: "#cbd5e1" }}>Rainfall Multiplier:</span>
-                <strong style={{ fontSize: "14px", color: "#38bdf8" }}>{rainfallMultiplier.toFixed(1)}x Normal</strong>
+            <div style={{ marginBottom: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "12px" }}>
+                <span>Rainfall Factor:</span>
+                <strong style={{ color: "#38bdf8" }}>{rainfallMultiplier.toFixed(1)}x</strong>
               </div>
               <input
                 type="range"
@@ -915,95 +752,14 @@ export default function AppDesktop() {
                 style={{ width: "100%", accentColor: "#0284c7" }}
               />
             </div>
-
-            <button
-              onClick={() => {
-                showToast(`⚡ Stress Multiplier set to ${rainfallMultiplier.toFixed(1)}x`)
-                setStressOpen(false)
-              }}
-              className="framer-btn-primary"
-              style={{ width: "100%", justifyContent: "center", padding: "12px" }}
-            >
-              Apply Simulation Parameters
+            <button onClick={() => setStressOpen(false)} className="framer-btn-primary" style={{ width: "100%", justifyContent: "center" }}>
+              Apply Simulation
             </button>
           </div>
         </div>
       )}
 
-      {/* 7. MODAL: CITIZEN APK DOWNLOAD & OFFLINE MESH INSTRUCTIONS */}
-      {apkModalOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0, 0, 0, 0.75)",
-            backdropFilter: "blur(14px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 10000
-          }}
-        >
-          <div
-            className="glass-surface"
-            style={{
-              width: "480px",
-              borderRadius: "24px",
-              padding: "24px",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.7)"
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "20px" }}>📱</span>
-                <strong style={{ fontSize: "16px", color: "#ffffff" }}>AEGIS CITIZEN OFFLINE MESH APK</strong>
-              </div>
-              <button
-                onClick={() => setApkModalOpen(false)}
-                style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "18px" }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <p style={{ fontSize: "12px", color: "#cbd5e1", lineHeight: 1.5, marginBottom: "16px" }}>
-              Install this native Android APK on your test devices. The app functions with <strong>0 KB internet, no SIM, and no Wi-Fi</strong>, receiving disaster sirens over 2.4 GHz BLE radio and relaying alerts via Multi-Hop Mesh.
-            </p>
-
-            <div
-              className="glass-card"
-              style={{ padding: "14px", marginBottom: "18px", border: "1px solid rgba(56, 189, 248, 0.2)" }}
-            >
-              <div style={{ fontSize: "11px", color: "#38bdf8", fontWeight: "700", marginBottom: "6px" }}>
-                OFFICIAL RELEASE PACKAGE
-              </div>
-              <div style={{ fontSize: "13px", fontWeight: "700", color: "#ffffff" }}>
-                AEGIS_LEWS_v2.0_PROTOTYPE.apk (9.35 MB)
-              </div>
-              <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>
-                Compiled with Android 14 Baseband BLE Advertising &amp; AudioTrack PCM Tone Generator.
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: "10px" }}>
-              <a
-                href="https://github.com/diverse-07/PROTOTYPE/releases/download/v2.0.0-prototype/AEGIS_LEWS_v2.0_PROTOTYPE.apk"
-                target="_blank"
-                rel="noreferrer"
-                className="framer-btn-primary"
-                style={{ flex: 1, textDecoration: "none", justifyContent: "center", padding: "12px" }}
-              >
-                <span>⬇️</span> <span>Download Release APK</span>
-              </a>
-              <button onClick={() => setApkModalOpen(false)} className="framer-btn-ghost">
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 8. MODAL: FULL EMERGENCY BROADCAST CONSOLE */}
+      {/* 8. MODAL: SIREN DISPATCH */}
       {sirenModalOpen && (
         <div
           style={{
@@ -1014,128 +770,61 @@ export default function AppDesktop() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 10000
+            zIndex: 10000,
+            padding: "16px"
           }}
         >
-          <div
-            className="glass-surface"
-            style={{
-              width: "500px",
-              borderRadius: "24px",
-              padding: "24px",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.7)"
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "22px" }}>🚨</span>
-                <strong style={{ fontSize: "16px", color: "#ef4444" }}>EMERGENCY SIREN DISPATCH CONSOLE</strong>
-              </div>
-              <button
-                onClick={() => setSirenModalOpen(false)}
-                style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "18px" }}
-              >
-                ✕
-              </button>
+          <div className="glass-surface" style={{ width: "460px", maxWidth: "100%", borderRadius: "20px", padding: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+              <strong style={{ fontSize: "15px", color: "#ef4444" }}>🚨 BROADCAST SIREN</strong>
+              <button onClick={() => setSirenModalOpen(false)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "16px" }}>✕</button>
             </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
-              <div>
-                <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>
-                  DISASTER ZONE TARGET
-                </label>
-                <select
-                  value={bleZone}
-                  onChange={(e) => setBleZone(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    background: "rgba(15, 23, 42, 0.9)",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    borderRadius: "12px",
-                    color: "#ffffff"
-                  }}
-                >
-                  {ZONES.map((z) => (
-                    <option key={z.id} value={z.name.split(",")[0]}>
-                      {z.name} ({z.risk})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>
-                  DIRECTIVE MESSAGE (BROADCAST OVER BLE RADIO)
-                </label>
-                <textarea
-                  rows={3}
-                  value={bleMessage}
-                  onChange={(e) => setBleMessage(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    background: "rgba(15, 23, 42, 0.9)",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    borderRadius: "12px",
-                    color: "#ffffff",
-                    fontSize: "12px"
-                  }}
-                />
-              </div>
-
-              <div
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: "12px",
-                  background: "rgba(239, 68, 68, 0.1)",
-                  border: "1px solid rgba(239, 68, 68, 0.25)",
-                  fontSize: "11px",
-                  color: "#fca5a5"
-                }}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
+              <select
+                value={bleZone}
+                onChange={(e) => setBleZone(e.target.value)}
+                style={{ width: "100%", padding: "8px", background: "rgba(15, 23, 42, 0.9)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#fff", fontSize: "12px" }}
               >
-                ⚠️ <strong>Attention:</strong> Dispatched signal reaches all citizen mobile phones in under 15ms via BLE radio advertising and internet push streams, triggering full-volume NDMA siren takeover even in silent mode.
-              </div>
+                {ZONES.map((z) => (
+                  <option key={z.id} value={z.name.split(",")[0]}>{z.name}</option>
+                ))}
+              </select>
+              <textarea
+                rows={3}
+                value={bleMessage}
+                onChange={(e) => setBleMessage(e.target.value)}
+                style={{ width: "100%", padding: "8px", background: "rgba(15, 23, 42, 0.9)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#fff", fontSize: "12px" }}
+              />
             </div>
-
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                onClick={handleDispatch}
-                disabled={isDispatching}
-                className="framer-btn-danger"
-                style={{ flex: 1, padding: "12px", justifyContent: "center" }}
-              >
-                {isDispatching ? "BROADCASTING..." : "CONFIRM & DISPATCH NOW"}
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button onClick={handleDispatch} disabled={isDispatching} className="framer-btn-danger" style={{ flex: 1, padding: "10px", justifyContent: "center" }}>
+                {isDispatching ? "BROADCASTING..." : "DISPATCH BROADCAST"}
               </button>
-              <button onClick={() => setSirenModalOpen(false)} className="framer-btn-ghost">
-                Cancel
-              </button>
+              <button onClick={() => setSirenModalOpen(false)} className="framer-btn-ghost">Cancel</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 9. FLOATING TOAST NOTIFICATION */}
+      {/* 9. TOAST */}
       {toastMsg && (
         <div
           style={{
             position: "fixed",
             bottom: "84px",
-            right: "24px",
+            right: "20px",
             background: "rgba(15, 23, 42, 0.95)",
             backdropFilter: "blur(16px)",
             border: "1px solid rgba(56, 189, 248, 0.4)",
-            borderRadius: "14px",
-            padding: "10px 18px",
+            borderRadius: "12px",
+            padding: "8px 16px",
             color: "#ffffff",
             fontSize: "12px",
             fontWeight: "600",
-            boxShadow: "0 12px 30px rgba(0,0,0,0.5)",
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
-            gap: "8px",
-            animation: "tooltipIn 0.2s ease-out forwards"
+            gap: "8px"
           }}
         >
           <span className="live-dot" style={{ background: "#38bdf8" }} />

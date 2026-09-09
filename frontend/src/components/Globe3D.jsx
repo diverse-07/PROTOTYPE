@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react'
-import * as THREE from 'three'
+import React, { useEffect, useRef, useState, useCallback } from "react"
+import * as THREE from "three"
 
 // Mathematical conversion of (lat, lng) to Three.js Vector3 on a sphere of given radius
 export function latLngToVector3(lat, lng, radius, out = new THREE.Vector3()) {
@@ -24,6 +24,7 @@ export default function Globe3D({
   onResetOrbit
 }) {
   const containerRef = useRef(null)
+  const canvasRef = useRef(null)
   const sceneRef = useRef(null)
   const rendererRef = useRef(null)
   const cameraRef = useRef(null)
@@ -59,13 +60,13 @@ export default function Globe3D({
     maxDistance: 9.0
   })
 
-  const [hoveredEntity, setHoveredEntity] = useState(null)
-  const [textureStatus, setTextureStatus] = useState('loading')
+  const [textureStatus, setTextureStatus] = useState("loading")
 
   // Initialize Three.js Scene
   useEffect(() => {
     const container = containerRef.current
-    if (!container) return
+    const canvas = canvasRef.current
+    if (!container || !canvas) return
 
     const width = container.clientWidth || window.innerWidth
     const height = container.clientHeight || window.innerHeight
@@ -75,28 +76,32 @@ export default function Globe3D({
     sceneRef.current = scene
 
     // 2. Camera
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
+    const camera = new THREE.PerspectiveCamera(45, width / Math.max(height, 1), 0.1, 1000)
     camera.position.set(0, 1.2, 5.2)
     cameraRef.current = camera
 
-    // 3. Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
-    renderer.setSize(width, height)
+    // 3. Renderer attached directly to canvasRef (Zero DOM replaceChildren)
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    })
+    renderer.setSize(width, height, false)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 1.15
-    container.replaceChildren(renderer.domElement)
     rendererRef.current = renderer
 
     // 4. Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95)
     scene.add(ambientLight)
 
-    const sunLight = new THREE.DirectionalLight(0xfffaed, 2.0)
+    const sunLight = new THREE.DirectionalLight(0xfffaed, 2.2)
     sunLight.position.set(10, 6, 8)
     scene.add(sunLight)
 
-    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.2)
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.4)
     rimLight.position.set(-10, -4, -6)
     scene.add(rimLight)
 
@@ -119,8 +124,8 @@ export default function Globe3D({
       starColors[i * 3 + 1] = colorMix > 0.8 ? 0.8 : 0.95
       starColors[i * 3 + 2] = 1.0
     }
-    starsGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
-    starsGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3))
+    starsGeo.setAttribute("position", new THREE.BufferAttribute(starPositions, 3))
+    starsGeo.setAttribute("color", new THREE.BufferAttribute(starColors, 3))
     const starsMat = new THREE.PointsMaterial({
       size: 0.28,
       vertexColors: true,
@@ -142,16 +147,16 @@ export default function Globe3D({
     const textureLoader = new THREE.TextureLoader()
 
     const dayTex = textureLoader.load(
-      './textures/earth_day.jpg',
-      () => setTextureStatus('ready'),
+      "./textures/earth_day.jpg",
+      () => setTextureStatus("ready"),
       undefined,
       () => {
-        console.warn('[AEGIS] Local texture load fallback')
-        setTextureStatus('fallback')
+        console.warn("[AEGIS] Local texture load fallback")
+        setTextureStatus("fallback")
       }
     )
-    const normalTex = textureLoader.load('./textures/earth_normal.jpg')
-    const specTex = textureLoader.load('./textures/earth_specular.jpg')
+    const normalTex = textureLoader.load("./textures/earth_normal.jpg")
+    const specTex = textureLoader.load("./textures/earth_specular.jpg")
 
     const globeMat = new THREE.MeshPhongMaterial({
       map: dayTex,
@@ -195,7 +200,7 @@ export default function Globe3D({
     scene.add(atmosMesh)
 
     // 8. Animated Cloud Layer
-    const cloudsTex = textureLoader.load('./textures/earth_clouds.jpg')
+    const cloudsTex = textureLoader.load("./textures/earth_clouds.jpg")
     const cloudsMat = new THREE.MeshStandardMaterial({
       map: cloudsTex,
       transparent: true,
@@ -220,16 +225,19 @@ export default function Globe3D({
     globeGroup.rotation.y = -Math.PI * 0.45
     globeGroup.rotation.x = 0.22
 
-    // Resize Handler
-    const handleResize = () => {
-      if (!containerRef.current || !rendererRef.current || !cameraRef.current) return
-      const w = containerRef.current.clientWidth
-      const h = containerRef.current.clientHeight
-      cameraRef.current.aspect = w / h
-      cameraRef.current.updateProjectionMatrix()
-      rendererRef.current.setSize(w, h)
-    }
-    window.addEventListener('resize', handleResize)
+    // Robust ResizeObserver for 100% stable aspect ratio
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width
+        const h = entry.contentRect.height
+        if (w > 0 && h > 0 && cameraRef.current && rendererRef.current) {
+          cameraRef.current.aspect = w / h
+          cameraRef.current.updateProjectionMatrix()
+          rendererRef.current.setSize(w, h, false)
+        }
+      }
+    })
+    resizeObserver.observe(container)
 
     // Interaction Handlers (Mouse / Touch)
     const onMouseDown = (e) => {
@@ -265,11 +273,10 @@ export default function Globe3D({
       )
     }
 
-    const domEl = renderer.domElement
-    domEl.addEventListener('mousedown', onMouseDown)
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup', onMouseUp)
-    domEl.addEventListener('wheel', onWheel, { passive: false })
+    canvas.addEventListener("mousedown", onMouseDown)
+    window.addEventListener("mousemove", onMouseMove)
+    window.addEventListener("mouseup", onMouseUp)
+    canvas.addEventListener("wheel", onWheel, { passive: false })
 
     // Touch support
     let touchStartDist = 0
@@ -314,9 +321,9 @@ export default function Globe3D({
       interactionRef.current.isDragging = false
     }
 
-    domEl.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchmove', onTouchMove, { passive: true })
-    window.addEventListener('touchend', onTouchEnd)
+    canvas.addEventListener("touchstart", onTouchStart, { passive: true })
+    window.addEventListener("touchmove", onTouchMove, { passive: true })
+    window.addEventListener("touchend", onTouchEnd)
 
     // Animation Loop
     let lastTime = performance.now()
@@ -382,7 +389,7 @@ export default function Globe3D({
       const pulseTime = time * 0.002
       if (zonePinsGroupRef.current) {
         zonePinsGroupRef.current.children.forEach((group) => {
-          const ring = group.getObjectByName('pulseRing')
+          const ring = group.getObjectByName("pulseRing")
           if (ring) {
             const s = 1.0 + (Math.sin(pulseTime * 2.5 + (group.userData.id || 0)) * 0.5 + 0.5) * 0.8
             ring.scale.set(s, s, s)
@@ -393,7 +400,7 @@ export default function Globe3D({
 
       // User beacon pulse
       if (userPinGroupRef.current) {
-        const userBeacon = userPinGroupRef.current.getObjectByName('userRadarRing')
+        const userBeacon = userPinGroupRef.current.getObjectByName("userRadarRing")
         if (userBeacon) {
           const s = 1.0 + ((pulseTime * 3) % 1.0) * 2.2
           userBeacon.scale.set(s, s, s)
@@ -409,14 +416,14 @@ export default function Globe3D({
     // Cleanup
     return () => {
       if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current)
-      window.removeEventListener('resize', handleResize)
-      window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mouseup', onMouseUp)
-      window.removeEventListener('touchmove', onTouchMove)
-      window.removeEventListener('touchend', onTouchEnd)
-      domEl.removeEventListener('mousedown', onMouseDown)
-      domEl.removeEventListener('wheel', onWheel)
-      domEl.removeEventListener('touchstart', onTouchStart)
+      resizeObserver.disconnect()
+      window.removeEventListener("mousemove", onMouseMove)
+      window.removeEventListener("mouseup", onMouseUp)
+      window.removeEventListener("touchmove", onTouchMove)
+      window.removeEventListener("touchend", onTouchEnd)
+      canvas.removeEventListener("mousedown", onMouseDown)
+      canvas.removeEventListener("wheel", onWheel)
+      canvas.removeEventListener("touchstart", onTouchStart)
       renderer.dispose()
     }
   }, [])
@@ -466,7 +473,7 @@ export default function Globe3D({
         opacity: 0.8
       })
       const ringMesh = new THREE.Mesh(ringGeo, ringMat)
-      ringMesh.name = 'pulseRing'
+      ringMesh.name = "pulseRing"
       ringMesh.position.y = 0.005
       pinGroup.add(ringMesh)
 
@@ -517,7 +524,7 @@ export default function Globe3D({
       opacity: 0.9
     })
     const ringMesh = new THREE.Mesh(ringGeo, ringMat)
-    ringMesh.name = 'userRadarRing'
+    ringMesh.name = "userRadarRing"
     ringMesh.position.y = 0.008
     beaconGroup.add(ringMesh)
 
@@ -556,9 +563,9 @@ export default function Globe3D({
 
   // Raycasting for interactive click & hover on zones
   const handleClick = (e) => {
-    if (!containerRef.current || !cameraRef.current || !zonePinsGroupRef.current) return
+    if (!canvasRef.current || !cameraRef.current || !zonePinsGroupRef.current) return
 
-    const rect = containerRef.current.getBoundingClientRect()
+    const rect = canvasRef.current.getBoundingClientRect()
     const mouse = new THREE.Vector2(
       ((e.clientX - rect.left) / rect.width) * 2 - 1,
       -((e.clientY - rect.top) / rect.height) * 2 + 1
@@ -582,36 +589,45 @@ export default function Globe3D({
   return (
     <div
       ref={containerRef}
-      onClick={handleClick}
       style={{
-        width: '100%',
-        height: '100%',
-        position: 'relative',
-        overflow: 'hidden',
-        cursor: interactionRef.current.isDragging ? 'grabbing' : 'grab'
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        overflow: "hidden"
       }}
     >
-      {textureStatus === 'loading' && (
+      <canvas
+        ref={canvasRef}
+        onClick={handleClick}
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "block",
+          cursor: interactionRef.current.isDragging ? "grabbing" : "grab"
+        }}
+      />
+      {textureStatus === "loading" && (
         <div
           style={{
-            position: 'absolute',
-            bottom: '90px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(10, 14, 23, 0.8)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '30px',
-            padding: '8px 18px',
-            color: '#94a3b8',
-            fontSize: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            zIndex: 10
+            position: "absolute",
+            bottom: "90px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "rgba(10, 14, 23, 0.8)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+            borderRadius: "30px",
+            padding: "8px 18px",
+            color: "#94a3b8",
+            fontSize: "12px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            zIndex: 10,
+            pointerEvents: "none"
           }}
         >
-          <span className='live-dot' style={{ background: '#00f0ff' }}></span>
+          <span className="live-dot" style={{ background: "#00f0ff" }} />
           <span>Loading NASA Surface Radar Telemetry...</span>
         </div>
       )}
