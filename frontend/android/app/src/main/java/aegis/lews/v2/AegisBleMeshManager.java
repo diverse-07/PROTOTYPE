@@ -70,6 +70,7 @@ public class AegisBleMeshManager {
     private String currentSosText = "";
 
     private final Map<String, JSONObject> discoveredPeers = new ConcurrentHashMap<>();
+    private final Map<String, Long> lastAlertTriggerTimes = new ConcurrentHashMap<>();
 
     public AegisBleMeshManager(MainActivity activity, WebView webView) {
         this.activity = activity;
@@ -81,6 +82,10 @@ public class AegisBleMeshManager {
         } else {
             this.bluetoothAdapter = null;
         }
+    }
+
+    public boolean hasPermissions() {
+        return getMissingPermissionsList().isEmpty() && isBluetoothEnabled();
     }
 
     private boolean hasPermission(String permission) {
@@ -220,16 +225,18 @@ public class AegisBleMeshManager {
                 return "{\"status\":\"error\",\"message\":\"Bluetooth LE Scanner unavailable\"}";
             }
 
-            ScanFilter filter = new ScanFilter.Builder()
-                .setServiceUuid(AEGIS_PARCEL_UUID)
-                .build();
+            List<ScanFilter> filters = new ArrayList<>();
+            filters.add(new ScanFilter.Builder().setServiceUuid(AEGIS_PARCEL_UUID).build());
+            try {
+                filters.add(new ScanFilter.Builder().setServiceData(AEGIS_PARCEL_UUID, new byte[]{(byte) 0xAE}, new byte[]{(byte) 0xFF}).build());
+            } catch (Exception ignored) {}
 
             ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .setReportDelay(0)
                 .build();
 
-            scanner.startScan(Collections.singletonList(filter), settings, scanCallback);
+            scanner.startScan(filters, settings, scanCallback);
             isScanning = true;
             Log.d(TAG, "BLE Mesh Scan started");
             return "{\"status\":\"success\",\"message\":\"Hardware BLE Mesh scan active\"}";
@@ -289,6 +296,24 @@ public class AegisBleMeshManager {
     }
 
     @JavascriptInterface
+    public void silenceNativeSiren() {
+        try {
+            AegisSirenService.stopSirenDirectly(activity);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to silence native siren", e);
+        }
+    }
+
+    @JavascriptInterface
+    public void triggerNativeSiren(String message) {
+        try {
+            AegisSirenService.startSirenDirectly(activity, message);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to trigger native siren", e);
+        }
+    }
+
+    @JavascriptInterface
     public String getDiscoveredPeers() {
         JSONArray arr = new JSONArray();
         for (JSONObject peer : discoveredPeers.values()) {
@@ -336,12 +361,12 @@ public class AegisBleMeshManager {
             .build();
 
         AdvertiseData data = new AdvertiseData.Builder()
-            .addServiceUuid(AEGIS_PARCEL_UUID)
             .addServiceData(AEGIS_PARCEL_UUID, payload)
-            .setIncludeTxPowerLevel(true)
+            .setIncludeTxPowerLevel(false)
             .build();
 
         AdvertiseData scanResponse = new AdvertiseData.Builder()
+            .addServiceUuid(AEGIS_PARCEL_UUID)
             .setIncludeDeviceName(true)
             .build();
 
@@ -427,7 +452,7 @@ public class AegisBleMeshManager {
     // =========================================================================
 
     /**
-     * Compact binary format (Max 24 bytes for ServiceData):
+     * Compact binary format (Max 20 bytes for ServiceData to guarantee <= 31 bytes PDU):
      * [0]     : Magic Byte (0xAE)
      * [1]     : Packet Type (1=SOS, 2=Warning, 3=Beacon, 4=WebRelay)
      * [2]     : Risk Score (0-100)
@@ -435,10 +460,10 @@ public class AegisBleMeshManager {
      * [5-8]   : Lat Int32 (lat * 100000)
      * [9-12]  : Lng Int32 (lng * 100000)
      * [13]    : Packed Meta ((severityCode << 4) | (presetCode & 0x0F))
-     * [14..23]: Text / Message snippet (up to 10 bytes UTF-8)
+     * [14..19]: Text / Message snippet (up to 6 bytes UTF-8)
      */
     private byte[] encodePacket(byte type, String nodeId, int riskScore, int presetCode, int severityCode, double lat, double lng, String text) {
-        ByteBuffer buf = ByteBuffer.allocate(24);
+        ByteBuffer buf = ByteBuffer.allocate(20);
         buf.put(MAGIC_BYTE);
         buf.put(type);
         buf.put((byte) Math.max(0, Math.min(100, riskScore)));
@@ -575,6 +600,17 @@ public class AegisBleMeshManager {
 
         ScanRecord record = result.getScanRecord();
         byte[] serviceData = record.getServiceData(AEGIS_PARCEL_UUID);
+        if (serviceData == null) {
+            Map<ParcelUuid, byte[]> map = record.getServiceData();
+            if (map != null) {
+                for (Map.Entry<ParcelUuid, byte[]> entry : map.entrySet()) {
+                    if (entry.getKey() != null && entry.getKey().getUuid().toString().toLowerCase().contains("ae61")) {
+                        serviceData = entry.getValue();
+                        break;
+                    }
+                }
+            }
+        }
         if (serviceData == null) return;
 
         JSONObject parsed = decodePacket(serviceData, result.getRssi(), result.getTxPower());
@@ -586,6 +622,22 @@ public class AegisBleMeshManager {
 
             discoveredPeers.put(deviceAddress, parsed);
 
+            int typeCode = parsed.getInt("typeCode");
+            boolean isEmergency = (typeCode == TYPE_SOS || typeCode == TYPE_WARNING || typeCode == TYPE_WEB_RELAY);
+
+            // Deduplication: prevent repeated alarms within 3.5 seconds for the same event
+            String alertKey = deviceAddress + "_" + typeCode + "_" + parsed.optInt("presetCode", 0);
+            long now = System.currentTimeMillis();
+            Long lastTrigger = lastAlertTriggerTimes.get(alertKey);
+            boolean shouldTriggerAlarm = isEmergency && (lastTrigger == null || (now - lastTrigger) > 3500);
+
+            if (shouldTriggerAlarm) {
+                lastAlertTriggerTimes.put(alertKey, now);
+                // DIRECT HARDWARE NATIVE SIREN TRIGGER: Wakes screen, raises volume to max, wails siren audio & vibrates
+                String alertMsg = parsed.optString("fullDirective", parsed.optString("message", "CRITICAL EVACUATION ALARM"));
+                AegisSirenService.startSirenDirectly(activity, alertMsg);
+            }
+
             final String jsonStr = parsed.toString();
 
             activity.runOnUiThread(() -> {
@@ -593,12 +645,9 @@ public class AegisBleMeshManager {
                 webView.evaluateJavascript("if (window.onAegisBlePeerDiscovered) { window.onAegisBlePeerDiscovered(" + jsonStr + "); }", null);
 
                 // If emergency SOS, warning, or WebRelay packet, trigger immediate packet listener
-                try {
-                    int typeCode = parsed.getInt("typeCode");
-                    if (typeCode == TYPE_SOS || typeCode == TYPE_WARNING || typeCode == TYPE_WEB_RELAY) {
-                        webView.evaluateJavascript("if (window.onAegisBlePacketReceived) { window.onAegisBlePacketReceived(" + jsonStr + "); }", null);
-                    }
-                } catch (Exception ignored) {}
+                if (isEmergency) {
+                    webView.evaluateJavascript("if (window.onAegisBlePacketReceived) { window.onAegisBlePacketReceived(" + jsonStr + "); }", null);
+                }
             });
         } catch (Exception e) {
             Log.e(TAG, "Error handling BLE scan result", e);

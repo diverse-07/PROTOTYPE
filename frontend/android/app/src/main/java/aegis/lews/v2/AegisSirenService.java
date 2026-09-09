@@ -49,6 +49,19 @@ public class AegisSirenService extends Service {
         } catch (Exception ignored) {}
     }
 
+    public static void startSirenDirectly(Context context, String message) {
+        try {
+            Intent intent = new Intent(context, AegisSirenService.class);
+            intent.setAction("ACTION_START_SIREN");
+            intent.putExtra("aegis_message", message != null ? message : "CRITICAL EVACUATION SIREN ACTIVE");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent);
+            } else {
+                context.startService(intent);
+            }
+        } catch (Exception ignored) {}
+    }
+
     public static void stopSirenDirectly(Context context) {
         try {
             Intent intent = new Intent(context, AegisSirenService.class);
@@ -71,7 +84,9 @@ public class AegisSirenService extends Service {
         }
 
         Notification notification = buildForegroundNotification();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(NOTIF_MONITOR_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC | ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIF_MONITOR_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
         } else {
             startForeground(NOTIF_MONITOR_ID, notification);
@@ -82,8 +97,14 @@ public class AegisSirenService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null && "ACTION_STOP_SIREN".equals(intent.getAction())) {
-            stopEmergencySiren();
+        if (intent != null) {
+            if ("ACTION_STOP_SIREN".equals(intent.getAction())) {
+                stopEmergencySiren();
+            } else if ("ACTION_START_SIREN".equals(intent.getAction())) {
+                String msg = intent.getStringExtra("aegis_message");
+                if (msg == null || msg.isEmpty()) msg = "CRITICAL EVACUATION SIREN ACTIVE";
+                triggerEmergencySiren(msg);
+            }
         }
         return START_STICKY;
     }

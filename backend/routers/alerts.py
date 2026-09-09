@@ -76,7 +76,7 @@ async def broadcast_alert(payload: AlertPayload):
                     "Priority": "urgent",
                     "Tags": "warning,rotating_light,skull",
                     "Sound": "alarm",
-                    "Actions": "view, Open AEGIS App, https://aegis-lews.vercel.app"
+                    "Actions": "view, Open AEGIS App, https://diverse-07.github.io/PROTOTYPE/"
                 }
             )
     except Exception:

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import { MapContainer, TileLayer, Polygon, CircleMarker, Popup } from "react-leaflet"
-import { broadcastAlert, getWeather, getRisk, getAlerts, submitReport, getReports, registerBleGatewayNode, getBleActiveTrigger, silenceBleBroadcast } from "./api/client"
+import { broadcastAlert, getWeather, getRisk, getAlerts, submitReport, getReports, registerBleGatewayNode, getBleActiveTrigger, silenceBleBroadcast, getWsBaseUrl, setCustomBackendUrl, getApiBaseUrl } from "./api/client"
 import "./mobile.css"
 
 // --- PROFESSIONAL VECTOR ICONS (NO CARTOON EMOJIS) ---
@@ -1629,18 +1629,32 @@ function OfflineDisasterPortal({ t, user, activeTab, onSelectTab, onSwitchOnline
           window.AegisBleBridge.requestEnableBluetooth()
         }
         window.AegisBleBridge.startMeshScan()
-        showToast("🔍 Active 2.4GHz BLE Hardware Scan Started (Zero SIM / Zero Wi-Fi)...")
+        showToast("🔍 Active 2.4GHz BLE Hardware Scan Active (Continuous Emergency Radio)...")
       } catch (err) {
         console.warn("Native BLE scan error:", err)
       }
-      // Auto-stop scanning after 15s to conserve device battery
+      // Populate latest discovered hardware peers
       setTimeout(() => {
         try {
-          if (window.AegisBleBridge) window.AegisBleBridge.stopMeshScan()
+          if (window.AegisBleBridge && window.AegisBleBridge.getDiscoveredPeers) {
+            const raw = window.AegisBleBridge.getDiscoveredPeers()
+            const list = JSON.parse(raw || "[]")
+            if (list.length > 0) {
+              setPeers(list.map((p, idx) => ({
+                id: p.nodeId || "RADIO-NODE-" + idx,
+                name: p.type === "WEB_RELAY" ? "Disaster Authority Relay" : (p.message ? "Citizen Node" : "AEGIS Radio Peer"),
+                dist: p.distStr || (p.distanceMeters ? p.distanceMeters + "m" : "Nearby"),
+                rssi: p.rssi || "-62 dBm",
+                hops: 1,
+                lastSeen: "Active",
+                alertsCarried: p.riskScore ? 1 : 0
+              })))
+            }
+          }
         } catch(e) {}
         setScanning(false)
-        showToast("BLE Hardware Scan complete. Discovered radio nodes updated.")
-      }, 15000)
+        showToast("Discovered peers updated. Radio receiver continues active background listening.")
+      }, 2500)
     } else {
       // Browser dev fallback
       setTimeout(() => {
@@ -2115,7 +2129,15 @@ if (typeof window !== 'undefined') {
   window.addEventListener('pointerdown', initAndUnlockAudio);
 }
 
-function startDeviceSiren() {
+function startDeviceSiren(msg) {
+  // 1. Native Android Hardware Siren (Bypasses silent mode, turns on screen, max alarm stream)
+  if (typeof window !== 'undefined' && window.AegisBleBridge && window.AegisBleBridge.triggerNativeSiren) {
+    try {
+      window.AegisBleBridge.triggerNativeSiren(msg || "CRITICAL EVACUATION SIREN ACTIVE");
+    } catch(e) {}
+  }
+
+  // 2. Web Audio API Siren for browser webview & speaker
   initAndUnlockAudio();
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -2202,6 +2224,15 @@ function stopDeviceSiren() {
   if (typeof navigator !== 'undefined' && navigator.vibrate) {
     navigator.vibrate(0);
   }
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+  // Native Android Siren Silence Trigger
+  if (typeof window !== 'undefined' && window.AegisBleBridge && window.AegisBleBridge.silenceNativeSiren) {
+    try {
+      window.AegisBleBridge.silenceNativeSiren();
+    } catch(e) {}
+  }
 }
 
 export default function AppMobile() {
@@ -2230,7 +2261,41 @@ export default function AppMobile() {
   const [webRelayInfo, setWebRelayInfo] = useState(null)
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(false)
   const [permissionPromptDetail, setPermissionPromptDetail] = useState("")
+  const [showBackendModal, setShowBackendModal] = useState(false)
+  const [customBackendUrlInput, setCustomBackendUrlInput] = useState(typeof window !== "undefined" ? (localStorage.getItem("aegis_backend_url") || getApiBaseUrl()) : "")
+  const [backendPingStatus, setBackendPingStatus] = useState("")
   const lastProcessedDispatchId = useRef("")
+
+  const handleTestBackendPing = async () => {
+    setBackendPingStatus("testing")
+    try {
+      let target = customBackendUrlInput.trim().replace(/\/$/, "")
+      if (!target.endsWith("/api") && !target.includes("/api/")) {
+        target += "/api"
+      }
+      const res = await fetch(`${target}/weather?lat=25.44&lng=92.21`, { signal: AbortSignal.timeout(3500) })
+      if (res.ok) {
+        setBackendPingStatus("connected")
+        setToastMsg("✅ Backend Server reachable and responsive!")
+      } else {
+        setBackendPingStatus("error")
+        setToastMsg(`⚠️ Backend responded with HTTP ${res.status}`)
+      }
+    } catch(err) {
+      setBackendPingStatus("failed")
+      setToastMsg("❌ Could not reach server. Check IP address & port.")
+    }
+    setTimeout(() => setToastMsg(""), 4000)
+  }
+
+  const handleSaveBackendUrl = () => {
+    setCustomBackendUrl(customBackendUrlInput.trim())
+    setShowBackendModal(false)
+    setToastMsg("✅ Backend Server saved! Reconnecting...")
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
+  }
 
   const executeBleBroadcast = useCallback((payload) => {
     if (window.AegisBleBridge && typeof window.AegisBleBridge.broadcastWebRelay === "function") {
@@ -2307,11 +2372,21 @@ export default function AppMobile() {
   }, [user])
 
   useEffect(() => {
+    // Auto-start continuous BLE mesh scan on mount if native bridge is present
+    if (typeof window !== "undefined" && window.AegisBleBridge) {
+      try {
+        if (!window.AegisBleBridge.isScanningActive()) {
+          window.AegisBleBridge.startMeshScan();
+        }
+      } catch(e) {}
+    }
+  }, []);
+
+  useEffect(() => {
     let backendWs
     const connectBackendBleWS = () => {
       try {
-        const host = (typeof window !== "undefined" && window.location.hostname) ? window.location.hostname : "127.0.0.1"
-        const wsUrl = `ws://${host}:8000/api/ble/ws`
+        const wsUrl = getWsBaseUrl()
         backendWs = new WebSocket(wsUrl)
         backendWs.onmessage = (event) => {
           try {
@@ -2326,6 +2401,7 @@ export default function AppMobile() {
         backendWs.onclose = () => {
           setTimeout(connectBackendBleWS, 3000)
         }
+        backendWs.onerror = () => {}
       } catch (e) {}
     }
     connectBackendBleWS()
@@ -2723,8 +2799,16 @@ export default function AppMobile() {
             </div>
           </div>
 
-          {/* Top Right: Network Pill + 3-Dot More Menu */}
+          {/* Top Right: Network Pill + Settings Antenna + 3-Dot More Menu */}
           <div className="mobile-header-actions">
+            <button 
+              className="mobile-more-btn" 
+              onClick={() => setShowBackendModal(true)} 
+              title="Server IP & BLE Radio Network Settings"
+              style={{ marginRight: "4px" }}
+            >
+              <span style={{ fontSize: "15px" }}>📡</span>
+            </button>
             {/* 3-Dot Options Button */}
             <button 
               className="mobile-more-btn" 
@@ -2769,6 +2853,40 @@ export default function AppMobile() {
               <span className="mode-badge-hint">0 KB Data</span>
             </button>
           </div>
+        </div>
+
+        {/* Continuous Offline BLE Radio Mesh Listener Status */}
+        <div style={{
+          margin: "4px 12px 6px",
+          padding: "6px 10px",
+          borderRadius: "8px",
+          background: "rgba(16, 185, 129, 0.08)",
+          border: "1px solid rgba(16, 185, 129, 0.25)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontSize: "11px",
+          fontWeight: "600",
+          color: "#065f46"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "#10b981", boxShadow: "0 0 6px #10b981" }} />
+            <span>Radio Listener Active (2.4GHz BLE • 0 KB Net)</span>
+          </div>
+          <button
+            onClick={() => setShowBackendModal(true)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#047857",
+              fontSize: "10.5px",
+              fontWeight: "700",
+              cursor: "pointer",
+              textDecoration: "underline"
+            }}
+          >
+            Config
+          </button>
         </div>
 
         {/* Dynamic Internet Connection Live Banner */}
@@ -3267,6 +3385,17 @@ export default function AppMobile() {
                 <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>›</span>
               </button>
 
+              <button className="menu-option-item" onClick={() => { setShowMenuModal(false); setShowBackendModal(true); }}>
+                <div className="menu-item-icon" style={{ background: "#e0f2fe", color: "#0369a1" }}>
+                  <Icons.Radio size={18} />
+                </div>
+                <div className="menu-item-text">
+                  <div className="menu-item-title">Backend &amp; BLE Network Settings</div>
+                  <div className="menu-item-sub">Configure FastAPI URL, Cloud Mesh &amp; radio endpoints</div>
+                </div>
+                <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>›</span>
+              </button>
+
               <button className="menu-option-item" onClick={handleSignOut} style={{ borderTop: "1px solid #fee2e2" }}>
                 <div className="menu-item-icon" style={{ background: "#fef2f2", color: "#b91c1c" }}>
                   <Icons.LogOut size={18} />
@@ -3281,6 +3410,113 @@ export default function AppMobile() {
 
             <button className="btn btn-outline" style={{ marginTop: "14px", width: "100%" }} onClick={() => setShowMenuModal(false)}>
               Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* BACKEND SERVER & BLE RADIO SETTINGS BOTTOM SHEET */}
+      {showBackendModal && (
+        <div className="modal-overlay" onClick={() => setShowBackendModal(false)}>
+          <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: "88vh", overflowY: "auto" }}>
+            <div className="modal-handle" />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+              <div className="modal-title" style={{ textAlign: "left", color: "var(--darknavy)", fontSize: "16px" }}>
+                📡 Backend &amp; BLE Network
+              </div>
+              <span style={{ fontSize: "11px", fontWeight: "700", background: "#ecfdf5", color: "#065f46", padding: "3px 8px", borderRadius: "6px" }}>
+                Active Node
+              </span>
+            </div>
+            <div className="modal-subtitle" style={{ textAlign: "left", marginBottom: "16px" }}>
+              Configure FastAPI endpoint, cloud emergency bus, and radio relay.
+            </div>
+
+            {/* Current Status Box */}
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "12px", marginBottom: "14px" }}>
+              <div style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: "700", marginBottom: "4px" }}>Active API Base URL</div>
+              <div style={{ fontSize: "13px", fontWeight: "700", color: "#0f172a", wordBreak: "break-all" }}>{getApiBaseUrl()}</div>
+              <div style={{ fontSize: "11px", color: "#64748b", marginTop: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
+                <span>WebSocket:</span>
+                <code style={{ fontSize: "10.5px", background: "#e2e8f0", padding: "2px 4px", borderRadius: "4px" }}>{getWsBaseUrl()}</code>
+              </div>
+            </div>
+
+            {/* Custom URL Input */}
+            <div style={{ marginBottom: "14px" }}>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>
+                Backend Server URL (LAN IP or Cloud URL)
+              </label>
+              <input
+                type="text"
+                value={customBackendUrlInput}
+                onChange={e => setCustomBackendUrlInput(e.target.value)}
+                placeholder="http://192.168.1.15:8000"
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  border: "1px solid #cbd5e1",
+                  fontSize: "13px",
+                  boxSizing: "border-box"
+                }}
+              />
+            </div>
+
+            {/* Quick Presets */}
+            <div style={{ marginBottom: "16px" }}>
+              <div style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", marginBottom: "6px" }}>QUICK PRESETS:</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                <button
+                  type="button"
+                  onClick={() => setCustomBackendUrlInput("/api")}
+                  style={{ fontSize: "11px", padding: "5px 10px", borderRadius: "6px", background: "#f1f5f9", border: "1px solid #cbd5e1", cursor: "pointer" }}
+                >
+                  💻 Local Proxy (/api)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustomBackendUrlInput("http://10.0.2.2:8000")}
+                  style={{ fontSize: "11px", padding: "5px 10px", borderRadius: "6px", background: "#f1f5f9", border: "1px solid #cbd5e1", cursor: "pointer" }}
+                >
+                  📱 Android Emulator (10.0.2.2:8000)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustomBackendUrlInput("http://192.168.1.100:8000")}
+                  style={{ fontSize: "11px", padding: "5px 10px", borderRadius: "6px", background: "#f1f5f9", border: "1px solid #cbd5e1", cursor: "pointer" }}
+                >
+                  📶 Wi-Fi Hotspot IP
+                </button>
+              </div>
+            </div>
+
+            {/* Live Test & Save Controls */}
+            <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                style={{ flex: 1, padding: "10px", fontSize: "12px" }}
+                onClick={handleTestBackendPing}
+              >
+                {backendPingStatus === "testing" ? "Testing..." : "⚡ Test Ping"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ flex: 1, padding: "10px", fontSize: "12px" }}
+                onClick={handleSaveBackendUrl}
+              >
+                💾 Save &amp; Apply
+              </button>
+            </div>
+
+            <button
+              className="btn btn-outline"
+              style={{ width: "100%", fontSize: "12px" }}
+              onClick={() => setShowBackendModal(false)}
+            >
+              Cancel
             </button>
           </div>
         </div>

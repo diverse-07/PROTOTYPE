@@ -32,6 +32,9 @@ public class MainActivity extends BridgeActivity {
         if (this.bridge != null && this.bridge.getWebView() != null) {
             bleMeshManager = new AegisBleMeshManager(this, this.bridge.getWebView());
             this.bridge.getWebView().addJavascriptInterface(bleMeshManager, "AegisBleBridge");
+            if (bleMeshManager.hasPermissions()) {
+                bleMeshManager.startMeshScan();
+            }
         }
 
         // Start native background siren service immediately
@@ -52,6 +55,9 @@ public class MainActivity extends BridgeActivity {
     public void onResume() {
         super.onResume();
         enableLockScreenWake();
+        if (bleMeshManager != null && bleMeshManager.hasPermissions() && !bleMeshManager.isScanningActive()) {
+            bleMeshManager.startMeshScan();
+        }
         handleIncomingIntent(getIntent());
     }
 
@@ -172,6 +178,9 @@ public class MainActivity extends BridgeActivity {
             }
             if (bleMeshManager != null) {
                 bleMeshManager.onPermissionsUpdated(allGranted);
+                if (allGranted && bleMeshManager.isBluetoothEnabled()) {
+                    bleMeshManager.startMeshScan();
+                }
             }
         }
     }

@@ -128,7 +128,7 @@ async def trigger_ble_broadcast(payload: BleBroadcastRequest):
                     "Title": f"AEGIS BLE BROADCAST - {payload.zone_name}",
                     "Priority": "urgent",
                     "Tags": "radio,broadcast,satellite,warning",
-                    "Actions": "view, Open AEGIS App, https://aegis-lews.vercel.app"
+                    "Actions": "view, Open AEGIS App, https://diverse-07.github.io/PROTOTYPE/"
                 }
             )
     except Exception:

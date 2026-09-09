@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react"
 import { MapContainer, TileLayer, Polygon, CircleMarker, Popup, useMap } from "react-leaflet"
-import { getWeather, broadcastAlert, dispatchBleBroadcast, getBleGatewayNodes } from "./api/client"
+import { getWeather, broadcastAlert, dispatchBleBroadcast, getBleGatewayNodes, getApiBaseUrl, setCustomBackendUrl } from "./api/client"
 
 function ZoomWatcher({ onZoomChange }) {
   const map = useMap()
@@ -81,6 +81,9 @@ export default function AppDesktop() {
   const [showMonitoringSensors, setShowMonitoringSensors] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [showBleModal, setShowBleModal] = useState(false)
+  const [showBackendModal, setShowBackendModal] = useState(false)
+  const [customBackendInput, setCustomBackendInput] = useState(getApiBaseUrl())
+  const [pingStatus, setPingStatus] = useState("")
   const [bleZone, setBleZone] = useState("Jaintia Hills")
   const [bleSeverity, setBleSeverity] = useState("CRITICAL")
   const [blePresetCode, setBlePresetCode] = useState(1)
@@ -89,6 +92,36 @@ export default function AppDesktop() {
   const [isBleDispatching, setIsBleDispatching] = useState(false)
   const [sendBleMesh, setSendBleMesh] = useState(true)
   const [toastMsg, setToastMsg] = useState("")
+
+  const handleTestBackendPing = async () => {
+    setPingStatus("testing")
+    try {
+      let target = customBackendInput.trim().replace(/\/$/, "")
+      if (!target.endsWith("/api") && !target.includes("/api/")) {
+        target += "/api"
+      }
+      const res = await fetch(`${target}/weather?lat=25.44&lng=92.21`, { signal: AbortSignal.timeout(3500) })
+      if (res.ok) {
+        setPingStatus("connected")
+        showToast("✅ Backend Server responsive!")
+      } else {
+        setPingStatus("error")
+        showToast(`⚠️ Server responded with HTTP ${res.status}`)
+      }
+    } catch(err) {
+      setPingStatus("failed")
+      showToast("❌ Could not reach server. Check IP & port.")
+    }
+  }
+
+  const handleSaveBackendUrl = () => {
+    setCustomBackendUrl(customBackendInput.trim())
+    setShowBackendModal(false)
+    showToast("✅ Backend Server saved! Reloading...")
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
+  }
   const [sendSms, setSendSms] = useState(true)
   const [notifyNdrf, setNotifyNdrf] = useState(true)
   const [closeHighway, setCloseHighway] = useState(false)
@@ -246,7 +279,16 @@ export default function AppDesktop() {
         </div>
         <div className="header-right">
           <div style={{fontFamily:"Consolas,monospace",fontSize:12}}>{currentTime}</div>
-          <div>Team AEGIS Control Center</div>
+          <div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}>
+            <button
+              onClick={()=>setShowBackendModal(true)}
+              style={{background:"rgba(255,255,255,0.14)",border:"1px solid rgba(255,255,255,0.3)",color:"#ffffff",borderRadius:4,padding:"2px 8px",fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}
+              title="Configure FastAPI Backend & Cloud Mesh Connection"
+            >
+              <span>📡</span>
+              <span>Backend: {getApiBaseUrl()}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -810,6 +852,70 @@ export default function AppDesktop() {
                 </button>
                 <button className="portal-btn" onClick={()=>setShowBleModal(false)} style={{padding:"12px 18px"}}>
                   Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== BACKEND SETTINGS MODAL ===== */}
+      {showBackendModal && (
+        <div className="modal-bg show">
+          <div className="modal-box" style={{maxWidth: 520}}>
+            <div className="modal-head" style={{background:"#0d2240",color:"white",padding:"14px 18px",borderRadius:"6px 6px 0 0"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{background:"#1e40af",padding:"6px 10px",borderRadius:4,fontSize:18}}>⚙️</div>
+                <div>
+                  <h3 style={{margin:0,fontSize:16,color:"#fff"}}>Backend Server Configuration</h3>
+                  <div style={{fontSize:11,color:"#93c5fd"}}>Configure API and WebSocket connections for Authority Portal</div>
+                </div>
+              </div>
+              <button className="modal-close" onClick={()=>setShowBackendModal(false)} style={{color:"#fff"}}>x</button>
+            </div>
+            
+            <div className="modal-content" style={{padding:20}}>
+              <div style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:4,padding:"10px 14px",marginBottom:14}}>
+                <div style={{fontSize:11,color:"#64748b",fontWeight:700,textTransform:"uppercase"}}>Current Active Endpoint:</div>
+                <div style={{fontSize:13,fontWeight:700,color:"#0f172a",fontFamily:"monospace",marginTop:2}}>{getApiBaseUrl()}</div>
+              </div>
+
+              <div style={{marginBottom:14}}>
+                <label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>CUSTOM BACKEND SERVER URL</label>
+                <input
+                  type="text"
+                  value={customBackendInput}
+                  onChange={e=>setCustomBackendInput(e.target.value)}
+                  placeholder="http://127.0.0.1:8000 or http://192.168.1.15:8000"
+                  style={{width:"100%",padding:8,borderRadius:4,border:"1px solid #cbd5e1",fontSize:13,boxSizing:"border-box"}}
+                />
+              </div>
+
+              <div style={{marginBottom:16}}>
+                <div style={{fontSize:10,fontWeight:700,color:"#64748b",marginBottom:4}}>QUICK PRESETS:</div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  <button type="button" className="portal-btn portal-btn-sm" onClick={()=>setCustomBackendInput("/api")}>💻 Local Proxy (/api)</button>
+                  <button type="button" className="portal-btn portal-btn-sm" onClick={()=>setCustomBackendInput("http://127.0.0.1:8000")}>🖥️ Localhost (8000)</button>
+                  <button type="button" className="portal-btn portal-btn-sm" onClick={()=>setCustomBackendInput("https://diverse-07.github.io/PROTOTYPE")}>🌐 Cloud / GitHub Pages</button>
+                </div>
+              </div>
+
+              <div style={{display:"flex",gap:10}}>
+                <button
+                  type="button"
+                  className="portal-btn"
+                  onClick={handleTestBackendPing}
+                  style={{flex:1,padding:10,background:"#f1f5f9",color:"#334155",border:"1px solid #cbd5e1",fontWeight:600}}
+                >
+                  {pingStatus === "testing" ? "Pinging..." : "⚡ Test Ping"}
+                </button>
+                <button
+                  type="button"
+                  className="portal-btn portal-btn-blue"
+                  onClick={handleSaveBackendUrl}
+                  style={{flex:1,padding:10,fontWeight:700}}
+                >
+                  💾 Save &amp; Apply
                 </button>
               </div>
             </div>
