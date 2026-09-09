@@ -1,5 +1,21 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: "Segoe UI", Arial, sans-serif; background: #eef1f5; color: #222; font-size: 13px; }
+html, body {
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh;
+  font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background: #F8FAFC;
+  color: #0F172A;
+  font-size: 13px;
+  scroll-behavior: smooth;
+}
+#root, .aegis-app-root {
+  min-height: 100vh;
+  height: auto !important;
+  display: flex;
+  flex-direction: column;
+}
 
 /* HEADER */
 .govt-header { background: #1a3c6e; color: white; display: flex; align-items: center; gap: 16px; padding: 10px 20px; border-bottom: 3px solid #c59b27; min-height: 64px; }

@@ -50,7 +50,7 @@
   user-select: none;
 }
 
-html, body, #root {
+.aegis-mobile-root {
   height: 100%;
   width: 100%;
   overflow: hidden;
