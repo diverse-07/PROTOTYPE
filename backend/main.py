@@ -67,4 +67,5 @@ def root():
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app" if os.path.exists("main.py") else "backend.main:app", host="0.0.0.0", port=port, reload=False)
+    print(f"[AEGIS] Starting FastAPI backend on 0.0.0.0:{port}...")
+    uvicorn.run(app, host="0.0.0.0", port=port)

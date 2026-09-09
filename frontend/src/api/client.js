@@ -33,7 +33,7 @@ export function getApiBaseUrl() {
 
       const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
       if (isNative) {
-        return "http://10.0.2.2:8000/api";
+        return "https://web-production-938c6.up.railway.app/api";
       }
 
       const host = window.location.hostname;
@@ -42,6 +42,9 @@ export function getApiBaseUrl() {
       }
       if (host.startsWith("192.168.") || host.startsWith("10.") || host.startsWith("172.")) {
         return `http://${host}:8000/api`;
+      }
+      if (host.includes("github.io") || host.includes("diverse-07")) {
+        return "https://web-production-938c6.up.railway.app/api";
       }
     } catch (e) {}
   }
