@@ -15,13 +15,10 @@ export default function Globe3D({
   userLocation,
   zones = [],
   sensors = [],
-  focusTarget, // { lat, lng, zoom: boolean }
+  focusTarget,
   autoRotate = true,
-  cloudsEnabled = true,
-  nightMode = false,
   onZoneSelect,
-  isZoomedIn = false,
-  onResetOrbit
+  isZoomedIn = false
 }) {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
@@ -29,10 +26,12 @@ export default function Globe3D({
   const rendererRef = useRef(null)
   const cameraRef = useRef(null)
   const globeGroupRef = useRef(null)
+  const earthMeshRef = useRef(null)
   const cloudsMeshRef = useRef(null)
   const userPinGroupRef = useRef(null)
   const zonePinsGroupRef = useRef(null)
   const animationFrameIdRef = useRef(null)
+  const sunDirRef = useRef(new THREE.Vector3(4.0, 1.8, 3.5).normalize())
 
   // Camera animation state
   const cameraAnimRef = useRef({
@@ -42,27 +41,26 @@ export default function Globe3D({
     startLookAt: new THREE.Vector3(),
     targetLookAt: new THREE.Vector3(),
     startTime: 0,
-    duration: 1600
+    duration: 1800
   })
 
-  // User drag interaction state
+  // User drag interaction state (locked to realistic vertical bounds)
   const interactionRef = useRef({
     isDragging: false,
     prevMouseX: 0,
     prevMouseY: 0,
-    rotSpeedX: 0.003,
-    rotSpeedY: 0.003,
+    rotSpeedX: 0.0025,
+    rotSpeedY: 0.0015,
     velX: 0,
     velY: 0,
     targetDistance: 5.2,
     currentDistance: 5.2,
-    minDistance: 2.35, // close orbit
-    maxDistance: 9.0
+    minDistance: 2.35,
+    maxDistance: 8.5
   })
 
   const [textureStatus, setTextureStatus] = useState("loading")
 
-  // Initialize Three.js Scene
   useEffect(() => {
     const container = containerRef.current
     const canvas = canvasRef.current
@@ -77,10 +75,10 @@ export default function Globe3D({
 
     // 2. Camera
     const camera = new THREE.PerspectiveCamera(45, width / Math.max(height, 1), 0.1, 1000)
-    camera.position.set(0, 1.2, 5.2)
+    camera.position.set(0, 0.8, 5.2)
     cameraRef.current = camera
 
-    // 3. Renderer attached directly to canvasRef (Zero DOM replaceChildren)
+    // 3. Renderer
     const renderer = new THREE.WebGLRenderer({
       canvas: canvas,
       antialias: true,
@@ -90,47 +88,34 @@ export default function Globe3D({
     renderer.setSize(width, height, false)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.15
+    renderer.toneMappingExposure = 1.05
     rendererRef.current = renderer
 
-    // 4. Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95)
+    // 4. Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.35)
     scene.add(ambientLight)
 
-    const sunLight = new THREE.DirectionalLight(0xfffaed, 2.2)
-    sunLight.position.set(10, 6, 8)
-    scene.add(sunLight)
-
-    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.4)
-    rimLight.position.set(-10, -4, -6)
-    scene.add(rimLight)
-
-    // 5. Deep Space Starfield
-    const starsCount = 1400
+    // 5. Deep Space Stars (tiny, realistic, crisp pinpoints)
+    const starsCount = 1800
     const starsGeo = new THREE.BufferGeometry()
     const starPositions = new Float32Array(starsCount * 3)
-    const starColors = new Float32Array(starsCount * 3)
+    const starOpacities = new Float32Array(starsCount)
 
     for (let i = 0; i < starsCount; i++) {
-      const r = 40 + Math.random() * 40
+      const r = 50 + Math.random() * 50
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(Math.random() * 2 - 1)
       starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
       starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
       starPositions[i * 3 + 2] = r * Math.cos(phi)
-
-      const colorMix = Math.random()
-      starColors[i * 3] = colorMix > 0.8 ? 0.6 : 0.9
-      starColors[i * 3 + 1] = colorMix > 0.8 ? 0.8 : 0.95
-      starColors[i * 3 + 2] = 1.0
+      starOpacities[i] = 0.4 + Math.random() * 0.5
     }
     starsGeo.setAttribute("position", new THREE.BufferAttribute(starPositions, 3))
-    starsGeo.setAttribute("color", new THREE.BufferAttribute(starColors, 3))
     const starsMat = new THREE.PointsMaterial({
-      size: 0.28,
-      vertexColors: true,
+      size: 0.18,
+      color: 0xe2e8f0,
       transparent: true,
-      opacity: 0.75
+      opacity: 0.85
     })
     const starField = new THREE.Points(starsGeo, starsMat)
     scene.add(starField)
@@ -141,7 +126,7 @@ export default function Globe3D({
     globeGroupRef.current = globeGroup
 
     const GLOBE_RADIUS = 2.0
-    const globeGeo = new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64)
+    const globeGeo = new THREE.SphereGeometry(GLOBE_RADIUS, 96, 96)
 
     // Texture Loader
     const textureLoader = new THREE.TextureLoader()
@@ -150,69 +135,114 @@ export default function Globe3D({
       "./textures/earth_day.jpg",
       () => setTextureStatus("ready"),
       undefined,
-      () => {
-        console.warn("[AEGIS] Local texture load fallback")
-        setTextureStatus("fallback")
-      }
+      () => setTextureStatus("fallback")
     )
-    const normalTex = textureLoader.load("./textures/earth_normal.jpg")
+    dayTex.colorSpace = THREE.SRGBColorSpace
+
+    const nightTex = textureLoader.load("./textures/earth_night.jpg")
+    nightTex.colorSpace = THREE.SRGBColorSpace
+
+    const cloudsTex = textureLoader.load("./textures/earth_clouds.jpg")
+    cloudsTex.colorSpace = THREE.SRGBColorSpace
+
     const specTex = textureLoader.load("./textures/earth_specular.jpg")
 
-    const globeMat = new THREE.MeshPhongMaterial({
-      map: dayTex,
-      bumpMap: normalTex,
-      bumpScale: 0.04,
-      specularMap: specTex,
-      specular: new THREE.Color(0x224466),
-      shininess: 12
-    })
-    const globeMesh = new THREE.Mesh(globeGeo, globeMat)
-    globeGroup.add(globeMesh)
-
-    // 7. Atmospheric Glow Shader (Fresnel outer halo)
-    const atmosVertexShader = `
+    // 7. PHOTOREALISTIC ISS-GRADE EARTH SHADER
+    // Blends Day Marble + Specular Oceans + Warm Golden Night City Lights + Delicate Horizon Limb Airglow
+    const earthVertexShader = `
       varying vec3 vNormal;
-      varying vec3 vPosition;
+      varying vec2 vUv;
+      varying vec3 vWorldPosition;
+      varying vec3 vViewPosition;
+
       void main() {
         vNormal = normalize(normalMatrix * normal);
-        vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        vUv = uv;
+        vec4 worldPos = modelMatrix * vec4(position, 1.0);
+        vWorldPosition = worldPos.xyz;
+        vec4 viewPos = modelViewMatrix * vec4(position, 1.0);
+        vViewPosition = viewPos.xyz;
+        gl_Position = projectionMatrix * viewPos;
       }
     `
-    const atmosFragmentShader = `
-      varying vec3 vNormal;
-      varying vec3 vPosition;
-      void main() {
-        vec3 viewDir = normalize(-vPosition);
-        float intensity = pow(0.68 - dot(vNormal, viewDir), 2.2);
-        gl_FragColor = vec4(0.12, 0.65, 1.0, intensity * 0.95);
-      }
-    `
-    const atmosMat = new THREE.ShaderMaterial({
-      vertexShader: atmosVertexShader,
-      fragmentShader: atmosFragmentShader,
-      blending: THREE.AdditiveBlending,
-      side: THREE.BackSide,
-      transparent: true,
-      depthWrite: false
-    })
-    const atmosMesh = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS * 1.15, 48, 48), atmosMat)
-    scene.add(atmosMesh)
 
-    // 8. Animated Cloud Layer
-    const cloudsTex = textureLoader.load("./textures/earth_clouds.jpg")
+    const earthFragmentShader = `
+      uniform sampler2D dayTexture;
+      uniform sampler2D nightTexture;
+      uniform sampler2D specularTexture;
+      uniform vec3 uSunDirection;
+
+      varying vec3 vNormal;
+      varying vec2 vUv;
+      varying vec3 vWorldPosition;
+      varying vec3 vViewPosition;
+
+      void main() {
+        vec3 normal = normalize(vNormal);
+        vec3 viewDir = normalize(-vViewPosition);
+
+        // Angle between surface normal and sunlight in camera space
+        float sunDot = dot(normal, normalize(uSunDirection));
+
+        // Sample textures
+        vec3 dayCol = texture2D(dayTexture, vUv).rgb;
+        vec3 nightCol = texture2D(nightTexture, vUv).rgb;
+        float specMask = texture2D(specularTexture, vUv).r;
+
+        // Rich warm amber city lights on night side (like ISS photograph)
+        vec3 cityLights = nightCol * vec3(1.35, 1.15, 0.75) * 1.8;
+
+        // Smooth transition between day and night (terminator line)
+        float dayFactor = smoothstep(-0.12, 0.18, sunDot);
+
+        // Ocean specular reflection (sun glint)
+        vec3 halfVec = normalize(normalize(uSunDirection) + viewDir);
+        float spec = pow(max(0.0, dot(normal, halfVec)), 28.0) * specMask * 0.45;
+        vec3 illuminatedDay = (dayCol * max(0.04, sunDot) + vec3(spec));
+
+        // Subtle realistic horizon airglow (thin delicate blue/cyan limb)
+        float rim = 1.0 - max(0.0, dot(normal, viewDir));
+        float thinLimb = pow(rim, 6.5) * 1.5;
+        vec3 limbColor = vec3(0.2, 0.58, 0.98) * thinLimb;
+
+        // Combine night city lights with day terrain
+        vec3 surface = mix(cityLights, illuminatedDay, dayFactor);
+
+        // Add delicate atmospheric horizon scattering
+        vec3 finalColor = surface + (limbColor * 0.75 * dayFactor) + (limbColor * 0.18 * (1.0 - dayFactor));
+
+        gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `
+
+    const earthMat = new THREE.ShaderMaterial({
+      vertexShader: earthVertexShader,
+      fragmentShader: earthFragmentShader,
+      uniforms: {
+        dayTexture: { value: dayTex },
+        nightTexture: { value: nightTex },
+        specularTexture: { value: specTex },
+        uSunDirection: { value: sunDirRef.current }
+      }
+    })
+
+    const earthMesh = new THREE.Mesh(globeGeo, earthMat)
+    globeGroup.add(earthMesh)
+    earthMeshRef.current = earthMesh
+
+    // 8. Realistic Thin Cloud Layer (soft, drifting slowly)
     const cloudsMat = new THREE.MeshStandardMaterial({
       map: cloudsTex,
       transparent: true,
-      opacity: 0.38,
+      opacity: 0.28,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     })
-    const cloudsMesh = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS * 1.012, 48, 48), cloudsMat)
+    const cloudsMesh = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS * 1.006, 64, 64), cloudsMat)
     globeGroup.add(cloudsMesh)
     cloudsMeshRef.current = cloudsMesh
 
-    // 9. Groups for Pins & Markers
+    // 9. Groups for Classic Minimalist Pins
     const zonePinsGroup = new THREE.Group()
     globeGroup.add(zonePinsGroup)
     zonePinsGroupRef.current = zonePinsGroup
@@ -221,11 +251,11 @@ export default function Globe3D({
     globeGroup.add(userPinGroup)
     userPinGroupRef.current = userPinGroup
 
-    // 10. Initial rotation oriented toward India (NER ~ 25°N, 92°E)
-    globeGroup.rotation.y = -Math.PI * 0.45
-    globeGroup.rotation.x = 0.22
+    // Initial orientation: Centered on India / Asian continent with a majestic angle
+    globeGroup.rotation.y = -Math.PI * 0.44
+    globeGroup.rotation.x = 0.12
 
-    // Robust ResizeObserver for 100% stable aspect ratio
+    // ResizeObserver
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const w = entry.contentRect.width
@@ -239,7 +269,7 @@ export default function Globe3D({
     })
     resizeObserver.observe(container)
 
-    // Interaction Handlers (Mouse / Touch)
+    // Interaction Handlers (Locked vertical pitch so Earth stays upright!)
     const onMouseDown = (e) => {
       interactionRef.current.isDragging = true
       interactionRef.current.prevMouseX = e.clientX
@@ -256,9 +286,10 @@ export default function Globe3D({
       interactionRef.current.velY = deltaY * interactionRef.current.rotSpeedY
 
       globeGroupRef.current.rotation.y += interactionRef.current.velX
+      // CLAMP VERTICAL TILT TO REALISTIC BOUNDS (-18 deg to +22 deg)
       globeGroupRef.current.rotation.x = Math.max(
-        -Math.PI / 2.2,
-        Math.min(Math.PI / 2.2, globeGroupRef.current.rotation.x + interactionRef.current.velY)
+        -0.28,
+        Math.min(0.35, globeGroupRef.current.rotation.x + interactionRef.current.velY)
       )
     }
     const onMouseUp = () => {
@@ -278,7 +309,7 @@ export default function Globe3D({
     window.addEventListener("mouseup", onMouseUp)
     canvas.addEventListener("wheel", onWheel, { passive: false })
 
-    // Touch support
+    // Touch support for phones
     let touchStartDist = 0
     const onTouchStart = (e) => {
       if (e.touches.length === 1) {
@@ -299,10 +330,10 @@ export default function Globe3D({
         interactionRef.current.prevMouseX = e.touches[0].clientX
         interactionRef.current.prevMouseY = e.touches[0].clientY
 
-        globeGroupRef.current.rotation.y += deltaX * 0.004
+        globeGroupRef.current.rotation.y += deltaX * 0.003
         globeGroupRef.current.rotation.x = Math.max(
-          -Math.PI / 2.2,
-          Math.min(Math.PI / 2.2, globeGroupRef.current.rotation.x + deltaY * 0.004)
+          -0.28,
+          Math.min(0.35, globeGroupRef.current.rotation.x + deltaY * 0.0018)
         )
       } else if (e.touches.length === 2) {
         const dist = Math.hypot(
@@ -332,28 +363,28 @@ export default function Globe3D({
       const delta = (time - lastTime) / 1000
       lastTime = time
 
-      // 1. Damping inertia on rotation
+      // Gentle damping
       if (!interactionRef.current.isDragging && globeGroupRef.current) {
-        interactionRef.current.velX *= 0.94
-        interactionRef.current.velY *= 0.94
+        interactionRef.current.velX *= 0.93
+        interactionRef.current.velY *= 0.93
         globeGroupRef.current.rotation.y += interactionRef.current.velX
         globeGroupRef.current.rotation.x = Math.max(
-          -Math.PI / 2.2,
-          Math.min(Math.PI / 2.2, globeGroupRef.current.rotation.x + interactionRef.current.velY)
+          -0.28,
+          Math.min(0.35, globeGroupRef.current.rotation.x + interactionRef.current.velY)
         )
 
-        // Subtle continuous auto-rotation if idle
+        // Slow cinematic planetary rotation
         if (autoRotate && !cameraAnimRef.current.animating && Math.abs(interactionRef.current.velX) < 0.0001) {
-          globeGroupRef.current.rotation.y += 0.0008
+          globeGroupRef.current.rotation.y += 0.0005
         }
       }
 
-      // 2. Cloud rotation
-      if (cloudsMeshRef.current && cloudsEnabled) {
-        cloudsMeshRef.current.rotation.y += 0.0012
+      // Cloud drift
+      if (cloudsMeshRef.current) {
+        cloudsMeshRef.current.rotation.y += 0.0008
       }
 
-      // 3. Smooth Camera distance zoom
+      // Smooth camera distance
       if (!cameraAnimRef.current.animating && cameraRef.current) {
         interactionRef.current.currentDistance +=
           (interactionRef.current.targetDistance - interactionRef.current.currentDistance) * 0.08
@@ -361,16 +392,13 @@ export default function Globe3D({
         cameraRef.current.position.copy(dir.multiplyScalar(interactionRef.current.currentDistance))
       }
 
-      // 4. Smooth Camera Fly-To animation (Interpolation)
+      // Smooth fly-to
       if (cameraAnimRef.current.animating && cameraRef.current) {
         const elapsed = performance.now() - cameraAnimRef.current.startTime
         const progress = Math.min(1.0, elapsed / cameraAnimRef.current.duration)
-
-        // Ease in-out cubic
         const ease = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2
 
         cameraRef.current.position.lerpVectors(cameraAnimRef.current.startPos, cameraAnimRef.current.targetPos, ease)
-
         const curLookAt = new THREE.Vector3().lerpVectors(
           cameraAnimRef.current.startLookAt,
           cameraAnimRef.current.targetLookAt,
@@ -385,27 +413,17 @@ export default function Globe3D({
         }
       }
 
-      // 5. Pulsing rings animation on 3D pins
-      const pulseTime = time * 0.002
+      // Subtle pulse on pins (minimal, non-flashy)
+      const pulseTime = time * 0.0015
       if (zonePinsGroupRef.current) {
         zonePinsGroupRef.current.children.forEach((group) => {
-          const ring = group.getObjectByName("pulseRing")
-          if (ring) {
-            const s = 1.0 + (Math.sin(pulseTime * 2.5 + (group.userData.id || 0)) * 0.5 + 0.5) * 0.8
-            ring.scale.set(s, s, s)
-            ring.material.opacity = 0.85 - (s - 1.0) * 0.7
+          const halo = group.getObjectByName("subtleHalo")
+          if (halo) {
+            const s = 1.0 + (Math.sin(pulseTime * 2.0 + (group.userData.id || 0)) * 0.5 + 0.5) * 0.35
+            halo.scale.set(s, s, s)
+            halo.material.opacity = 0.35 - (s - 1.0) * 0.4
           }
         })
-      }
-
-      // User beacon pulse
-      if (userPinGroupRef.current) {
-        const userBeacon = userPinGroupRef.current.getObjectByName("userRadarRing")
-        if (userBeacon) {
-          const s = 1.0 + ((pulseTime * 3) % 1.0) * 2.2
-          userBeacon.scale.set(s, s, s)
-          userBeacon.material.opacity = Math.max(0, 1.0 - (s - 1.0) / 2.2)
-        }
       }
 
       renderer.render(scene, camera)
@@ -413,7 +431,6 @@ export default function Globe3D({
 
     animationFrameIdRef.current = requestAnimationFrame(animate)
 
-    // Cleanup
     return () => {
       if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current)
       resizeObserver.disconnect()
@@ -428,7 +445,7 @@ export default function Globe3D({
     }
   }, [])
 
-  // Update Zone Pins on Globe
+  // Update Zone Pins (Classic Minimalist Dots with Hairline Ring)
   useEffect(() => {
     const group = zonePinsGroupRef.current
     if (!group) return
@@ -440,48 +457,45 @@ export default function Globe3D({
       const pinGroup = new THREE.Group()
       pinGroup.userData = zone
 
-      // Position on sphere
       const lat = zone.lat || zone.coords?.[0]?.[0] || 25.5
       const lng = zone.lng || zone.coords?.[0]?.[1] || 92.5
-      const pos = latLngToVector3(lat, lng, GLOBE_RADIUS + 0.01)
+      const pos = latLngToVector3(lat, lng, GLOBE_RADIUS + 0.003)
       pinGroup.position.copy(pos)
-
-      // Align pin group to point normal to the sphere surface
       pinGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pos.clone().normalize())
 
-      // Color based on risk
-      let colorHex = 0x22c55e // green
+      // Classic, subtle pinpoint dot (warm amber / crisp white / subtle crimson)
       const score = zone.score || 50
-      if (score >= 80) colorHex = 0xef4444 // red
-      else if (score >= 65) colorHex = 0xf97316 // orange
-      else if (score >= 45) colorHex = 0xeab308 // yellow
-      else if (score >= 25) colorHex = 0x84cc16
+      let pinColor = 0xf59e0b // amber
+      if (score >= 80) pinColor = 0xef4444 // crimson
+      else if (score >= 65) pinColor = 0xf97316 // orange
+      else if (score < 30) pinColor = 0x10b981 // emerald
 
-      // Base Pin Core Dot
-      const coreMat = new THREE.MeshBasicMaterial({ color: colorHex })
-      const coreMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.005, 0.04, 16), coreMat)
-      coreMesh.position.y = 0.02
-      pinGroup.add(coreMesh)
+      // 1. Tiny sharp central bead
+      const beadGeo = new THREE.SphereGeometry(0.012, 12, 12)
+      const beadMat = new THREE.MeshBasicMaterial({ color: pinColor })
+      const beadMesh = new THREE.Mesh(beadGeo, beadMat)
+      beadMesh.position.y = 0.008
+      pinGroup.add(beadMesh)
 
-      // Pulsing Radar Ring
-      const ringGeo = new THREE.RingGeometry(0.02, 0.045, 24)
-      ringGeo.rotateX(-Math.PI / 2)
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: colorHex,
+      // 2. Delicate hairline boundary ring (0.5px subtle halo)
+      const haloGeo = new THREE.RingGeometry(0.014, 0.022, 24)
+      haloGeo.rotateX(-Math.PI / 2)
+      const haloMat = new THREE.MeshBasicMaterial({
+        color: pinColor,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.8
+        opacity: 0.35
       })
-      const ringMesh = new THREE.Mesh(ringGeo, ringMat)
-      ringMesh.name = "pulseRing"
-      ringMesh.position.y = 0.005
-      pinGroup.add(ringMesh)
+      const haloMesh = new THREE.Mesh(haloGeo, haloMat)
+      haloMesh.name = "subtleHalo"
+      haloMesh.position.y = 0.003
+      pinGroup.add(haloMesh)
 
       group.add(pinGroup)
     })
   }, [zones])
 
-  // Update Live User Location Pin & Radar Beacon
+  // Update Live User Location Pin (Classic Subtle Cyan Pinpoint)
   useEffect(() => {
     const userGroup = userPinGroupRef.current
     if (!userGroup) return
@@ -490,57 +504,44 @@ export default function Globe3D({
     if (!userLocation || !userLocation.lat || !userLocation.lng) return
 
     const GLOBE_RADIUS = 2.0
-    const pos = latLngToVector3(userLocation.lat, userLocation.lng, GLOBE_RADIUS + 0.01)
+    const pos = latLngToVector3(userLocation.lat, userLocation.lng, GLOBE_RADIUS + 0.004)
 
     const beaconGroup = new THREE.Group()
     beaconGroup.position.copy(pos)
     beaconGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pos.clone().normalize())
 
-    // 1. Glowing vertical light pillar beam pointing into space
-    const beamGeo = new THREE.CylinderGeometry(0.008, 0.022, 0.28, 16)
-    const beamMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0ff,
-      transparent: true,
-      opacity: 0.85
-    })
-    const beamMesh = new THREE.Mesh(beamGeo, beamMat)
-    beamMesh.position.y = 0.14
-    beaconGroup.add(beamMesh)
+    // 1. Tiny crisp white core bead
+    const coreGeo = new THREE.SphereGeometry(0.016, 16, 16)
+    const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat)
+    coreMesh.position.y = 0.01
+    beaconGroup.add(coreMesh)
 
-    // 2. Center bright core orb
-    const orbGeo = new THREE.SphereGeometry(0.026, 16, 16)
-    const orbMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
-    const orbMesh = new THREE.Mesh(orbGeo, orbMat)
-    orbMesh.position.y = 0.28
-    beaconGroup.add(orbMesh)
-
-    // 3. Radar ripple wave rings
-    const ringGeo = new THREE.RingGeometry(0.025, 0.065, 32)
+    // 2. Subtle cyan ring
+    const ringGeo = new THREE.RingGeometry(0.02, 0.03, 32)
     ringGeo.rotateX(-Math.PI / 2)
     const ringMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0ff,
+      color: 0x38bdf8,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.9
+      opacity: 0.6
     })
     const ringMesh = new THREE.Mesh(ringGeo, ringMat)
-    ringMesh.name = "userRadarRing"
-    ringMesh.position.y = 0.008
+    ringMesh.position.y = 0.004
     beaconGroup.add(ringMesh)
 
     userGroup.add(beaconGroup)
   }, [userLocation])
 
-  // Smooth Camera Fly-To Interpolation (Zoom into Coordinates)
+  // Camera Fly-To Interpolation
   const flyTo = useCallback((lat, lng, closeZoom = true) => {
     if (!cameraRef.current || !globeGroupRef.current) return
 
     const GLOBE_RADIUS = 2.0
-    const targetDistance = closeZoom ? 2.55 : 5.2
+    const targetDistance = closeZoom ? 2.65 : 5.2
 
     const localTarget = latLngToVector3(lat, lng, GLOBE_RADIUS)
     const worldTarget = localTarget.clone().applyEuler(globeGroupRef.current.rotation)
-
     const targetCamPos = worldTarget.clone().normalize().multiplyScalar(targetDistance)
 
     cameraAnimRef.current = {
@@ -548,20 +549,18 @@ export default function Globe3D({
       startPos: cameraRef.current.position.clone(),
       targetPos: targetCamPos,
       startLookAt: new THREE.Vector3(0, 0, 0),
-      targetLookAt: worldTarget.clone().multiplyScalar(0.2),
+      targetLookAt: worldTarget.clone().multiplyScalar(0.15),
       startTime: performance.now(),
       duration: closeZoom ? 1800 : 1200
     }
   }, [])
 
-  // Trigger flyTo when focusTarget changes
   useEffect(() => {
     if (focusTarget && focusTarget.lat !== undefined && focusTarget.lng !== undefined) {
       flyTo(focusTarget.lat, focusTarget.lng, focusTarget.zoom !== false)
     }
   }, [focusTarget, flyTo])
 
-  // Raycasting for interactive click & hover on zones
   const handleClick = (e) => {
     if (!canvasRef.current || !cameraRef.current || !zonePinsGroupRef.current) return
 
@@ -606,31 +605,6 @@ export default function Globe3D({
           cursor: interactionRef.current.isDragging ? "grabbing" : "grab"
         }}
       />
-      {textureStatus === "loading" && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: "90px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "rgba(10, 14, 23, 0.8)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
-            borderRadius: "30px",
-            padding: "8px 18px",
-            color: "#94a3b8",
-            fontSize: "12px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            zIndex: 10,
-            pointerEvents: "none"
-          }}
-        >
-          <span className="live-dot" style={{ background: "#00f0ff" }} />
-          <span>Loading NASA Surface Radar Telemetry...</span>
-        </div>
-      )}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 
 export default function GlassDock({
-  activeView, // 'globe' | 'gis'
+  activeView,
   onSelectView,
   onLocateMe,
   onOpenSirenModal,
@@ -20,21 +20,19 @@ export default function GlassDock({
   const dockItems = [
     {
       id: 'globe',
-      label: '3D Earth Orbit',
+      label: '3D Orbit',
       icon: '🌍',
-      category: 'view',
       active: activeView === 'globe',
       onClick: () => onSelectView('globe'),
-      description: 'Planetary 3D Space View'
+      description: 'Planetary Earth View'
     },
     {
       id: 'gis',
-      label: '2D Satellite GIS',
+      label: 'Satellite GIS',
       icon: '🛰️',
-      category: 'view',
       active: activeView === 'gis',
       onClick: () => onSelectView('gis'),
-      description: 'High-Res Topo Contours & Polygons'
+      description: 'Topographic Contour Polygons'
     },
     {
       id: 'separator-1',
@@ -42,38 +40,33 @@ export default function GlassDock({
     },
     {
       id: 'locate',
-      label: 'My Location',
+      label: 'My Position',
       icon: '📍',
-      category: 'action',
       onClick: onLocateMe,
-      description: 'Zoom Camera to Live GPS Pin'
+      description: 'Fly to GPS Coordinates'
     },
     {
       id: 'siren',
-      label: 'Broadcast Siren',
+      label: 'Dispatch Siren',
       icon: '🚨',
-      category: 'action',
-      highlight: true,
       onClick: onOpenSirenModal,
-      description: 'BLE Mesh & Cloud Dispatch'
+      description: 'BLE Radio & Cloud Alert'
     },
     {
       id: 'telemetry',
-      label: 'Live Sensors',
+      label: 'Corridors & Sensors',
       icon: '📡',
-      category: 'action',
       active: telemetryOpen,
       onClick: onToggleTelemetry,
-      description: 'Real-Time Telemetry Stream'
+      description: 'Live Geological Readings'
     },
     {
       id: 'stress',
-      label: 'Stress Engine',
+      label: 'Stress Simulation',
       icon: '⚡',
-      category: 'action',
       active: stressOpen,
       onClick: onToggleStress,
-      description: 'Cloudburst Rainfall Multiplier'
+      description: 'Monsoon Rainfall Factor'
     },
     {
       id: 'separator-2',
@@ -81,59 +74,54 @@ export default function GlassDock({
     },
     {
       id: 'audio',
-      label: isSirenPlaying ? 'Mute Siren' : 'Test Siren Tone',
-      icon: isSirenPlaying ? '🔊' : '🔔',
-      category: 'tool',
+      label: isSirenPlaying ? 'Stop Audio' : 'Audio Tone Test',
+      icon: isSirenPlaying ? '🔕' : '🔊',
       active: isSirenPlaying,
       onClick: onPlaySirenTest,
-      description: '750Hz-1250Hz NDMA Audio Tone'
+      description: 'NDMA 750-1250Hz Audio Tone'
     },
     {
       id: 'apk',
       label: 'Citizen APK',
       icon: '📱',
-      category: 'tool',
       onClick: onOpenApkModal,
-      description: 'Download Android Offline Mesh App'
+      description: 'Android Offline Mesh APK'
     },
     {
       id: 'rotate',
-      label: autoRotate ? 'Pause Orbit' : 'Auto Orbit',
+      label: autoRotate ? 'Pause Rotation' : 'Auto Rotation',
       icon: autoRotate ? '⏸️' : '▶️',
-      category: 'setting',
       active: autoRotate,
       onClick: onToggleAutoRotate,
-      description: 'Planetary Continuous Rotation'
+      description: 'Planetary Drift Rotation'
     }
   ]
 
   return (
     <aside
-      aria-label="Interactive System Dock"
-      className="framer-dock-container"
+      aria-label="System Dock"
       style={{
         position: 'fixed',
-        bottom: '22px',
+        bottom: '18px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 9000,
-        pointerEvents: 'auto'
+        pointerEvents: 'auto',
+        maxWidth: 'calc(100vw - 20px)'
       }}
     >
       <div
-        className="framer-dock"
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          padding: '8px 14px',
-          background: 'rgba(8, 12, 20, 0.78)',
-          backdropFilter: 'blur(28px) saturate(190%)',
-          WebkitBackdropFilter: 'blur(28px) saturate(190%)',
-          border: '1px solid rgba(255, 255, 255, 0.14)',
-          borderRadius: '40px',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+          gap: '6px',
+          padding: '6px 10px',
+          background: 'rgba(13, 16, 22, 0.88)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '20px',
+          boxShadow: '0 16px 36px rgba(0, 0, 0, 0.6)'
         }}
       >
         {dockItems.map((item, idx) => {
@@ -143,9 +131,9 @@ export default function GlassDock({
                 key={item.id}
                 style={{
                   width: '1px',
-                  height: '24px',
-                  background: 'rgba(255, 255, 255, 0.12)',
-                  margin: '0 2px'
+                  height: '18px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  margin: '0 1px'
                 }}
               />
             )
@@ -163,46 +151,22 @@ export default function GlassDock({
             >
               {isHovered && (
                 <div
-                  className="framer-tooltip"
                   style={{
                     position: 'absolute',
-                    bottom: '54px',
-                    background: 'rgba(15, 23, 42, 0.95)',
-                    backdropFilter: 'blur(16px)',
-                    border: '1px solid rgba(255, 255, 255, 0.18)',
-                    borderRadius: '8px',
-                    padding: '6px 12px',
+                    bottom: '46px',
+                    background: 'rgba(18, 22, 30, 0.95)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '6px',
+                    padding: '4px 10px',
                     color: '#ffffff',
                     fontSize: '11px',
-                    fontWeight: '600',
+                    fontWeight: '500',
                     whiteSpace: 'nowrap',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '2px',
+                    boxShadow: '0 8px 20px rgba(0,0,0,0.5)',
                     pointerEvents: 'none'
                   }}
                 >
-                  <span style={{ color: '#38bdf8' }}>{item.label}</span>
-                  {item.description && (
-                    <span style={{ fontSize: '9px', color: '#94a3b8', fontWeight: '400' }}>
-                      {item.description}
-                    </span>
-                  )}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '-4px',
-                      left: '50%',
-                      transform: 'translateX(-50%) rotate(45deg)',
-                      width: '8px',
-                      height: '8px',
-                      background: 'rgba(15, 23, 42, 0.95)',
-                      borderRight: '1px solid rgba(255, 255, 255, 0.18)',
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.18)'
-                    }}
-                  />
+                  <span>{item.label}</span>
                 </div>
               )}
 
@@ -210,31 +174,23 @@ export default function GlassDock({
                 onClick={item.onClick}
                 aria-label={item.label}
                 style={{
-                  width: isHovered ? '46px' : '40px',
-                  height: isHovered ? '46px' : '40px',
-                  borderRadius: '16px',
-                  border: item.highlight
-                    ? '1px solid rgba(239, 68, 68, 0.6)'
-                    : isSelected
-                    ? '1px solid rgba(56, 189, 248, 0.5)'
-                    : '1px solid rgba(255, 255, 255, 0.08)',
-                  background: item.highlight
-                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(185, 28, 28, 0.2) 100%)'
-                    : isSelected
-                    ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.28) 0%, rgba(30, 58, 138, 0.2) 100%)'
-                    : 'rgba(255, 255, 255, 0.04)',
-                  boxShadow: item.highlight
-                    ? '0 0 16px rgba(239, 68, 68, 0.4)'
-                    : isSelected
-                    ? '0 0 16px rgba(56, 189, 248, 0.35)'
-                    : 'none',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  border: isSelected
+                    ? '1px solid rgba(255, 255, 255, 0.2)'
+                    : '1px solid transparent',
+                  background: isSelected
+                    ? 'rgba(255, 255, 255, 0.1)'
+                    : isHovered
+                    ? 'rgba(255, 255, 255, 0.05)'
+                    : 'transparent',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: isHovered ? '22px' : '18px',
+                  fontSize: '16px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                  transform: isHovered ? 'translateY(-6px)' : 'none',
+                  transition: 'all 0.15s ease-out',
                   outline: 'none'
                 }}
               >
@@ -243,17 +199,12 @@ export default function GlassDock({
 
               <div
                 style={{
-                  width: '4px',
-                  height: '4px',
+                  width: '3px',
+                  height: '3px',
                   borderRadius: '50%',
-                  marginTop: '4px',
-                  background: item.highlight
-                    ? '#ef4444'
-                    : isSelected
-                    ? '#38bdf8'
-                    : 'transparent',
-                  boxShadow: isSelected ? '0 0 6px #38bdf8' : 'none',
-                  transition: 'background 0.2s'
+                  marginTop: '2px',
+                  background: isSelected ? '#38bdf8' : 'transparent',
+                  transition: 'background 0.15s'
                 }}
               />
             </div>

@@ -1,6 +1,6 @@
 /* ==========================================================================
-   AEGIS LEWS v2.0 - FRAMER DARK LUXURY AESTHETIC DESIGN SYSTEM
-   Obsidian palette, Frosted Glassmorphism, 3D Canvas, Floating Glass Docks
+   AEGIS LEWS v2.0 - CLASSIC PROFESSIONAL AEROSPACE / METEOROLOGY DESIGN SYSTEM
+   Deep Matte Obsidian, Smoked Glass, Hairline Borders, Crisp Neutral Typography
    ========================================================================== */
 
 * {
@@ -13,179 +13,138 @@ html, body, #root, .aegis-app-root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: #05070c;
+  background-color: #06070a;
   color: #f1f5f9;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Public Sans", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Ambient Radial Background Glows */
+/* Subtle Deep Space Vignette (Zero loud cartoon gradients) */
 .framer-ambient-bg {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background:
-    radial-gradient(circle at 50% 25%, rgba(56, 189, 248, 0.09) 0%, transparent 55%),
-    radial-gradient(circle at 85% 75%, rgba(99, 102, 241, 0.07) 0%, transparent 45%),
-    radial-gradient(circle at 15% 85%, rgba(239, 68, 68, 0.05) 0%, transparent 40%);
+  background: radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.25) 0%, #06070a 100%);
 }
 
-/* Glassmorphism Surface Classes */
+/* Classic Smoked Glass Surface */
 .glass-surface {
-  background: rgba(11, 16, 26, 0.72);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-.glass-card {
-  background: rgba(15, 23, 42, 0.65);
+  background: rgba(13, 16, 22, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+}
+
+.glass-card {
+  background: rgba(18, 22, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  transition: all 0.18s ease-out;
 }
 
 .glass-card:hover {
-  background: rgba(22, 32, 54, 0.75);
-  border-color: rgba(56, 189, 248, 0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  background: rgba(26, 32, 44, 0.85);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
-/* Glass Buttons */
+/* Professional Buttons */
 .framer-btn-primary {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  background: #0284c7;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 12px;
-  padding: 8px 16px;
-  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: background 0.15s;
 }
 
 .framer-btn-primary:hover {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45);
+  background: #0369a1;
 }
 
 .framer-btn-danger {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: #b91c1c;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 12px;
-  padding: 8px 16px;
-  font-size: 12px;
-  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4);
+  transition: background 0.15s;
 }
 
 .framer-btn-danger:hover {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 22px rgba(239, 68, 68, 0.55);
+  background: #991b1b;
 }
 
 .framer-btn-ghost {
   background: rgba(255, 255, 255, 0.05);
-  color: #cbd5e1;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 8px 14px;
-  font-size: 12px;
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 5px;
+  transition: all 0.15s;
 }
 
 .framer-btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.09);
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.22);
 }
 
-/* Status Pulse Dots */
+/* Subtle Status Dot */
 .live-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   display: inline-block;
-  animation: radarBlink 1.4s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  opacity: 0.9;
 }
 
-@keyframes radarBlink {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.35; transform: scale(0.85); }
-}
-
-/* Radar Ping Ripple */
-.radar-pulse-ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 1.5px solid #00f0ff;
-  animation: radarRipple 2s infinite ease-out;
-  pointer-events: none;
-}
-
-@keyframes radarRipple {
-  0% { transform: scale(0.6); opacity: 1; }
-  100% { transform: scale(2.4); opacity: 0; }
-}
-
-/* Sleek Scrollbars */
+/* Minimalist Scrollbar */
 .framer-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
 }
 .framer-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 .framer-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
 }
 .framer-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(56, 189, 248, 0.4);
-}
-
-/* Tooltip animation */
-@keyframes tooltipIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* Leaflet dark theme integration */
 .leaflet-container {
-  background: #090d16 !important;
+  background: #08090d !important;
   font-family: inherit;
 }
 .leaflet-popup-content-wrapper {
-  background: rgba(11, 16, 26, 0.94) !important;
-  backdrop-filter: blur(16px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  background: rgba(14, 17, 23, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #f1f5f9 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 16px 36px rgba(0,0,0,0.5) !important;
+  border-radius: 8px !important;
 }
 .leaflet-popup-tip {
-  background: rgba(11, 16, 26, 0.94) !important;
+  background: rgba(14, 17, 23, 0.95) !important;
 }
