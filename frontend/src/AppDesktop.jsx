@@ -1083,16 +1083,6 @@ export default function AppDesktop({ onSwitchToMobile }) {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                 RADAR: LIVE
               </span>
-              {onSwitchToMobile && (
-                <button
-                  onClick={onSwitchToMobile}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-2 py-0.5 rounded flex items-center gap-1 transition-colors"
-                  title="Switch to Citizen Mobile App"
-                >
-                  <span>📱</span>
-                  <span>Citizen App</span>
-                </button>
-              )}
             </div>
           </div>
         </div>
