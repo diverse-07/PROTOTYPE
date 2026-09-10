@@ -603,6 +603,48 @@ export default function AppDesktop({ onSwitchToMobile }) {
   // What-If Simulation Drawer Toggle
   const [showSimulator, setShowSimulator] = useState(false)
 
+  // Regional Sector Selection Modal State
+  const [sectorModalOpen, setSectorModalOpen] = useState(false)
+  const [sectorSearchQuery, setSectorSearchQuery] = useState("")
+  const [selectedStateFilter, setSelectedStateFilter] = useState("ALL")
+  const [selectedRiskFilter, setSelectedRiskFilter] = useState("ALL")
+
+  // Keyboard shortcut: close sector modal with Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setSectorModalOpen(false)
+    }
+    if (sectorModalOpen) {
+      document.addEventListener("keydown", handleKeyDown)
+    }
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [sectorModalOpen])
+
+  // Filtered monitoring sectors based on search, state and risk
+  const filteredZones = useMemo(() => {
+    return ZONES.filter((z) => {
+      const q = sectorSearchQuery.toLowerCase().trim()
+      const matchSearch =
+        !q ||
+        z.name.toLowerCase().includes(q) ||
+        z.state.toLowerCase().includes(q) ||
+        z.sub.toLowerCase().includes(q) ||
+        (z.shortName && z.shortName.toLowerCase().includes(q))
+      
+      const matchState =
+        selectedStateFilter === "ALL" ||
+        z.state.toLowerCase() === selectedStateFilter.toLowerCase()
+
+      const matchRisk =
+        selectedRiskFilter === "ALL" ||
+        z.tier.toUpperCase() === selectedRiskFilter.toUpperCase()
+
+      return matchSearch && matchState && matchRisk
+    })
+  }, [sectorSearchQuery, selectedStateFilter, selectedRiskFilter])
+
   // Map Basemap Layer
   const [baseLayer, setBaseLayer] = useState("topo")
 
@@ -652,13 +694,18 @@ export default function AppDesktop({ onSwitchToMobile }) {
     return () => { isMounted = false }
   }, [selectedZone])
 
-  // Handle Sector Change: automatically updates parameters
+  // Handle Sector Change: automatically updates parameters & smooth flies map
   const handleZoneSelect = (zone) => {
     setSelectedZone(zone)
     setSlope(zone.defaultSlope)
     setSoilWetness(zone.defaultWetness)
     setLithStrength(zone.defaultLith)
     setInsarVelocity(zone.defaultInsar)
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([zone.lat, zone.lon], 9, {
+        duration: 1.2
+      })
+    }
   }
 
   // Audio Alarm Siren using Web Audio API
@@ -1022,7 +1069,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
         
         {/* Top Micro Strip */}
         <div className="bg-[#082846] text-[11px] text-slate-300 border-b border-white/10 px-4 py-1">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="font-semibold text-amber-300">भारत सरकार | GOVERNMENT OF INDIA</span>
               <span className="hidden sm:inline text-slate-400">|</span>
@@ -1051,7 +1098,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
         </div>
 
         {/* Main Branding Strip */}
-        <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
+        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <img 
               src="/emblem_of_india.svg" 
@@ -1073,6 +1120,18 @@ export default function AppDesktop({ onSwitchToMobile }) {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Quick Sector Selector from Header */}
+            <button
+              onClick={() => setSectorModalOpen(true)}
+              className="bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded text-xs font-bold border border-white/30 flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Select one of 18 Regional Monitoring Sectors"
+            >
+              <span className="material-symbols-outlined text-amber-400 text-sm">pin_drop</span>
+              <span className="hidden sm:inline">Monitoring Zone:</span>
+              <span className="text-amber-200 font-extrabold">{selectedZone.name.split("(")[0]}</span>
+              <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
+            </button>
+
             <button
               onClick={handleExportReport}
               className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded text-xs font-semibold border border-white/25 flex items-center gap-1.5 transition-colors"
@@ -1087,18 +1146,40 @@ export default function AppDesktop({ onSwitchToMobile }) {
       </header>
 
       {/* 2. OFFICIAL EOC EMERGENCY ALERT & BLE COMMAND STRIP */}
-      <section className="bg-[#1E293B] border-b border-slate-700 text-white py-2 px-4 shadow-sm">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <section className="bg-[#1E293B] border-b border-slate-700 text-white py-2.5 px-4 shadow-sm relative z-20">
+        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-3">
           
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center flex-wrap gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full animate-ping" style={{backgroundColor: riskResult.color}}></span>
             <span className="text-xs font-bold uppercase tracking-wider" style={{color: riskResult.color}}>
               {riskResult.status}:
             </span>
-            <span className="text-xs font-semibold text-slate-100">
-              {selectedZone.name}
-            </span>
-            <span className="hidden sm:inline text-xs text-slate-400">
+            
+            {/* Interactive Target Sector Selector Button */}
+            <button
+              onClick={() => setSectorModalOpen(true)}
+              className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-600 hover:border-amber-400 flex items-center gap-2 transition-all cursor-pointer shadow-xs group"
+              title="Click to change target monitored sector (18 available)"
+            >
+              <span className="material-symbols-outlined text-amber-400 text-sm group-hover:scale-110 transition-transform">pin_drop</span>
+              <span className="text-white group-hover:text-amber-300 transition-colors">
+                {selectedZone.name}
+              </span>
+              <span className="text-[11px] text-slate-300 font-normal">
+                ({selectedZone.state})
+              </span>
+              <span 
+                className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded text-white shadow-2xs"
+                style={{ backgroundColor: selectedZone.tierColor }}
+              >
+                {selectedZone.tier}
+              </span>
+              <span className="material-symbols-outlined text-xs text-slate-400 group-hover:text-white transition-colors">
+                arrow_drop_down
+              </span>
+            </button>
+
+            <span className="hidden lg:inline text-xs text-slate-400">
               ({riskResult.failureType} | Shearing: {insarVelocity} mm/d)
             </span>
           </div>
@@ -1108,7 +1189,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
             {!bleBroadcasting ? (
               <button
                 onClick={handleDispatchBle}
-                className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase px-3.5 py-1.5 rounded-md shadow flex items-center gap-1.5 transition-all"
+                className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase px-3.5 py-1.5 rounded-md shadow flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm animate-pulse">cell_tower</span>
                 <span>Dispatch BLE Offline Alert</span>
@@ -1116,7 +1197,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
             ) : (
               <button
                 onClick={handleSilenceBle}
-                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase px-3 py-1.5 rounded-md shadow flex items-center gap-1.5 transition-all"
+                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase px-3 py-1.5 rounded-md shadow flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">volume_off</span>
                 <span>Silence Alert</span>
@@ -1125,7 +1206,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
             <button
               onClick={toggleSirenAudio}
-              className={`px-2.5 py-1.5 rounded-md text-xs font-semibold border flex items-center gap-1 transition-all ${
+              className={`px-2.5 py-1.5 rounded-md text-xs font-semibold border flex items-center gap-1 transition-all cursor-pointer ${
                 sirenPlaying 
                   ? "bg-red-600 text-white border-red-400 animate-pulse" 
                   : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600"
@@ -1143,7 +1224,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
         {/* Live BLE Feedback Notice (when broadcasting) */}
         {bleBroadcasting && (
-          <div className="max-w-7xl mx-auto mt-1.5 pt-1.5 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-amber-300 font-mono">
+          <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 mt-1.5 pt-1.5 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-amber-300 font-mono">
             <span>{bleFeedbackMsg}</span>
             <span>PACKETS DISPATCHED: {blePacketsSent}</span>
           </div>
@@ -1151,7 +1232,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
       </section>
 
       {/* 3. MAIN DASHBOARD CONTENT */}
-      <main className="max-w-7xl mx-auto w-full px-4 py-4 flex-1 flex flex-col gap-4">
+      <main className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col gap-4">
 
         {/* 5 KEY MONITORED KPI CARDS */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -1234,31 +1315,45 @@ export default function AppDesktop({ onSwitchToMobile }) {
                 </span>
               </div>
 
-              {/* Layer Toggles */}
-              <div className="flex items-center bg-slate-200/80 p-0.5 rounded-md text-xs">
+              <div className="flex items-center gap-2">
+                {/* Sector Selector Trigger on Toolbar */}
                 <button
-                  onClick={() => switchBaseLayer("topo")}
-                  className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "topo" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                  onClick={() => setSectorModalOpen(true)}
+                  className="bg-white hover:bg-slate-100 text-blue-900 border border-slate-300 text-xs font-bold px-2.5 py-1 rounded flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  title="Choose from all 18 Northeast Monitoring Sectors"
                 >
-                  Topographic
+                  <span className="material-symbols-outlined text-sm text-blue-700">pin_drop</span>
+                  <span className="hidden sm:inline">Sector:</span>
+                  <span className="text-blue-950 font-bold">{selectedZone.name.split("(")[0]}</span>
+                  <span className="material-symbols-outlined text-xs text-slate-500">arrow_drop_down</span>
                 </button>
-                <button
-                  onClick={() => switchBaseLayer("satellite")}
-                  className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "satellite" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
-                >
-                  Satellite
-                </button>
-                <button
-                  onClick={() => switchBaseLayer("street")}
-                  className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "street" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
-                >
-                  Street
-                </button>
+
+                {/* Layer Toggles */}
+                <div className="flex items-center bg-slate-200/80 p-0.5 rounded-md text-xs">
+                  <button
+                    onClick={() => switchBaseLayer("topo")}
+                    className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "topo" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                  >
+                    Topographic
+                  </button>
+                  <button
+                    onClick={() => switchBaseLayer("satellite")}
+                    className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "satellite" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                  >
+                    Satellite
+                  </button>
+                  <button
+                    onClick={() => switchBaseLayer("street")}
+                    className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "street" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                  >
+                    Street
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Map Canvas */}
-            <div className="relative w-full h-[440px] bg-slate-100">
+            <div className="relative w-full h-[500px] xl:h-[580px] bg-slate-100">
               <div ref={mapContainerRef} className="w-full h-full z-0"></div>
 
               {/* Clean Floating Badge */}
@@ -1302,18 +1397,28 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
             {/* Sector Quick Selector Pills (Hidden Scrollbar) */}
             <div className="p-2 bg-slate-50 border-t border-slate-200 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs">
-              <span className="text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap px-1">Sectors:</span>
+              <button
+                onClick={() => setSectorModalOpen(true)}
+                className="bg-[#0B3C68] hover:bg-[#082846] text-white px-2.5 py-1 rounded text-xs font-bold whitespace-nowrap flex items-center gap-1 shadow-2xs shrink-0 cursor-pointer"
+                title="Open full searchable list of 18 sectors"
+              >
+                <span className="material-symbols-outlined text-xs text-amber-300">list</span>
+                <span>All 18 Sectors</span>
+                <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
+              </button>
+              <div className="h-4 w-[1px] bg-slate-300 mx-1 shrink-0"></div>
               {ZONES.map((z) => (
                 <button
                   key={z.id}
                   onClick={() => handleZoneSelect(z)}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold whitespace-nowrap transition-colors border ${
+                  className={`px-2.5 py-1 rounded text-xs font-semibold whitespace-nowrap transition-colors border flex items-center gap-1.5 shrink-0 cursor-pointer ${
                     selectedZone.id === z.id 
-                      ? "bg-[#0B3C68] text-white border-[#0B3C68]" 
+                      ? "bg-[#0B3C68] text-white border-[#0B3C68] shadow-2xs font-bold" 
                       : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
                   }`}
                 >
-                  {z.name.split("(")[0]}
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: z.tierColor }}></span>
+                  <span>{z.name.split("(")[0]}</span>
                 </button>
               ))}
             </div>
@@ -1663,7 +1768,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
       {/* 5. CLEAN GOVERNMENT FOOTER */}
       <footer className="bg-[#0A2540] text-slate-400 text-xs py-4 border-t-2 border-[#138808]">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="flex flex-col">
             <span className="text-white font-semibold">
               National Landslide Early Warning System (NER-LEWS)
@@ -1684,6 +1789,185 @@ export default function AppDesktop({ onSwitchToMobile }) {
           </div>
         </div>
       </footer>
+
+      {/* 6. REGIONAL SECTOR SELECTION MODAL */}
+      {sectorModalOpen && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150"
+          onClick={() => setSectorModalOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-[#0B3C68] text-white px-5 py-3.5 flex items-center justify-between border-b border-blue-900">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-amber-300">
+                  <span className="material-symbols-outlined text-xl">pin_drop</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base text-white tracking-tight">
+                    Select Monitoring Sector
+                  </h3>
+                  <p className="text-[11px] text-slate-300">
+                    18 GSI / NLSM Geotechnical Monitoring Zones across 8 Northeast States
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSectorModalOpen(false)}
+                className="text-slate-300 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+                title="Close (Esc)"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            {/* Modal Filters & Search */}
+            <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-col gap-2.5">
+              {/* Search Bar */}
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-lg">search</span>
+                <input
+                  type="text"
+                  value={sectorSearchQuery}
+                  onChange={(e) => setSectorSearchQuery(e.target.value)}
+                  placeholder="Filter by sector name, corridor or state (e.g. Sikkim, Haflong, Aizawl, Tawang)..."
+                  className="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-9 py-2 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 shadow-2xs"
+                  autoFocus
+                />
+                {sectorSearchQuery && (
+                  <button
+                    onClick={() => setSectorSearchQuery("")}
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* State Filter Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
+                <span className="font-bold text-[10px] text-slate-500 uppercase whitespace-nowrap">State:</span>
+                {["ALL", "Arunachal Pradesh", "Assam", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Sikkim", "Tripura"].map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setSelectedStateFilter(st)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                      selectedStateFilter === st
+                        ? "bg-[#0B3C68] text-white shadow-2xs"
+                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    {st === "ALL" ? "All States (18)" : st.replace(" Pradesh", "")}
+                  </button>
+                ))}
+              </div>
+
+              {/* Risk Filter Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
+                <span className="font-bold text-[10px] text-slate-500 uppercase whitespace-nowrap">Hazard Tier:</span>
+                {[
+                  { id: "ALL", label: "All Tiers", color: "#475569" },
+                  { id: "CRITICAL", label: "Critical (Red)", color: "#DC2626" },
+                  { id: "HIGH", label: "High (Orange)", color: "#EA580C" },
+                  { id: "MODERATE", label: "Moderate (Yellow)", color: "#EAB308" },
+                  { id: "LOW", label: "Low (Green)", color: "#22C55E" },
+                  { id: "SAFE", label: "Safe (Dark Green)", color: "#14532D" }
+                ].map((rk) => (
+                  <button
+                    key={rk.id}
+                    onClick={() => setSelectedRiskFilter(rk.id)}
+                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold whitespace-nowrap flex items-center gap-1.5 transition-colors cursor-pointer ${
+                      selectedRiskFilter === rk.id
+                        ? "bg-slate-900 text-white shadow-2xs"
+                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    {rk.id !== "ALL" && (
+                      <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: rk.color }}></span>
+                    )}
+                    <span>{rk.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Sector Grid/List */}
+            <div className="flex-1 overflow-y-auto p-4 max-h-[50vh] grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-slate-100/50">
+              {filteredZones.length === 0 ? (
+                <div className="col-span-full py-12 text-center text-slate-500 text-xs">
+                  No monitoring sectors found matching "{sectorSearchQuery}".
+                </div>
+              ) : (
+                filteredZones.map((z) => {
+                  const isSelected = selectedZone.id === z.id
+                  return (
+                    <button
+                      key={z.id}
+                      onClick={() => {
+                        handleZoneSelect(z)
+                        setSectorModalOpen(false)
+                      }}
+                      className={`p-3 rounded-xl text-left border transition-all flex flex-col justify-between gap-2 cursor-pointer ${
+                        isSelected 
+                          ? "bg-blue-50/90 border-blue-600 ring-2 ring-blue-600/30 shadow-sm" 
+                          : "bg-white border-slate-200 hover:border-blue-300 hover:shadow-sm"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span 
+                            className="w-3 h-3 rounded-full shrink-0 shadow-2xs"
+                            style={{ backgroundColor: z.tierColor }}
+                          ></span>
+                          <span className={`text-xs sm:text-sm font-bold truncate ${isSelected ? "text-blue-950 font-extrabold" : "text-slate-900"}`}>
+                            {z.name}
+                          </span>
+                        </div>
+                        <span 
+                          className="text-[9px] font-black uppercase px-2 py-0.5 rounded text-white shrink-0 shadow-2xs"
+                          style={{ backgroundColor: z.tierColor }}
+                        >
+                          {z.tier}
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-slate-600 line-clamp-1">
+                        <strong className="text-slate-800">{z.state}</strong> • {z.sub}
+                      </p>
+
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1.5 border-t border-slate-100 font-mono">
+                        <span>{z.lat.toFixed(2)}°N, {z.lon.toFixed(2)}°E</span>
+                        <div className="flex items-center gap-2 font-sans font-semibold">
+                          <span>Slope: {z.defaultSlope}°</span>
+                          <span>•</span>
+                          <span className="text-sky-700">{z.defaultWetness}% Sat</span>
+                          {isSelected && (
+                            <span className="text-blue-700 font-bold bg-blue-100 px-1 rounded">ACTIVE</span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3 bg-white border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+              <span>Showing <strong>{filteredZones.length}</strong> of {ZONES.length} Regional Hazard Sectors</span>
+              <button
+                onClick={() => setSectorModalOpen(false)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-1.5 rounded-lg transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )
