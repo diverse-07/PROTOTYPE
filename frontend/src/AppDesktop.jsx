@@ -1100,15 +1100,42 @@ export default function AppDesktop({ onSwitchToMobile }) {
         {/* Main Branding Strip */}
         <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <img 
-              src="/emblem_of_india.svg" 
-              alt="Government of India Emblem" 
-              className="h-10 w-auto filter drop-shadow-sm" 
-              onError={(e) => { e.target.style.display = "none" }}
-            />
+            {/* 1. Indian Government Emblem & Team AEGIS Logo Group */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <img 
+                src="./emblem_of_india.svg" 
+                alt="Government of India Emblem" 
+                className="h-10 sm:h-11 w-auto brightness-0 invert opacity-95 filter drop-shadow-sm" 
+                onError={(e) => { 
+                  if (e.target.src.endsWith('/emblem_of_india.svg')) {
+                    e.target.src = './emblem_of_india.svg';
+                  } else {
+                    e.target.src = 'emblem_of_india.svg';
+                  }
+                }}
+              />
+              
+              {/* Elegant Vertical Divider */}
+              <div className="h-8 sm:h-9 w-[1.5px] bg-white/20"></div>
+
+              {/* 2. Team AEGIS Official Logo (Transparent Circular Crest) */}
+              <img 
+                src="./logo.png" 
+                alt="Team AEGIS Crest" 
+                className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-contain filter drop-shadow-sm ring-1 ring-amber-400/40" 
+                onError={(e) => { 
+                  e.target.src = './aegis_logo_transparent.png';
+                }}
+              />
+            </div>
+
+            {/* Portal Title & Subtitles */}
             <div>
-              <h1 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
+              <h1 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2 flex-wrap">
                 <span>NER-LEWS</span>
+                <span className="text-[10px] sm:text-[11px] font-bold bg-amber-400/20 text-amber-300 px-1.5 py-0.2 rounded border border-amber-400/40 tracking-wider">
+                  TEAM AEGIS
+                </span>
                 <span className="hidden md:inline font-normal text-xs text-slate-200">
                   | राष्ट्रीय भूस्खलन पूर्व चेतावनी प्रणाली
                 </span>
