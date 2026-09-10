@@ -17,6 +17,34 @@ html, body {
   flex-direction: column;
 }
 
+/* Elegant Slim Scrollbars */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Completely hidden scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+
 /* HEADER */
 .govt-header { background: #1a3c6e; color: white; display: flex; align-items: center; gap: 16px; padding: 10px 20px; border-bottom: 3px solid #c59b27; min-height: 64px; }
 .header-text h1 { font-size: 17px; font-weight: 700; color: #fff; line-height: 1.3; }

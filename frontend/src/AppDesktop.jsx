@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from "react"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
-import { dispatchBleBroadcast, silenceBleBroadcast, getApiBaseUrl } from "./api/client"
+import { dispatchBleBroadcast, silenceBleBroadcast } from "./api/client"
 
 // Geotechnical Zones in Northeast India
 const ZONES = [
   {
     id: "z-ejh",
     name: "East Jaintia Hills (Sector 4)",
-    sub: "NH-44 Corridor / Disang Shale",
+    sub: "NH-44 Artery / Disang Weak Shale",
     state: "Meghalaya",
     lat: 25.3412,
     lon: 92.3614,
@@ -18,7 +18,7 @@ const ZONES = [
     defaultWetness: 94,
     defaultLith: 22, // Disang weak shale
     defaultInsar: 42.1,
-    description: "Active thrust fault shearing zone. Intense Disang shale saturation along NH-44 artery KM 114."
+    description: "Active thrust fault shearing zone. Intense Disang shale saturation along NH-44 corridor KM 114."
   },
   {
     id: "z-teesta",
@@ -33,7 +33,7 @@ const ZONES = [
     defaultWetness: 88,
     defaultLith: 38, // Pelitic Schist
     defaultInsar: 36.8,
-    description: "Main Central Thrust (MCT) active glacial-fluvial erosion. High-angle debris accumulation."
+    description: "Main Central Thrust (MCT) active glacial-fluvial erosion with high-angle debris accumulation."
   },
   {
     id: "z-kohima",
@@ -48,7 +48,7 @@ const ZONES = [
     defaultWetness: 76,
     defaultLith: 45, // Sandstone-Shale interbed
     defaultInsar: 19.2,
-    description: "Active road cutting and slope subsidence. Heavy vehicle vibration sensitivity."
+    description: "Active road cutting and slope subsidence with heavy vehicular vibration sensitivity."
   },
   {
     id: "z-aizawl",
@@ -183,20 +183,20 @@ function calculateGeotechnicalRisk(rainfall24, api72, slope, soilWetness, lithol
     failureWindow,
     failureType,
     featureContributions: [
-      { name: "24h Satellite Rainfall", pct: 36, val: `${rainfall24} mm` },
-      { name: "Slope Inclination", pct: 24, val: `${slope}°` },
-      { name: "InSAR Radar Shearing", pct: 20, val: `${insarVelocity} mm/d` },
+      { name: "24h Satellite Rainfall", pct: 38, val: `${rainfall24} mm` },
+      { name: "Slope Inclination", pct: 26, val: `${slope}°` },
+      { name: "InSAR Radar Shearing", pct: 18, val: `${insarVelocity} mm/d` },
       { name: "Soil Moisture (SMAP)", pct: 12, val: `${soilWetness}%` },
-      { name: "Bedrock Lithology", pct: 8, val: `${lithologyStrength} MPa` }
+      { name: "Lithology Strength", pct: 6, val: `${lithologyStrength} MPa` }
     ]
   }
 }
 
 export default function AppDesktop() {
-  // Selected Zone State
+  // Selected Sector
   const [selectedZone, setSelectedZone] = useState(ZONES[0])
 
-  // Real-Time Simulation Parameters (controlled by sliders & presets)
+  // Geotechnical Simulation Parameters
   const [rainfall24, setRainfall24] = useState(ZONES[0].defaultRain)
   const [api72, setApi72] = useState(ZONES[0].defaultApi)
   const [slope, setSlope] = useState(ZONES[0].defaultSlope)
@@ -204,30 +204,29 @@ export default function AppDesktop() {
   const [lithStrength, setLithStrength] = useState(ZONES[0].defaultLith)
   const [insarVelocity, setInsarVelocity] = useState(ZONES[0].defaultInsar)
 
-  // Map Basemap Layer State
+  // Simulation Mode Toggle (Allows testing without cluttering main view)
+  const [showSimulator, setShowSimulator] = useState(false)
+
+  // Map Basemap Layer
   const [baseLayer, setBaseLayer] = useState("topo")
 
-  // BLE Broadcast State
+  // BLE Emergency Broadcast State
   const [bleBroadcasting, setBleBroadcasting] = useState(false)
   const [bleDispatchId, setBleDispatchId] = useState("")
   const [blePacketsSent, setBlePacketsSent] = useState(0)
-  const [blePresetCode, setBlePresetCode] = useState(1)
   const [bleFeedbackMsg, setBleFeedbackMsg] = useState("")
 
-  // Audio Siren State
+  // Audible Siren Alarm State
   const [sirenPlaying, setSirenPlaying] = useState(false)
   const audioCtxRef = useRef(null)
   const sirenOscRef = useRef(null)
-
-  // AI Inference Computing Animation Flag
-  const [isInferencing, setIsInferencing] = useState(false)
 
   // Calculate live geotechnical risk
   const riskResult = useMemo(() => {
     return calculateGeotechnicalRisk(rainfall24, api72, slope, soilWetness, lithStrength, insarVelocity)
   }, [rainfall24, api72, slope, soilWetness, lithStrength, insarVelocity])
 
-  // Handle Zone Change: automatically update sliders to that zone's empirical defaults
+  // Handle Sector Change: automatically updates parameters
   const handleZoneSelect = (zone) => {
     setSelectedZone(zone)
     setRainfall24(zone.defaultRain)
@@ -236,16 +235,9 @@ export default function AppDesktop() {
     setSoilWetness(zone.defaultWetness)
     setLithStrength(zone.defaultLith)
     setInsarVelocity(zone.defaultInsar)
-    triggerInferencePulse()
   }
 
-  // Brief compute pulse animation when sliders move
-  const triggerInferencePulse = () => {
-    setIsInferencing(true)
-    setTimeout(() => setIsInferencing(false), 200)
-  }
-
-  // Siren Audio Engine via Web Audio API
+  // Audio Alarm Siren using Web Audio API
   const toggleSirenAudio = () => {
     if (sirenPlaying) {
       if (audioCtxRef.current) {
@@ -263,28 +255,26 @@ export default function AppDesktop() {
 
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
-      osc.type = "sawtooth"
+      osc.type = "sine"
       
-      // Sweep frequency between 700Hz and 1100Hz like an emergency wail
-      osc.frequency.setValueAtTime(750, ctx.currentTime)
+      osc.frequency.setValueAtTime(800, ctx.currentTime)
       const now = ctx.currentTime
-      for (let i = 0; i < 30; i++) {
-        osc.frequency.linearRampToValueAtTime(1150, now + i * 1.2 + 0.6)
-        osc.frequency.linearRampToValueAtTime(750, now + i * 1.2 + 1.2)
+      for (let i = 0; i < 20; i++) {
+        osc.frequency.linearRampToValueAtTime(1100, now + i * 1.2 + 0.6)
+        osc.frequency.linearRampToValueAtTime(800, now + i * 1.2 + 1.2)
       }
 
-      gain.gain.setValueAtTime(0.2, ctx.currentTime)
+      gain.gain.setValueAtTime(0.15, ctx.currentTime)
       osc.connect(gain)
       gain.connect(ctx.destination)
       osc.start()
       sirenOscRef.current = osc
       setSirenPlaying(true)
     } catch(e) {
-      console.warn("Audio context not allowed yet:", e)
+      console.warn("Audio context not available:", e)
     }
   }
 
-  // Cleanup audio on unmount
   useEffect(() => {
     return () => {
       if (audioCtxRef.current) {
@@ -296,14 +286,14 @@ export default function AppDesktop() {
   // BLE Broadcast Action (DISPATCH ALERT BLE BUTTON)
   const handleDispatchBle = async () => {
     setBleBroadcasting(true)
-    setBleFeedbackMsg("Engaging Radio BLE Mesh broadcast & Cloud emergency bus...")
+    setBleFeedbackMsg("Transmitting BLE emergency beacon packets to offline citizen phones...")
 
     const payload = {
       zone_name: selectedZone.name,
       severity: riskResult.status.includes("CRITICAL") ? "CRITICAL" : "HIGH",
       risk_score: Math.round(riskResult.probability),
-      preset_code: blePresetCode,
-      message: `DISASTER ALERT: ${riskResult.status} predicted at ${selectedZone.name}. ${riskResult.failureType}. Evacuate immediately to designated bedrock shelter.`,
+      preset_code: 1,
+      message: `DISASTER DIRECTIVE: ${riskResult.status} predicted for ${selectedZone.name}. ${riskResult.failureType}. Evacuate immediately to safe bedrock shelter.`,
       latitude: selectedZone.lat,
       longitude: selectedZone.lon
     }
@@ -313,15 +303,14 @@ export default function AppDesktop() {
       const id = res?.dispatch_id || `BLE-${Date.now().toString(16).slice(-6).toUpperCase()}`
       setBleDispatchId(id)
       setBlePacketsSent((p) => p + 1)
-      setBleFeedbackMsg(`BROADCAST ACTIVE: Packet ID ${id} transmitted via Bluetooth Mesh & satellite cloud relay.`)
+      setBleFeedbackMsg(`BROADCAST ACTIVE: Packet ID ${id} dispatched via Bluetooth mesh relay and emergency cloud bus.`)
       
-      // Start siren sound automatically if critical
       if (riskResult.status.includes("CRITICAL") && !sirenPlaying) {
         toggleSirenAudio()
       }
     } catch (err) {
       setBleDispatchId(`BLE-OFFLINE-${Date.now().toString(16).slice(-4).toUpperCase()}`)
-      setBleFeedbackMsg("Broadcast queued in offline BLE beacon queue.")
+      setBleFeedbackMsg("Broadcast queued in offline BLE beacon relay.")
     }
   }
 
@@ -331,11 +320,11 @@ export default function AppDesktop() {
       await silenceBleBroadcast()
     } catch(e) {}
     setBleBroadcasting(false)
-    setBleFeedbackMsg("BLE Emergency broadcast halted. Beacon radio quieted.")
+    setBleFeedbackMsg("Emergency broadcast quieted. BLE beacon radio returned to standby.")
     if (sirenPlaying) toggleSirenAudio()
   }
 
-  // Export Printable EOC Rainfall & Risk Report
+  // Export Printable EOC Report
   const handleExportReport = () => {
     const reportHtml = `
       <!DOCTYPE html>
@@ -343,7 +332,7 @@ export default function AppDesktop() {
       <head>
         <title>NER-LEWS Official EOC Geotechnical & Rainfall Report</title>
         <style>
-          body { font-family: 'Segoe UI', Arial, sans-serif; padding: 28px; color: #111; max-width: 800px; margin: auto; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; padding: 32px; color: #0F172A; max-width: 820px; margin: auto; }
           .header { border-bottom: 3px solid #0B3C68; padding-bottom: 12px; margin-bottom: 20px; }
           .stamp { float: right; padding: 6px 12px; background: #DC2626; color: white; font-weight: bold; border-radius: 4px; font-size: 13px; }
           h1 { margin: 0; color: #0B3C68; font-size: 20px; }
@@ -352,7 +341,7 @@ export default function AppDesktop() {
           .box { border: 1px solid #CBD5E1; padding: 12px; border-radius: 6px; background: #F8FAFC; }
           .kpi { font-size: 22px; font-weight: bold; color: #0B3C68; margin-top: 4px; }
           table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 12px; }
-          th, td { border: 1px solid #CBD5E1; padding: 6px 10px; text-align: left; }
+          th, td { border: 1px solid #CBD5E1; padding: 8px 10px; text-align: left; }
           th { background: #0B3C68; color: white; }
           .footer { margin-top: 30px; font-size: 11px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 10px; }
         </style>
@@ -367,7 +356,7 @@ export default function AppDesktop() {
 
         <div class="box" style="margin-bottom:14px;">
           <strong>Target Monitored Sector:</strong> ${selectedZone.name} (${selectedZone.state})<br>
-          <strong>Geological Coordinates:</strong> ${selectedZone.lat}° N, ${selectedZone.lon}° E | <strong>Lithology:</strong> ${selectedZone.sub}<br>
+          <strong>Geological Coordinates:</strong> ${selectedZone.lat}° N, ${selectedZone.lon}° E | <strong>Formation:</strong> ${selectedZone.sub}<br>
           <strong>Report Generated:</strong> ${new Date().toLocaleString()} IST
         </div>
 
@@ -375,7 +364,7 @@ export default function AppDesktop() {
           <div class="box">
             <span style="font-size:11px;color:#64748B;">AI FAILURE PROBABILITY (XGBOOST)</span>
             <div class="kpi" style="color:${riskResult.color}">${riskResult.probability}%</div>
-            <p style="font-size:12px;margin-top:4px;">Threshold Breach Status: <strong>${riskResult.status}</strong></p>
+            <p style="font-size:12px;margin-top:4px;">Hazard Classification: <strong>${riskResult.status}</strong></p>
           </div>
           <div class="box">
             <span style="font-size:11px;color:#64748B;">GEOTECHNICAL FACTOR OF SAFETY (FOS)</span>
@@ -385,12 +374,12 @@ export default function AppDesktop() {
           <div class="box">
             <span style="font-size:11px;color:#64748B;">24-HOUR SATELLITE RAINFALL (IMD)</span>
             <div class="kpi">${rainfall24} mm</div>
-            <p style="font-size:12px;margin-top:4px;">Critical Triggering Threshold: 120 mm (${rainfall24 > 120 ? '+' + (rainfall24 - 120) + ' mm Breach' : 'Within Safety Limit'})</p>
+            <p style="font-size:12px;margin-top:4px;">Triggering Threshold: 120 mm (${rainfall24 > 120 ? '+' + (rainfall24 - 120) + ' mm Exceedance' : 'Normal'})</p>
           </div>
           <div class="box">
             <span style="font-size:11px;color:#64748B;">INSAR RADAR SHEARING (SENTINEL-1)</span>
             <div class="kpi">${insarVelocity} mm/day</div>
-            <p style="font-size:12px;margin-top:4px;">Predicted Mechanism: <strong>${riskResult.failureType}</strong></p>
+            <p style="font-size:12px;margin-top:4px;">Failure Mode: <strong>${riskResult.failureType}</strong></p>
           </div>
         </div>
 
@@ -402,7 +391,7 @@ export default function AppDesktop() {
               <th>Hourly Rainfall (mm/hr)</th>
               <th>Cumulative 24h Rainfall (mm)</th>
               <th>Trigger Threshold (mm)</th>
-              <th>Status</th>
+              <th>Threshold Status</th>
             </tr>
           </thead>
           <tbody>
@@ -413,7 +402,7 @@ export default function AppDesktop() {
                 <td>${h.cum}</td>
                 <td>${h.thresh}</td>
                 <td style="color:${h.cum >= h.thresh ? '#DC2626' : '#10B981'};font-weight:${h.cum >= h.thresh ? 'bold' : 'normal'}">
-                  ${h.cum >= h.thresh ? 'CRITICAL EXCEEDANCE' : 'NORMAL'}
+                  ${h.cum >= h.thresh ? 'EXCEEDANCE BREACH' : 'WITHIN LIMIT'}
                 </td>
               </tr>
             `).join('')}
@@ -421,10 +410,10 @@ export default function AppDesktop() {
         </table>
 
         <div class="box" style="margin-top:16px;border-left:4px solid #DC2626;">
-          <strong>Official Directives for Incident Commander:</strong><br>
-          1. Mobilize SDRF / NDRF evacuation teams to designated bedrock safe havens.<br>
-          2. Execute emergency Bluetooth Mesh (BLE) beacon warnings to offline citizen phones.<br>
-          3. Request Border Roads Organisation (BRO) precautionary closures on NH-44 / NH-10 vulnerable chainage sections.
+          <strong>Official Incident Directives:</strong><br>
+          1. Mobilize SDRF / NDRF staging teams to safe bedrock community havens.<br>
+          2. Dispatch emergency BLE beacon advisories to citizen smartphones in sector.<br>
+          3. Enforce precautionary traffic interdiction along vulnerable highway chainages.
         </div>
 
         <div class="footer">
@@ -442,27 +431,24 @@ export default function AppDesktop() {
     }
   }
 
-  // Leaflet Map Ref and Setup
+  // Leaflet Map Ref
   const mapContainerRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const markersGroupRef = useRef(null)
-  const isohyetLayerRef = useRef(null)
 
   useEffect(() => {
     if (!mapContainerRef.current) return
-    if (mapInstanceRef.current) return // already initialized
+    if (mapInstanceRef.current) return
 
-    // Center on Northeast India (Shillong / Assam / Meghalaya / Sikkim region)
     const map = L.map(mapContainerRef.current, {
       center: [25.8, 92.5],
       zoom: 7,
-      scrollWheelZoom: false, // Do not trap mouse wheel
+      scrollWheelZoom: false,
       zoomControl: true
     })
     mapInstanceRef.current = map
 
-    // Tile Layer: Topo / Satellite
-    const topoLayer = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+    L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
       maxZoom: 17,
       attribution: 'Map: © OpenTopoMap, Survey of India'
     }).addTo(map)
@@ -470,31 +456,13 @@ export default function AppDesktop() {
     const markersGroup = L.layerGroup().addTo(map)
     markersGroupRef.current = markersGroup
 
-    // Rainfall Isohyet Overlay (polygon representing high rainfall funnel)
-    const isohyetPolygon = L.polygon([
-      [25.0, 91.5],
-      [25.6, 91.6],
-      [25.7, 92.6],
-      [25.1, 92.7]
-    ], {
-      color: "#0284C7",
-      weight: 2,
-      fillColor: "#38BDF8",
-      fillOpacity: 0.15,
-      dashArray: "6, 6"
-    }).addTo(map)
-    isohyetPolygon.bindTooltip("IMD Doppler Radar: > 150mm High-Precipitation Isohyet", { permanent: false, direction: "top" })
-    isohyetLayerRef.current = isohyetPolygon
-
     return () => {
-      try {
-        map.remove()
-      } catch(e) {}
+      try { map.remove() } catch(e) {}
       mapInstanceRef.current = null
     }
   }, [])
 
-  // Update Markers on Map whenever active parameters or selectedZone change
+  // Sync Markers & Center
   useEffect(() => {
     const map = mapInstanceRef.current
     const group = markersGroupRef.current
@@ -504,29 +472,28 @@ export default function AppDesktop() {
 
     ZONES.forEach((z) => {
       const isSelected = z.id === selectedZone.id
-      // Calculate individual zone risk
       const zRisk = isSelected 
         ? riskResult 
         : calculateGeotechnicalRisk(z.defaultRain, z.defaultApi, z.defaultSlope, z.defaultWetness, z.defaultLith, z.defaultInsar)
 
       const color = zRisk.color
-      const radius = isSelected ? 16 : 11
+      const radius = isSelected ? 15 : 10
 
       const marker = L.circleMarker([z.lat, z.lon], {
         radius,
         fillColor: color,
-        fillOpacity: isSelected ? 0.95 : 0.8,
+        fillOpacity: isSelected ? 0.95 : 0.75,
         color: "#ffffff",
-        weight: isSelected ? 3.5 : 2
+        weight: isSelected ? 3 : 1.5
       })
 
       marker.bindTooltip(`
-        <div style="font-family:sans-serif;font-size:12px;padding:2px 4px;">
-          <strong style="color:#0B3C68;">${z.name}</strong><br>
-          <span style="color:${color};font-weight:bold;">${zRisk.status} (${zRisk.probability}%)</span><br>
+        <div style="font-family:sans-serif;font-size:12px;padding:3px 6px;">
+          <strong style="color:#0B3C68;">${z.name}</strong><br/>
+          <span style="color:${color};font-weight:bold;">${zRisk.status} (${zRisk.probability}%)</span><br/>
           <span>FoS: ${zRisk.fos} | Rain: ${isSelected ? rainfall24 : z.defaultRain}mm</span>
         </div>
-      `, { direction: "top", offset: [0, -10] })
+      `, { direction: "top", offset: [0, -8] })
 
       marker.on("click", () => {
         handleZoneSelect(z)
@@ -534,26 +501,24 @@ export default function AppDesktop() {
 
       marker.addTo(group)
 
-      // Add a pulsating radar ring around the selected marker
       if (isSelected) {
         L.circleMarker([z.lat, z.lon], {
-          radius: 28,
+          radius: 26,
           fillColor: color,
-          fillOpacity: 0.2,
+          fillOpacity: 0.15,
           color: color,
           weight: 1.5,
-          dashArray: "3, 3"
+          dashArray: "4, 4"
         }).addTo(group)
       }
     })
 
-    // Pan smoothly to selected zone
     if (selectedZone) {
-      map.panTo([selectedZone.lat, selectedZone.lon], { animate: true, duration: 0.8 })
+      map.panTo([selectedZone.lat, selectedZone.lon], { animate: true, duration: 0.7 })
     }
   }, [selectedZone, riskResult, rainfall24])
 
-  // Handle Base Layer Switch
+  // Layer Switching
   const switchBaseLayer = (type) => {
     setBaseLayer(type)
     const map = mapInstanceRef.current
@@ -568,7 +533,7 @@ export default function AppDesktop() {
     if (type === "satellite") {
       L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
         maxZoom: 18,
-        attribution: 'Tiles: © Esri & USGS'
+        attribution: 'Tiles: © Esri, USGS'
       }).addTo(map)
     } else if (type === "topo") {
       L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
@@ -587,35 +552,54 @@ export default function AppDesktop() {
     <div className="w-full min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col font-sans">
       
       {/* 1. TOP NATIONAL GOVERNMENT OF INDIA HEADER */}
-      <header className="bg-[#0B3C68] text-white border-b-4 border-[#FF9933] shadow-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center p-1 border border-white/20">
-              <span className="material-symbols-outlined text-amber-300 text-2xl">radar</span>
+      <header className="bg-[#0B3C68] text-white border-b-4 border-[#FF9933] shadow-sm sticky top-0 z-50">
+        
+        {/* Top Micro Strip */}
+        <div className="bg-[#082846] text-[11px] text-slate-300 border-b border-white/10 px-4 py-1">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="font-semibold text-amber-300">भारत सरकार | GOVERNMENT OF INDIA</span>
+              <span className="hidden sm:inline text-slate-400">|</span>
+              <span className="hidden sm:inline">गृह मंत्रालय • उत्तर पूर्वी क्षेत्र विकास मंत्रालय (MDoNER)</span>
             </div>
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-[10px] bg-white/10 px-2 py-0.5 rounded text-amber-200">
+                EOC 24x7: 1078
+              </span>
+              <span className="text-emerald-400 flex items-center gap-1 font-semibold text-[10px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                RADAR: LIVE
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Branding Strip */}
+        <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <img 
+              src="/emblem_of_india.svg" 
+              alt="Government of India Emblem" 
+              className="h-10 w-auto filter drop-shadow-sm" 
+              onError={(e) => { e.target.style.display = "none" }}
+            />
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-amber-300">Government of India</span>
-                <span className="text-[11px] bg-white/15 px-2 py-0.5 rounded font-mono">NDMA • MDoNER • ISRO • GSI</span>
-              </div>
-              <h1 className="text-lg md:text-xl font-bold tracking-tight text-white leading-tight">
-                NER-LEWS <span className="font-normal text-sm text-slate-200">| National Landslide Early Warning & AI Prediction Portal</span>
+              <h1 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                <span>NER-LEWS</span>
+                <span className="hidden md:inline font-normal text-xs text-slate-200">
+                  | राष्ट्रीय भूस्खलन पूर्व चेतावनी प्रणाली
+                </span>
               </h1>
+              <p className="text-[11px] text-slate-300">
+                National Landslide Early Warning System — Satellite Radar & Geotechnical Operations Center
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex flex-col text-right">
-              <span className="text-[11px] text-slate-300 font-mono">EOC HOTLINE: 1078 / 811-26781728</span>
-              <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1 justify-end">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> SATELLITE RADAR: LIVE
-              </span>
-            </div>
-
-            {/* Print/Export Report */}
+          <div className="flex items-center gap-2">
             <button
               onClick={handleExportReport}
-              className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded text-xs font-semibold border border-white/25 flex items-center gap-1.5 transition-colors shadow-sm"
+              className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded text-xs font-semibold border border-white/25 flex items-center gap-1.5 transition-colors"
               title="Generate printable EOC Geotechnical & Rainfall Report"
             >
               <span className="material-symbols-outlined text-sm">print</span>
@@ -624,145 +608,116 @@ export default function AppDesktop() {
           </div>
         </div>
 
-        {/* Threat Alert Ticker */}
-        <div className="bg-[#0A2540] px-4 py-1.5 text-xs text-slate-200 border-t border-white/10 flex items-center justify-between">
-          <div className="max-w-7xl mx-auto w-full flex items-center gap-2 overflow-x-auto whitespace-nowrap">
-            <span className="bg-[#DC2626] text-white text-[10px] font-bold uppercase px-1.5 py-0.5 rounded tracking-wider animate-pulse">
-              ACTIVE HAZARD DIRECTIVE
-            </span>
-            <span className="text-slate-300">
-              High Precipitation & InSAR Ground Shearing Breach Monitored in <strong>{selectedZone.name}</strong>. Calculated Failure Probability: <strong style={{color: riskResult.color}}>{riskResult.probability}%</strong>.
-            </span>
-          </div>
-        </div>
       </header>
 
-      {/* 2. EMERGENCY ACTION STRIP (THE ALERT BLE BUTTON & SIREN) */}
-      <section className="bg-gradient-to-r from-red-950 via-slate-900 to-amber-950 border-b border-red-800 text-white py-2.5 px-4 shadow-inner">
+      {/* 2. OFFICIAL EOC EMERGENCY ALERT & BLE COMMAND STRIP */}
+      <section className="bg-[#1E293B] border-b border-slate-700 text-white py-2 px-4 shadow-sm">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-full ${bleBroadcasting ? "bg-red-600 animate-bounce" : "bg-red-800/60"} border border-red-500/50`}>
-              <span className="material-symbols-outlined text-xl text-white">settings_remote</span>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-red-300 uppercase tracking-wide">Emergency Radio Relay:</span>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-white/10">
-                  Target: {selectedZone.name}
-                </span>
-                {bleBroadcasting && (
-                  <span className="text-[10px] bg-red-600 px-2 py-0.5 rounded-full font-mono animate-pulse">
-                    TRANSMITTING BLE PACKETS ({blePacketsSent})
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px] text-slate-300">
-                {bleFeedbackMsg || "Direct offline Bluetooth Low Energy broadcast to primary citizen phones and emergency mesh relays."}
-              </p>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full animate-ping" style={{backgroundColor: riskResult.color}}></span>
+            <span className="text-xs font-bold uppercase tracking-wider" style={{color: riskResult.color}}>
+              {riskResult.status}:
+            </span>
+            <span className="text-xs font-semibold text-slate-100">
+              {selectedZone.name}
+            </span>
+            <span className="hidden sm:inline text-xs text-slate-400">
+              ({riskResult.failureType} | Shearing: {insarVelocity} mm/d)
+            </span>
           </div>
 
+          {/* Action Group: The Alert BLE Button & Alarm */}
           <div className="flex items-center gap-2">
-            {/* THE ALERT BLE BUTTON */}
             {!bleBroadcasting ? (
               <button
                 onClick={handleDispatchBle}
-                className="bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold text-xs uppercase px-4 py-2 rounded-lg shadow-lg border border-red-400 flex items-center gap-2 transition-all"
+                className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase px-3.5 py-1.5 rounded-md shadow flex items-center gap-1.5 transition-all"
               >
-                <span className="material-symbols-outlined text-base animate-pulse">broadcast_on_home</span>
+                <span className="material-symbols-outlined text-sm animate-pulse">cell_tower</span>
                 <span>Dispatch BLE Offline Alert</span>
               </button>
             ) : (
               <button
                 onClick={handleSilenceBle}
-                className="bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold text-xs uppercase px-3 py-2 rounded-lg shadow-lg border border-amber-400 flex items-center gap-1.5 transition-all"
+                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase px-3 py-1.5 rounded-md shadow flex items-center gap-1.5 transition-all"
               >
-                <span className="material-symbols-outlined text-base">volume_off</span>
-                <span>Silence BLE Broadcast</span>
+                <span className="material-symbols-outlined text-sm">volume_off</span>
+                <span>Silence Alert</span>
               </button>
             )}
 
-            {/* Sound Siren Toggle */}
             <button
               onClick={toggleSirenAudio}
-              className={`px-3 py-2 rounded-lg text-xs font-bold border flex items-center gap-1.5 transition-all ${
+              className={`px-2.5 py-1.5 rounded-md text-xs font-semibold border flex items-center gap-1 transition-all ${
                 sirenPlaying 
-                  ? "bg-red-500 text-white border-white animate-pulse" 
-                  : "bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-600"
+                  ? "bg-red-600 text-white border-red-400 animate-pulse" 
+                  : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600"
               }`}
-              title="Toggle Audible Alarm Siren"
+              title="Toggle Audible Alarm Tone"
             >
-              <span className="material-symbols-outlined text-base">
+              <span className="material-symbols-outlined text-sm">
                 {sirenPlaying ? "campaign" : "notifications"}
               </span>
-              <span>{sirenPlaying ? "Siren Active" : "Test Siren"}</span>
+              <span className="hidden sm:inline">{sirenPlaying ? "Siren Active" : "Alarm"}</span>
             </button>
           </div>
 
         </div>
+
+        {/* Live BLE Feedback Notice (when broadcasting) */}
+        {bleBroadcasting && (
+          <div className="max-w-7xl mx-auto mt-1.5 pt-1.5 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-amber-300 font-mono">
+            <span>{bleFeedbackMsg}</span>
+            <span>PACKETS DISPATCHED: {blePacketsSent}</span>
+          </div>
+        )}
       </section>
 
-      {/* 3. MAIN DASHBOARD CONTENT (MAP, AI PREDICTION, RAINFALL REPORT) */}
+      {/* 3. MAIN DASHBOARD CONTENT */}
       <main className="max-w-7xl mx-auto w-full px-4 py-4 flex-1 flex flex-col gap-4">
 
-        {/* 5 KPI METRIC CARDS */}
+        {/* 5 KEY MONITORED KPI CARDS */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           
-          {/* Card 1: AI Failure Risk */}
-          <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase">AI Failure Probability</span>
-              <span className="material-symbols-outlined text-lg" style={{color: riskResult.color}}>psychology</span>
-            </div>
-            <div className="my-1">
+          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+            <span className="text-[11px] font-semibold text-slate-500 uppercase">AI Failure Risk</span>
+            <div className="my-1 flex items-baseline gap-1">
               <span className="text-2xl font-black tracking-tight" style={{color: riskResult.color}}>
                 {riskResult.probability}%
               </span>
             </div>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded inline-block w-fit uppercase" style={{backgroundColor: riskResult.bgLight, color: riskResult.color}}>
+            <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded w-fit" style={{backgroundColor: riskResult.bgLight, color: riskResult.color}}>
               {riskResult.status}
             </span>
           </div>
 
-          {/* Card 2: Factor of Safety */}
-          <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase">Factor of Safety (FoS)</span>
-              <span className="material-symbols-outlined text-lg text-slate-600">balance</span>
-            </div>
+          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+            <span className="text-[11px] font-semibold text-slate-500 uppercase">Factor of Safety (FoS)</span>
             <div className="my-1">
               <span className={`text-2xl font-black tracking-tight ${riskResult.fos < 1.0 ? "text-red-600" : "text-emerald-600"}`}>
                 {riskResult.fos}
               </span>
             </div>
             <span className="text-[10px] text-slate-500">
-              {riskResult.fos < 1.0 ? "Imminent Shear Failure" : "Geotechnically Stable"}
+              {riskResult.fos < 1.0 ? "Active Shear Failure" : "Geotechnically Stable"}
             </span>
           </div>
 
-          {/* Card 3: 24h Satellite Rainfall */}
-          <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase">24h Rainfall (IMD)</span>
-              <span className="material-symbols-outlined text-lg text-sky-600">rainy</span>
-            </div>
+          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+            <span className="text-[11px] font-semibold text-slate-500 uppercase">24h Rainfall (IMD)</span>
             <div className="my-1">
               <span className="text-2xl font-black text-slate-900 tracking-tight">
                 {rainfall24} <span className="text-xs font-normal text-slate-500">mm</span>
               </span>
             </div>
             <span className={`text-[10px] font-bold ${rainfall24 >= 120 ? "text-red-600" : "text-slate-500"}`}>
-              {rainfall24 >= 120 ? "Exceeds 120mm Threshold" : "Below Alert Threshold"}
+              {rainfall24 >= 120 ? "+ " + (rainfall24 - 120) + "mm Threshold Breach" : "Within Safe Limits"}
             </span>
           </div>
 
-          {/* Card 4: InSAR Ground Shearing */}
-          <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase">InSAR Displacement</span>
-              <span className="material-symbols-outlined text-lg text-violet-600">satellite_alt</span>
-            </div>
+          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+            <span className="text-[11px] font-semibold text-slate-500 uppercase">InSAR Displacement</span>
             <div className="my-1">
               <span className="text-2xl font-black text-slate-900 tracking-tight">
                 {insarVelocity} <span className="text-xs font-normal text-slate-500">mm/d</span>
@@ -771,107 +726,103 @@ export default function AppDesktop() {
             <span className="text-[10px] text-slate-500">Sentinel-1 Interferometry</span>
           </div>
 
-          {/* Card 5: Estimated Failure Window */}
-          <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between col-span-2 sm:col-span-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase">Failure Time Window</span>
-              <span className="material-symbols-outlined text-lg text-amber-600">timer</span>
-            </div>
+          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between col-span-2 sm:col-span-1">
+            <span className="text-[11px] font-semibold text-slate-500 uppercase">Estimated Impact</span>
             <div className="my-1">
               <span className="text-lg font-black text-slate-900 tracking-tight">
                 {riskResult.failureWindow}
               </span>
             </div>
-            <span className="text-[10px] font-medium text-slate-500 truncate" title={riskResult.failureType}>
+            <span className="text-[10px] text-slate-500 truncate" title={riskResult.failureType}>
               {riskResult.failureType}
             </span>
           </div>
 
         </div>
 
-        {/* TWO-COLUMN CORE: MAP (LEFT) & FULLY WORKING AI PREDICTION ENGINE (RIGHT) */}
+        {/* 2-COLUMN OPERATIONAL WORKSPACE: MAP (LEFT) & AI PREDICTIONS (RIGHT) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
           
-          {/* LEFT: INTERACTIVE GEOTECHNICAL GIS MAP (7 Cols) */}
-          <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          {/* LEFT: GEOTECHNICAL GIS MAP (7 Cols) */}
+          <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
             
-            {/* Map Header Toolbar */}
-            <div className="p-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+            {/* Map Toolbar */}
+            <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-blue-700 text-lg">public</span>
                 <span className="font-bold text-xs uppercase tracking-wide text-slate-800">
-                  Northeast Geotechnical GIS Canvas
+                  Northeast Regional GIS Canvas
                 </span>
               </div>
 
-              {/* Layer Switcher */}
-              <div className="flex items-center bg-slate-200 p-0.5 rounded-lg text-xs">
+              {/* Layer Toggles */}
+              <div className="flex items-center bg-slate-200/80 p-0.5 rounded-md text-xs">
                 <button
                   onClick={() => switchBaseLayer("topo")}
-                  className={`px-2.5 py-1 rounded font-semibold transition-all ${baseLayer === "topo" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                  className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "topo" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
                 >
                   Topographic
                 </button>
                 <button
                   onClick={() => switchBaseLayer("satellite")}
-                  className={`px-2.5 py-1 rounded font-semibold transition-all ${baseLayer === "satellite" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                  className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "satellite" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
                 >
                   Satellite
                 </button>
                 <button
                   onClick={() => switchBaseLayer("street")}
-                  className={`px-2.5 py-1 rounded font-semibold transition-all ${baseLayer === "street" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                  className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "street" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
                 >
                   Street
                 </button>
               </div>
             </div>
 
-            {/* Map Container */}
-            <div className="relative w-full h-[460px] bg-slate-100">
+            {/* Map Canvas */}
+            <div className="relative w-full h-[440px] bg-slate-100">
               <div ref={mapContainerRef} className="w-full h-full z-0"></div>
 
-              {/* Floating Overlay Badge on Map */}
-              <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md p-2.5 rounded-lg shadow-md border border-slate-200 z-10 max-w-xs text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-slate-900 mb-1">
+              {/* Clean Floating Badge */}
+              <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md p-3 rounded-lg shadow-sm border border-slate-200 z-10 max-w-xs text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-slate-900 mb-0.5">
                   <span className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: riskResult.color}}></span>
                   <span>{selectedZone.name}</span>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-snug">{selectedZone.description}</p>
                 <div className="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-mono">
-                  <span>LAT: {selectedZone.lat}° N</span>
-                  <span>LON: {selectedZone.lon}° E</span>
+                  <span>{selectedZone.lat}° N, {selectedZone.lon}° E</span>
+                  <span className="font-bold text-blue-700">{selectedZone.state}</span>
                 </div>
               </div>
 
               {/* Map Legend */}
-              <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-2 rounded shadow-sm border border-slate-200 z-10 text-[10px] flex flex-col gap-1">
+              <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1.5 rounded shadow-xs border border-slate-200 z-10 text-[10px] flex flex-col gap-1">
                 <span className="font-bold text-slate-700">Hazard Tier</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-600"></span>
+                  <span className="w-2 h-2 rounded-full bg-red-600"></span>
                   <span>Critical (FoS &lt; 1.0)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                   <span>High (FoS 1.0-1.25)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                   <span>Stable (&gt; 1.5)</span>
                 </div>
               </div>
             </div>
 
-            {/* Map Footer Quick Sector Selector */}
-            <div className="p-2.5 bg-slate-50 border-t border-slate-200 flex items-center gap-2 overflow-x-auto text-xs">
-              <span className="text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Focus Sector:</span>
+            {/* Sector Quick Selector Pills (Hidden Scrollbar) */}
+            <div className="p-2 bg-slate-50 border-t border-slate-200 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs">
+              <span className="text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap px-1">Sectors:</span>
               {ZONES.map((z) => (
                 <button
                   key={z.id}
                   onClick={() => handleZoneSelect(z)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap transition-colors border ${
+                  className={`px-2.5 py-1 rounded text-xs font-semibold whitespace-nowrap transition-colors border ${
                     selectedZone.id === z.id 
-                      ? "bg-[#0B3C68] text-white border-[#0B3C68] shadow-xs" 
+                      ? "bg-[#0B3C68] text-white border-[#0B3C68]" 
                       : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
                   }`}
                 >
@@ -882,44 +833,47 @@ export default function AppDesktop() {
 
           </div>
 
-          {/* RIGHT: WHOLE WORKING AI PREDICTION SYSTEM (5 Cols) */}
-          <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-4">
+          {/* RIGHT: WORKING AI PREDICTION SYSTEM (5 Cols) */}
+          <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-xs p-4 flex flex-col gap-3.5">
             
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-amber-500 text-xl">model_training</span>
-                  <h2 className="font-bold text-sm text-slate-900 uppercase tracking-tight">
-                    XGBoost Geotechnical AI Engine
-                  </h2>
-                </div>
-                <p className="text-[11px] text-slate-500">Real-Time Geotechnical Slope Failure Inference</p>
+                <h2 className="font-bold text-sm text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-blue-700 text-lg">neurology</span>
+                  <span>Geotechnical AI Risk Assessment</span>
+                </h2>
+                <p className="text-[11px] text-slate-500">XGBoost ML v4.2 & Infinite Slope Stability Model</p>
               </div>
 
-              {/* Status Pill */}
-              <div className="text-right">
-                <span className={`text-[11px] font-mono px-2 py-0.5 rounded font-bold uppercase transition-all ${isInferencing ? "bg-amber-100 text-amber-800 animate-pulse" : "bg-emerald-50 text-emerald-700"}`}>
-                  {isInferencing ? "Computing..." : "Model: Active"}
-                </span>
-              </div>
+              {/* What-If Simulation Toggle */}
+              <button
+                onClick={() => setShowSimulator(!showSimulator)}
+                className={`text-[11px] font-semibold px-2 py-1 rounded border flex items-center gap-1 transition-all ${
+                  showSimulator 
+                    ? "bg-blue-50 text-blue-700 border-blue-200" 
+                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                }`}
+              >
+                <span className="material-symbols-outlined text-xs">tune</span>
+                <span>{showSimulator ? "Close Simulation" : "What-If Analysis"}</span>
+              </button>
             </div>
 
-            {/* Live Model Output Display */}
+            {/* Calculated Classification Card */}
             <div 
               className="p-3.5 rounded-xl border transition-all" 
               style={{backgroundColor: riskResult.bgLight, borderColor: riskResult.border}}
             >
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs font-bold uppercase" style={{color: riskResult.color}}>
-                  Calculated Hazard Classification
+                  {riskResult.status}
                 </span>
                 <span className="text-xs font-mono font-bold" style={{color: riskResult.color}}>
                   FoS: {riskResult.fos}
                 </span>
               </div>
 
-              {/* Probability Number and Visual Bar */}
               <div className="flex items-baseline justify-between mb-1.5">
                 <span className="text-3xl font-black tracking-tight" style={{color: riskResult.color}}>
                   {riskResult.probability}%
@@ -929,8 +883,8 @@ export default function AppDesktop() {
                 </span>
               </div>
 
-              {/* Progress Bar */}
-              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden mb-2">
+              {/* Progress Meter */}
+              <div className="w-full bg-slate-200/80 h-2 rounded-full overflow-hidden mb-2">
                 <div 
                   className="h-full rounded-full transition-all duration-300"
                   style={{width: `${riskResult.probability}%`, backgroundColor: riskResult.color}}
@@ -938,134 +892,109 @@ export default function AppDesktop() {
               </div>
 
               <div className="text-[11px] text-slate-700 flex items-center justify-between pt-1 border-t border-slate-200/60">
-                <span>Failure Mode: <strong>{riskResult.failureType}</strong></span>
-                <span className="font-mono text-[10px] text-slate-500">ROC-AUC: 0.942</span>
+                <span>Predicted Mode: <strong>{riskResult.failureType}</strong></span>
+                <span className="font-mono text-[10px] text-slate-500">Model: GSI-XGBoost</span>
               </div>
             </div>
 
-            {/* 6 Interactive Parameter Adjusters (Working Sliders) */}
-            <div className="flex flex-col gap-3">
-              <span className="text-xs font-bold uppercase text-slate-600 tracking-wide">
-                Live Geotechnical Feature Adjusters
-              </span>
-
-              {/* 1. 24h Rainfall */}
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-700 font-medium">24h Rainfall (IMD Satellite)</span>
-                  <span className="font-mono font-bold text-blue-700">{rainfall24} mm</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="280"
-                  step="2"
-                  value={rainfall24}
-                  onChange={(e) => { setRainfall24(Number(e.target.value)); triggerInferencePulse(); }}
-                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
+            {/* Sector Current Telemetry Specs */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                <span className="text-[10px] text-slate-500 uppercase block">Monitored Rainfall</span>
+                <span className="font-bold text-slate-800">{rainfall24} mm / 24h</span>
               </div>
-
-              {/* 2. Slope Inclination */}
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-700 font-medium">Slope Face Inclination (DEM 0.5m)</span>
-                  <span className="font-mono font-bold text-blue-700">{slope}°</span>
-                </div>
-                <input
-                  type="range"
-                  min="15"
-                  max="65"
-                  step="1"
-                  value={slope}
-                  onChange={(e) => { setSlope(Number(e.target.value)); triggerInferencePulse(); }}
-                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
+              <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                <span className="text-[10px] text-slate-500 uppercase block">Slope Inclination</span>
+                <span className="font-bold text-slate-800">{slope}° Angle</span>
               </div>
-
-              {/* 3. InSAR Shearing Velocity */}
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-700 font-medium">InSAR Velocity (Sentinel-1A)</span>
-                  <span className="font-mono font-bold text-violet-700">{insarVelocity} mm/day</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="55"
-                  step="0.5"
-                  value={insarVelocity}
-                  onChange={(e) => { setInsarVelocity(Number(e.target.value)); triggerInferencePulse(); }}
-                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-violet-600"
-                />
+              <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                <span className="text-[10px] text-slate-500 uppercase block">InSAR Deformation</span>
+                <span className="font-bold text-violet-700">{insarVelocity} mm/day</span>
               </div>
-
-              {/* 4. Soil Wetness (SMAP) */}
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-700 font-medium">Soil Saturation / Wetness (SMAP)</span>
-                  <span className="font-mono font-bold text-sky-700">{soilWetness}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="100"
-                  step="1"
-                  value={soilWetness}
-                  onChange={(e) => { setSoilWetness(Number(e.target.value)); triggerInferencePulse(); }}
-                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600"
-                />
-              </div>
-
-              {/* 5. 72h Antecedent Rain */}
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-700 font-medium">72h Cumulative Antecedent Rain</span>
-                  <span className="font-mono font-bold text-slate-800">{api72} mm</span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="420"
-                  step="5"
-                  value={api72}
-                  onChange={(e) => { setApi72(Number(e.target.value)); triggerInferencePulse(); }}
-                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-700"
-                />
-              </div>
-
-              {/* 6. Bedrock Lithology Strength */}
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-700 font-medium">Bedrock Shear Strength (GSI Lithology)</span>
-                  <span className="font-mono font-bold text-amber-800">{lithStrength} MPa</span>
-                </div>
-                <input
-                  type="range"
-                  min="12"
-                  max="80"
-                  step="2"
-                  value={lithStrength}
-                  onChange={(e) => { setLithStrength(Number(e.target.value)); triggerInferencePulse(); }}
-                  className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-700"
-                />
-                <span className="text-[10px] text-slate-400 block mt-0.5">
-                  12-25 MPa: Weak Disang Shale | 30-50 MPa: Siltstone/Schist | 60-80 MPa: Hard Gneiss
-                </span>
+              <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                <span className="text-[10px] text-slate-500 uppercase block">Soil Saturation</span>
+                <span className="font-bold text-sky-700">{soilWetness}% (SMAP)</span>
               </div>
             </div>
 
-            {/* Feature Importance Bars */}
-            <div className="border-t border-slate-100 pt-3">
-              <span className="text-[11px] font-bold text-slate-500 uppercase block mb-2">
-                SHAP Feature Weight Breakdown
+            {/* WHAT-IF SIMULATOR DRAWER (Revealed when What-If Analysis is active) */}
+            {showSimulator && (
+              <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex flex-col gap-2.5 transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-blue-900 uppercase">Interactive Sensitivity Adjusters</span>
+                  <button 
+                    onClick={() => handleZoneSelect(selectedZone)}
+                    className="text-[10px] text-blue-700 underline hover:text-blue-900"
+                  >
+                    Reset Defaults
+                  </button>
+                </div>
+
+                {/* Slider 1: 24h Rainfall */}
+                <div>
+                  <div className="flex justify-between text-[11px] mb-0.5">
+                    <span className="text-slate-700">Simulate 24h Rainfall</span>
+                    <span className="font-mono font-bold text-blue-800">{rainfall24} mm</span>
+                  </div>
+                  <input
+                    type="range" min="0" max="280" step="2" value={rainfall24}
+                    onChange={(e) => setRainfall24(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-200 rounded appearance-none cursor-pointer accent-blue-700"
+                  />
+                </div>
+
+                {/* Slider 2: Slope */}
+                <div>
+                  <div className="flex justify-between text-[11px] mb-0.5">
+                    <span className="text-slate-700">Simulate Slope Angle</span>
+                    <span className="font-mono font-bold text-blue-800">{slope}°</span>
+                  </div>
+                  <input
+                    type="range" min="15" max="65" step="1" value={slope}
+                    onChange={(e) => setSlope(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-200 rounded appearance-none cursor-pointer accent-blue-700"
+                  />
+                </div>
+
+                {/* Slider 3: InSAR Velocity */}
+                <div>
+                  <div className="flex justify-between text-[11px] mb-0.5">
+                    <span className="text-slate-700">Simulate InSAR Velocity</span>
+                    <span className="font-mono font-bold text-violet-800">{insarVelocity} mm/d</span>
+                  </div>
+                  <input
+                    type="range" min="0" max="55" step="0.5" value={insarVelocity}
+                    onChange={(e) => setInsarVelocity(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-200 rounded appearance-none cursor-pointer accent-violet-700"
+                  />
+                </div>
+
+                {/* Slider 4: Soil Saturation */}
+                <div>
+                  <div className="flex justify-between text-[11px] mb-0.5">
+                    <span className="text-slate-700">Simulate Soil Moisture</span>
+                    <span className="font-mono font-bold text-sky-800">{soilWetness}%</span>
+                  </div>
+                  <input
+                    type="range" min="10" max="100" step="1" value={soilWetness}
+                    onChange={(e) => setSoilWetness(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-200 rounded appearance-none cursor-pointer accent-sky-700"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Contributing Risk Factors Breakdown */}
+            <div className="border-t border-slate-100 pt-2.5">
+              <span className="text-[11px] font-bold text-slate-500 uppercase block mb-1.5">
+                Key Contributing Risk Drivers
               </span>
               <div className="flex flex-col gap-1.5">
                 {riskResult.featureContributions.map((fc) => (
                   <div key={fc.name} className="flex items-center text-xs">
                     <span className="w-36 text-slate-600 truncate text-[11px]">{fc.name}</span>
-                    <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden mx-2">
-                      <div className="bg-blue-600 h-full rounded-full" style={{width: `${fc.pct * 2.2}%`}}></div>
+                    <div className="flex-1 bg-slate-100 h-1.5 rounded-full overflow-hidden mx-2">
+                      <div className="bg-[#0B3C68] h-full rounded-full" style={{width: `${fc.pct * 2.2}%`}}></div>
                     </div>
                     <span className="font-mono text-[10px] text-slate-500 w-16 text-right">{fc.val}</span>
                   </div>
@@ -1073,21 +1002,21 @@ export default function AppDesktop() {
               </div>
             </div>
 
-            {/* Quick Action Button */}
+            {/* Dispatch Action Button */}
             <button
               onClick={handleDispatchBle}
-              className="w-full bg-[#0B3C68] hover:bg-[#0A2540] text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow transition-all"
+              className="w-full bg-[#0B3C68] hover:bg-[#082846] text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all"
             >
               <span className="material-symbols-outlined text-sm">cell_tower</span>
-              <span>Broadcast Alert For This Predicted Hazard</span>
+              <span>Broadcast Emergency Warning for this Sector</span>
             </button>
 
           </div>
 
         </div>
 
-        {/* 4. RAINFALL DATA & HOURLY PRECIPITATION REPORT */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        {/* 4. IMD DOPPLER RADAR RAINFALL TELEMETRY & REPORT */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-4">
           
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-3">
             <div>
@@ -1098,64 +1027,155 @@ export default function AppDesktop() {
                 </h3>
               </div>
               <p className="text-[11px] text-slate-500">
-                Ground Precipitation Progression vs Empirical Landslide Triggering Threshold (Caine / GSI Model)
+                Hourly Precipitation Progression vs Empirical Landslide Triggering Threshold (Caine / GSI Model: 120 mm)
               </p>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-xs bg-red-50 text-red-700 px-2.5 py-1 rounded font-bold border border-red-200">
-                Trigger Threshold: 120 mm / 24h
+                Trigger Threshold: 120 mm
               </span>
               <button
                 onClick={handleExportReport}
                 className="text-xs text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1 bg-blue-50 px-2.5 py-1 rounded border border-blue-200"
               >
                 <span className="material-symbols-outlined text-sm">download</span>
-                <span>Download CSV / Print</span>
+                <span>Download Official Report</span>
               </button>
             </div>
           </div>
 
-          {/* Graphical Representation of 24h Rainfall */}
-          <div className="grid grid-cols-6 sm:grid-cols-12 gap-2 my-3">
-            {HOURLY_RAIN_DATA.map((item, idx) => {
-              const isBreached = item.cum >= item.thresh
-              const heightPct = Math.min(100, Math.max(15, (item.rain / 40) * 100))
-              return (
-                <div key={idx} className="flex flex-col items-center gap-1 text-center">
-                  <span className="text-[10px] font-mono text-slate-500">{item.rain}mm</span>
-                  <div className="w-full bg-slate-100 h-28 rounded flex flex-col justify-end p-1 relative">
-                    <div 
-                      className={`w-full rounded transition-all ${isBreached ? "bg-red-500" : "bg-sky-500"}`}
-                      style={{height: `${heightPct}%`}}
-                    ></div>
-                    {/* Threshold Marker Indicator */}
-                    {item.cum >= 120 && (
-                      <span className="absolute top-1 left-1 right-1 text-[8px] bg-red-600 text-white font-bold rounded py-0.2">
-                        BREACH
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-600 font-medium">{item.hour}</span>
-                  <span className="text-[9px] font-mono text-slate-400">Σ{item.cum}</span>
-                </div>
-              )
-            })}
+          {/* Scientific Hydrograph SVG Chart */}
+          <div className="w-full my-3 bg-slate-50/60 rounded-xl p-3 border border-slate-100">
+            <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1 px-1 font-mono">
+              <span>Cumulative Precipitation Curve (mm) vs Time (IST)</span>
+              <span className="text-red-600 font-bold flex items-center gap-1">
+                <span className="w-3 h-0.5 bg-red-500 inline-block border-t border-dashed border-red-600"></span>
+                Trigger Threshold (120 mm)
+              </span>
+            </div>
+
+            <div className="w-full overflow-x-auto no-scrollbar">
+              <svg viewBox="0 0 840 140" className="w-full h-32 select-none">
+                <defs>
+                  <linearGradient id="rainGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#0284C7" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#0284C7" stopOpacity="0.0" />
+                  </linearGradient>
+                  <linearGradient id="breachGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#DC2626" stopOpacity="0.35" />
+                    <stop offset="100%" stopColor="#DC2626" stopOpacity="0.02" />
+                  </linearGradient>
+                </defs>
+
+                {/* Grid horizontal lines */}
+                <line x1="40" y1="20" x2="820" y2="20" stroke="#E2E8F0" strokeWidth="1" strokeDasharray="3,3" />
+                <text x="32" y="24" fontSize="9" fill="#94A3B8" textAnchor="end" fontFamily="monospace">180mm</text>
+
+                {/* Threshold line at 120mm -> Y ~ 55 */}
+                <line x1="40" y1="55" x2="820" y2="55" stroke="#DC2626" strokeWidth="1.5" strokeDasharray="5,4" />
+                <text x="32" y="58" fontSize="9" fill="#DC2626" fontWeight="bold" textAnchor="end" fontFamily="monospace">120mm</text>
+
+                <line x1="40" y1="90" x2="820" y2="90" stroke="#E2E8F0" strokeWidth="1" strokeDasharray="3,3" />
+                <text x="32" y="93" fontSize="9" fill="#94A3B8" textAnchor="end" fontFamily="monospace">60mm</text>
+
+                <line x1="40" y1="120" x2="820" y2="120" stroke="#CBD5E1" strokeWidth="1" />
+                <text x="32" y="123" fontSize="9" fill="#94A3B8" textAnchor="end" fontFamily="monospace">0mm</text>
+
+                {/* Shaded Area */}
+                <polygon 
+                  points="50,120 115,116 180,112 245,106 310,97 375,82 440,64 505,40 570,25 635,14 700,7 765,2 765,120 50,120" 
+                  fill="url(#rainGrad)" 
+                />
+                <polygon 
+                  points="505,40 570,25 635,14 700,7 765,2 765,55 505,55" 
+                  fill="url(#breachGrad)" 
+                />
+
+                {/* Curve Line */}
+                <polyline 
+                  points="50,120 115,116 180,112 245,106 310,97 375,82 440,64 505,40 570,25 635,14 700,7 765,2" 
+                  fill="none" 
+                  stroke="#0284C7" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round"
+                />
+
+                {/* Critical section of line in red */}
+                <polyline 
+                  points="440,64 505,40 570,25 635,14 700,7 765,2" 
+                  fill="none" 
+                  stroke="#DC2626" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round"
+                />
+
+                {/* Data Points & X Axis Labels */}
+                {HOURLY_RAIN_DATA.map((h, i) => {
+                  const cx = 50 + i * 65
+                  // Y coordinate: 120 - (cum / 200) * 115
+                  const cy = Math.max(4, 120 - (h.cum / 200) * 118)
+                  const isBreach = h.cum >= 120
+
+                  return (
+                    <g key={i}>
+                      <circle 
+                        cx={cx} 
+                        cy={cy} 
+                        r={isBreach ? "4" : "3"} 
+                        fill={isBreach ? "#DC2626" : "#0284C7"} 
+                        stroke="#ffffff" 
+                        strokeWidth="1.5" 
+                      />
+                      <text x={cx} y="134" fontSize="9" fill="#64748B" textAnchor="middle" fontFamily="monospace">{h.hour}</text>
+                    </g>
+                  )
+                })}
+              </svg>
+            </div>
+
+            {/* Micro Telemetry Metrics strip */}
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-2 pt-2 border-t border-slate-100 text-center text-xs">
+              <div className="bg-white p-1.5 rounded border border-slate-100">
+                <span className="text-[10px] text-slate-400 block">Peak Intensity</span>
+                <span className="font-bold text-slate-800">38.4 mm/h</span>
+              </div>
+              <div className="bg-white p-1.5 rounded border border-slate-100">
+                <span className="text-[10px] text-slate-400 block">Current Total (24h)</span>
+                <span className="font-bold text-red-600">190.0 mm</span>
+              </div>
+              <div className="bg-white p-1.5 rounded border border-slate-100">
+                <span className="text-[10px] text-slate-400 block">Threshold Exceedance</span>
+                <span className="font-bold text-red-600">+ 70.0 mm (58%)</span>
+              </div>
+              <div className="bg-white p-1.5 rounded border border-slate-100">
+                <span className="text-[10px] text-slate-400 block">Antecedent Index (72h)</span>
+                <span className="font-bold text-slate-800">265.0 mm</span>
+              </div>
+              <div className="bg-white p-1.5 rounded border border-slate-100">
+                <span className="text-[10px] text-slate-400 block">Basin Moisture</span>
+                <span className="font-bold text-sky-700">94% (Extreme)</span>
+              </div>
+              <div className="bg-white p-1.5 rounded border border-slate-100">
+                <span className="text-[10px] text-slate-400 block">Doppler Reliability</span>
+                <span className="font-bold text-emerald-600">99.4% Validated</span>
+              </div>
+            </div>
           </div>
 
-          {/* Telemetry Footnotes */}
+          {/* Official Footnotes */}
           <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-600">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded bg-red-500"></span>
-              <span>Cumulative Precipitation exceeds empirical shear trigger ({rainfall24}mm / 120mm limit).</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+              <span>Cumulative Precipitation exceeds empirical threshold ({rainfall24}mm / 120mm).</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded bg-sky-500"></span>
-              <span>IMD Cherrapunji Doppler Radar Feed: 15-minute sync interval.</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+              <span>IMD Cherrapunji Doppler Radar Telemetry: Synced every 15 minutes.</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded bg-emerald-500"></span>
-              <span>SMAP L4 Basin Saturation: 94% extreme hydrostatic pressure.</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span>SMAP L4 Basin Saturation: 94% extreme soil moisture.</span>
             </div>
           </div>
 
