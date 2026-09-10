@@ -576,6 +576,49 @@ export default function AppDesktop({ onSwitchToMobile }) {
   // Selected Sector
   const [selectedZone, setSelectedZone] = useState(ZONES[0])
 
+  // Active Navigation Tab: "overview" | "map" | "ai" | "rainfall" | "advisories"
+  const getInitialTab = () => {
+    try {
+      const hash = window.location.hash.replace("#", "").toLowerCase()
+      if (["overview", "map", "ai", "rainfall", "advisories"].includes(hash)) {
+        return hash
+      }
+      const params = new URLSearchParams(window.location.search)
+      const tabParam = params.get("tab")
+      if (tabParam && ["overview", "map", "ai", "rainfall", "advisories"].includes(tabParam.toLowerCase())) {
+        return tabParam.toLowerCase()
+      }
+    } catch (e) {}
+    return "overview"
+  }
+
+  const [activeTab, setActiveTab] = useState(getInitialTab)
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    try {
+      window.location.hash = tab
+    } catch (e) {}
+    if (tab === "overview" || tab === "map") {
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize()
+        }
+      }, 150)
+    }
+  }
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const h = window.location.hash.replace("#", "").toLowerCase()
+      if (["overview", "map", "ai", "rainfall", "advisories"].includes(h)) {
+        setActiveTab(h)
+      }
+    }
+    window.addEventListener("hashchange", onHashChange)
+    return () => window.removeEventListener("hashchange", onHashChange)
+  }, [])
+
   // Real Live Weather State from Open-Meteo
   const [liveWeather, setLiveWeather] = useState({
     loading: true,
@@ -1175,40 +1218,54 @@ export default function AppDesktop({ onSwitchToMobile }) {
           {/* Center Navigation Tabs */}
           <nav className="hidden lg:flex items-center gap-6 text-xs font-medium text-slate-600">
             <button 
-              onClick={() => {
-                const el = document.getElementById("operational-workspace");
-                if (el) el.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="py-1 text-[#005B9E] font-bold border-b-2 border-[#005B9E] transition cursor-pointer"
+              onClick={() => handleTabChange("overview")}
+              className={`py-1 transition cursor-pointer ${
+                activeTab === "overview" 
+                  ? "text-[#005B9E] font-bold border-b-2 border-[#005B9E]" 
+                  : "hover:text-[#005B9E]"
+              }`}
             >
               Operations Home
             </button>
             <button 
-              onClick={() => {
-                const el = document.getElementById("regional-map-container");
-                if (el) el.scrollIntoView({ behavior: "smooth" });
-              }} 
-              className="py-1 hover:text-[#005B9E] transition cursor-pointer"
+              onClick={() => handleTabChange("map")}
+              className={`py-1 transition cursor-pointer ${
+                activeTab === "map" 
+                  ? "text-[#005B9E] font-bold border-b-2 border-[#005B9E]" 
+                  : "hover:text-[#005B9E]"
+              }`}
             >
               Regional GIS Map
             </button>
             <button 
-              onClick={() => {
-                const el = document.getElementById("ai-assessment-card");
-                if (el) el.scrollIntoView({ behavior: "smooth" });
-              }} 
-              className="py-1 hover:text-[#005B9E] transition cursor-pointer"
+              onClick={() => handleTabChange("ai")}
+              className={`py-1 transition cursor-pointer ${
+                activeTab === "ai" 
+                  ? "text-[#005B9E] font-bold border-b-2 border-[#005B9E]" 
+                  : "hover:text-[#005B9E]"
+              }`}
             >
               Geotechnical AI
             </button>
             <button 
-              onClick={() => {
-                const el = document.getElementById("rainfall-report-section");
-                if (el) el.scrollIntoView({ behavior: "smooth" });
-              }} 
-              className="py-1 hover:text-[#005B9E] transition cursor-pointer"
+              onClick={() => handleTabChange("rainfall")}
+              className={`py-1 transition cursor-pointer ${
+                activeTab === "rainfall" 
+                  ? "text-[#005B9E] font-bold border-b-2 border-[#005B9E]" 
+                  : "hover:text-[#005B9E]"
+              }`}
             >
               Precipitation
+            </button>
+            <button 
+              onClick={() => handleTabChange("advisories")}
+              className={`py-1 transition cursor-pointer ${
+                activeTab === "advisories" 
+                  ? "text-[#005B9E] font-bold border-b-2 border-[#005B9E]" 
+                  : "hover:text-[#005B9E]"
+              }`}
+            >
+              Disaster Advisories
             </button>
             <button 
               onClick={() => setSectorModalOpen(true)} 
@@ -1331,538 +1388,1162 @@ export default function AppDesktop({ onSwitchToMobile }) {
         )}
       </section>
 
-      {/* 3. MAIN DASHBOARD CONTENT */}
+      {/* 3. MAIN DASHBOARD CONTENT WITH DYNAMIC TABBED VIEWS */}
       <main id="operational-workspace" className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col gap-4">
 
-        {/* 5 KEY MONITORED KPI CARDS */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          
-          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase">AI Failure Risk</span>
-            <div className="my-1 flex items-baseline gap-1">
-              <span className="text-2xl font-black tracking-tight" style={{color: riskResult.color}}>
-                {riskResult.probability}%
-              </span>
-            </div>
-            <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded w-fit" style={{backgroundColor: riskResult.bgLight, color: riskResult.color}}>
-              {riskResult.status}
-            </span>
-          </div>
+        {/* =========================================================================
+            SHARED MAP WORKSPACE: OPERATIONS HOME & REGIONAL GIS MAP
+            Kept permanently mounted so Leaflet never destroys layers, tiles or WebGL canvas!
+            ========================================================================= */}
+        <div className={`flex flex-col gap-4 animate-in fade-in duration-200 ${(activeTab === "overview" || activeTab === "map") ? "flex" : "hidden"}`}>
 
-          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase">Factor of Safety (FoS)</span>
-            <div className="my-1">
-              <span className={`text-2xl font-black tracking-tight ${riskResult.fos < 1.0 ? "text-red-600" : "text-emerald-600"}`}>
-                {riskResult.fos}
-              </span>
-            </div>
-            <span className="text-[10px] text-slate-500">
-              {riskResult.fos < 1.0 ? "Active Shear Failure" : "Geotechnically Stable"}
-            </span>
-          </div>
-
-          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase">24h Rainfall</span>
-              <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1 rounded">LIVE API</span>
-            </div>
-            <div className="my-1">
-              <span className="text-2xl font-black text-slate-900 tracking-tight">
-                {activeRainfall} <span className="text-xs font-normal text-slate-500">mm</span>
-              </span>
-            </div>
-            <span className={`text-[10px] font-bold ${activeRainfall >= 120 ? "text-red-600" : "text-slate-500"}`}>
-              {activeRainfall >= 120 ? "+ " + (activeRainfall - 120) + "mm Threshold Breach" : "Within Safe Limits"}
-            </span>
-          </div>
-
-          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase">InSAR Displacement</span>
-            <div className="my-1">
-              <span className="text-2xl font-black text-slate-900 tracking-tight">
-                {insarVelocity} <span className="text-xs font-normal text-slate-500">mm/d</span>
-              </span>
-            </div>
-            <span className="text-[10px] text-slate-500">Sentinel-1 Interferometry</span>
-          </div>
-
-          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between col-span-2 sm:col-span-1">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase">Estimated Impact</span>
-            <div className="my-1">
-              <span className="text-lg font-black text-slate-900 tracking-tight">
-                {riskResult.failureWindow}
-              </span>
-            </div>
-            <span className="text-[10px] text-slate-500 truncate" title={riskResult.failureType}>
-              {riskResult.failureType}
-            </span>
-          </div>
-
-        </div>
-
-        {/* 2-COLUMN OPERATIONAL WORKSPACE: MAP (LEFT) & AI PREDICTIONS (RIGHT) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-          
-          {/* LEFT: GEOTECHNICAL GIS MAP (7 Cols) */}
-          <div id="regional-map-container" className="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
-            
-            {/* Map Toolbar */}
-            <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-blue-700 text-lg">public</span>
-                <span className="font-bold text-xs uppercase tracking-wide text-slate-800">
-                  Northeast Regional GIS Canvas
-                </span>
+          {/* GIS Sub-Bar (Shown when activeTab === "map") */}
+          {activeTab === "map" && (
+            <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-[#005B9E]">
+                  <span className="material-symbols-outlined text-xl">map</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#003B73] uppercase tracking-tight">
+                    Northeast Regional GIS Command Canvas
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    18 GSI Geotechnical Polygons with High-Resolution Topographic Contours &amp; SRTM DEM Elevation
+                  </p>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                {/* Sector Selector Trigger on Toolbar */}
-                <button
-                  onClick={() => setSectorModalOpen(true)}
-                  className="bg-white hover:bg-slate-100 text-blue-900 border border-slate-300 text-xs font-bold px-2.5 py-1 rounded flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
-                  title="Choose from all 18 Northeast Monitoring Sectors"
-                >
-                  <span className="material-symbols-outlined text-sm text-blue-700">pin_drop</span>
-                  <span className="hidden sm:inline">Sector:</span>
-                  <span className="text-blue-950 font-bold">{selectedZone.name.split("(")[0]}</span>
-                  <span className="material-symbols-outlined text-xs text-slate-500">arrow_drop_down</span>
-                </button>
-
-                {/* Layer Toggles */}
-                <div className="flex items-center bg-slate-200/80 p-0.5 rounded-md text-xs">
+              {/* State quick filter pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
+                <span className="text-[10px] font-bold text-slate-500 uppercase">State Filter:</span>
+                {["ALL", "Arunachal", "Assam", "Meghalaya", "Mizoram", "Nagaland", "Sikkim", "Tripura"].map(st => (
                   <button
-                    onClick={() => switchBaseLayer("topo")}
-                    className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "topo" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                    key={st}
+                    onClick={() => {
+                      const fullState = st === "ALL" ? "ALL" : (st === "Arunachal" ? "Arunachal Pradesh" : st);
+                      setSelectedStateFilter(fullState);
+                      const matched = ZONES.find(z => fullState === "ALL" || z.state.toLowerCase().includes(st.toLowerCase()));
+                      if (matched) handleZoneSelect(matched);
+                    }}
+                    className={`px-2.5 py-1 rounded-full text-xs font-semibold cursor-pointer transition ${
+                      selectedStateFilter.toLowerCase().includes(st.toLowerCase()) || (st === "ALL" && selectedStateFilter === "ALL")
+                        ? "bg-[#003B73] text-white shadow-2xs"
+                        : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                    }`}
                   >
-                    Topographic
+                    {st}
                   </button>
-                  <button
-                    onClick={() => switchBaseLayer("satellite")}
-                    className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "satellite" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
-                  >
-                    Satellite
-                  </button>
-                  <button
-                    onClick={() => switchBaseLayer("street")}
-                    className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "street" ? "bg-white text-blue-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
-                  >
-                    Street
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Map Canvas */}
-            <div className="relative w-full h-[500px] xl:h-[580px] bg-slate-100">
-              <div ref={mapContainerRef} className="w-full h-full z-0"></div>
-
-              {/* Clean Floating Badge */}
-              <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md p-3 rounded-lg shadow-sm border border-slate-200 z-10 max-w-xs text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-slate-900 mb-0.5">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: riskResult.color}}></span>
-                  <span>{selectedZone.name}</span>
-                </div>
-                <p className="text-[11px] text-slate-600 leading-snug">{selectedZone.description}</p>
-                <div className="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-mono">
-                  <span>{selectedZone.lat}° N, {selectedZone.lon}° E</span>
-                  <span className="font-bold text-blue-700">{selectedZone.state}</span>
-                </div>
-              </div>
-
-              {/* Clean 5-Tier Hazard Legend */}
-              <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md p-2.5 rounded-lg shadow-md border border-slate-300 z-10 text-[10.5px] flex flex-col gap-1.5">
-                <span className="font-black text-slate-800 uppercase tracking-wider text-[9px]">GSI Hazard Polygons</span>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-sm bg-[#DC2626] border border-[#991B1B]"></span>
-                  <span className="font-bold text-red-700">CRITICAL (Red)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-sm bg-[#EA580C] border border-[#C2410C]"></span>
-                  <span className="font-bold text-orange-700">HIGH (Orange)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-sm bg-[#EAB308] border border-[#A16207]"></span>
-                  <span className="font-bold text-yellow-700">MODERATE (Yellow)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-sm bg-[#22C55E] border border-[#15803D]"></span>
-                  <span className="font-bold text-emerald-600">LOW (Green)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-sm bg-[#14532D] border border-[#052E16]"></span>
-                  <span className="font-bold text-emerald-950">SAFE (Dark Green)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Sector Quick Selector Pills (Hidden Scrollbar) */}
-            <div className="p-2 bg-slate-50 border-t border-slate-200 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs">
-              <button
-                onClick={() => setSectorModalOpen(true)}
-                className="bg-[#0B3C68] hover:bg-[#082846] text-white px-2.5 py-1 rounded text-xs font-bold whitespace-nowrap flex items-center gap-1 shadow-2xs shrink-0 cursor-pointer"
-                title="Open full searchable list of 18 sectors"
-              >
-                <span className="material-symbols-outlined text-xs text-amber-300">list</span>
-                <span>All 18 Sectors</span>
-                <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
-              </button>
-              <div className="h-4 w-[1px] bg-slate-300 mx-1 shrink-0"></div>
-              {ZONES.map((z) => (
-                <button
-                  key={z.id}
-                  onClick={() => handleZoneSelect(z)}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold whitespace-nowrap transition-colors border flex items-center gap-1.5 shrink-0 cursor-pointer ${
-                    selectedZone.id === z.id 
-                      ? "bg-[#0B3C68] text-white border-[#0B3C68] shadow-2xs font-bold" 
-                      : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
-                  }`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: z.tierColor }}></span>
-                  <span>{z.name.split("(")[0]}</span>
-                </button>
-              ))}
-            </div>
-
-          </div>
-
-          {/* RIGHT: WORKING AI PREDICTION SYSTEM (5 Cols) */}
-          <div id="ai-assessment-card" className="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-xs p-4 flex flex-col gap-3.5">
-            
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div>
-                <h2 className="font-bold text-sm text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-blue-700 text-lg">neurology</span>
-                  <span>Geotechnical AI Risk Assessment</span>
-                </h2>
-                <p className="text-[11px] text-slate-500">XGBoost ML v4.2 & Infinite Slope Stability Model</p>
-              </div>
-
-              {/* What-If Simulation Toggle */}
-              <button
-                onClick={() => setShowSimulator(!showSimulator)}
-                className={`text-[11px] font-semibold px-2 py-1 rounded border flex items-center gap-1 transition-all ${
-                  showSimulator 
-                    ? "bg-blue-50 text-blue-700 border-blue-200" 
-                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                }`}
-              >
-                <span className="material-symbols-outlined text-xs">tune</span>
-                <span>{showSimulator ? "Close Simulation" : "What-If Analysis"}</span>
-              </button>
-            </div>
-
-            {/* Calculated Classification Card */}
-            <div 
-              className="p-3.5 rounded-xl border transition-all" 
-              style={{backgroundColor: riskResult.bgLight, borderColor: riskResult.border}}
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-bold uppercase" style={{color: riskResult.color}}>
-                  {riskResult.status}
-                </span>
-                <span className="text-xs font-mono font-bold" style={{color: riskResult.color}}>
-                  FoS: {riskResult.fos}
-                </span>
-              </div>
-
-              <div className="flex items-baseline justify-between mb-1.5">
-                <span className="text-3xl font-black tracking-tight" style={{color: riskResult.color}}>
-                  {riskResult.probability}%
-                </span>
-                <span className="text-xs font-semibold text-slate-600">
-                  Window: <strong className="text-slate-900">{riskResult.failureWindow}</strong>
-                </span>
-              </div>
-
-              {/* Progress Meter */}
-              <div className="w-full bg-slate-200/80 h-2 rounded-full overflow-hidden mb-2">
-                <div 
-                  className="h-full rounded-full transition-all duration-300"
-                  style={{width: `${riskResult.probability}%`, backgroundColor: riskResult.color}}
-                ></div>
-              </div>
-
-              <div className="text-[11px] text-slate-700 flex items-center justify-between pt-1 border-t border-slate-200/60">
-                <span>Predicted Mode: <strong>{riskResult.failureType}</strong></span>
-                <span className="font-mono text-[10px] text-slate-500">Model: GSI-XGBoost</span>
-              </div>
-            </div>
-
-            {/* Sector Current Telemetry Specs (100% REAL LIVE DATA) */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-slate-50 p-2 rounded border border-slate-100">
-                <span className="text-[10px] text-slate-500 uppercase block">Monitored 24h Rain</span>
-                <span className="font-bold text-slate-800">{activeRainfall} mm</span>
-              </div>
-              <div className="bg-slate-50 p-2 rounded border border-slate-100">
-                <span className="text-[10px] text-slate-500 uppercase block">Slope Inclination</span>
-                <span className="font-bold text-slate-800">{slope}° Angle</span>
-              </div>
-              <div className="bg-slate-50 p-2 rounded border border-slate-100">
-                <span className="text-[10px] text-slate-500 uppercase block">InSAR Deformation</span>
-                <span className="font-bold text-violet-700">{insarVelocity} mm/day</span>
-              </div>
-              <div className="bg-slate-50 p-2 rounded border border-slate-100">
-                <span className="text-[10px] text-slate-500 uppercase block">Soil Saturation</span>
-                <span className="font-bold text-sky-700">{soilWetness}% (SMAP)</span>
-              </div>
-            </div>
-
-            {/* WHAT-IF SIMULATOR DRAWER (Revealed when What-If Analysis is active) */}
-            {showSimulator && (
-              <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex flex-col gap-2.5 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-blue-900 uppercase">Interactive Sensitivity Adjusters</span>
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => setDataMode("live")}
-                      className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${dataMode === "live" ? "bg-blue-700 text-white" : "text-blue-700 underline"}`}
-                    >
-                      Use Live Rain ({liveWeather.total24h}mm)
-                    </button>
-                    <button 
-                      onClick={() => { setDataMode("whatif"); setSimRainfall(180); }}
-                      className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${dataMode === "whatif" ? "bg-red-700 text-white" : "text-red-700 underline"}`}
-                    >
-                      Stress Storm (180mm)
-                    </button>
-                  </div>
-                </div>
-
-                {/* Slider 1: 24h Rainfall */}
-                <div>
-                  <div className="flex justify-between text-[11px] mb-0.5">
-                    <span className="text-slate-700">Simulate 24h Rainfall</span>
-                    <span className="font-mono font-bold text-blue-800">{activeRainfall} mm</span>
-                  </div>
-                  <input
-                    type="range" min="0" max="280" step="2" value={activeRainfall}
-                    onChange={(e) => { setDataMode("whatif"); setSimRainfall(Number(e.target.value)); }}
-                    className="w-full h-1 bg-slate-200 rounded appearance-none cursor-pointer accent-blue-700"
-                  />
-                </div>
-
-                {/* Slider 2: Slope */}
-                <div>
-                  <div className="flex justify-between text-[11px] mb-0.5">
-                    <span className="text-slate-700">Simulate Slope Angle</span>
-                    <span className="font-mono font-bold text-blue-800">{slope}°</span>
-                  </div>
-                  <input
-                    type="range" min="15" max="65" step="1" value={slope}
-                    onChange={(e) => setSlope(Number(e.target.value))}
-                    className="w-full h-1 bg-slate-200 rounded appearance-none cursor-pointer accent-blue-700"
-                  />
-                </div>
-
-                {/* Slider 3: InSAR Velocity */}
-                <div>
-                  <div className="flex justify-between text-[11px] mb-0.5">
-                    <span className="text-slate-700">Simulate InSAR Velocity</span>
-                    <span className="font-mono font-bold text-violet-800">{insarVelocity} mm/d</span>
-                  </div>
-                  <input
-                    type="range" min="0" max="55" step="0.5" value={insarVelocity}
-                    onChange={(e) => setInsarVelocity(Number(e.target.value))}
-                    className="w-full h-1 bg-slate-200 rounded appearance-none cursor-pointer accent-violet-700"
-                  />
-                </div>
-
-                {/* Slider 4: Soil Saturation */}
-                <div>
-                  <div className="flex justify-between text-[11px] mb-0.5">
-                    <span className="text-slate-700">Simulate Soil Moisture</span>
-                    <span className="font-mono font-bold text-sky-800">{soilWetness}%</span>
-                  </div>
-                  <input
-                    type="range" min="10" max="100" step="1" value={soilWetness}
-                    onChange={(e) => setSoilWetness(Number(e.target.value))}
-                    className="w-full h-1 bg-slate-200 rounded appearance-none cursor-pointer accent-sky-700"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Contributing Risk Factors Breakdown */}
-            <div className="border-t border-slate-100 pt-2.5">
-              <span className="text-[11px] font-bold text-slate-500 uppercase block mb-1.5">
-                Key Contributing Risk Drivers
-              </span>
-              <div className="flex flex-col gap-1.5">
-                {riskResult.featureContributions.map((fc) => (
-                  <div key={fc.name} className="flex items-center text-xs">
-                    <span className="w-36 text-slate-600 truncate text-[11px]">{fc.name}</span>
-                    <div className="flex-1 bg-slate-100 h-1.5 rounded-full overflow-hidden mx-2">
-                      <div className="bg-[#0B3C68] h-full rounded-full" style={{width: `${fc.pct * 2.2}%`}}></div>
-                    </div>
-                    <span className="font-mono text-[10px] text-slate-500 w-16 text-right">{fc.val}</span>
-                  </div>
                 ))}
               </div>
             </div>
+          )}
 
-            {/* Dispatch Action Button */}
-            <button
-              onClick={handleDispatchBle}
-              className="w-full bg-[#0B3C68] hover:bg-[#082846] text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all"
-            >
-              <span className="material-symbols-outlined text-sm">cell_tower</span>
-              <span>Broadcast Emergency Warning for this Sector</span>
-            </button>
-
-          </div>
-
-        </div>
-
-        {/* 4. REAL IMD / OPEN-METEO RADAR RAINFALL TELEMETRY & REPORT */}
-        <div id="rainfall-report-section" className="bg-white rounded-xl border border-slate-200 shadow-xs p-4">
-          
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-sky-600">water_drop</span>
-                <h3 className="font-bold text-sm text-slate-900 uppercase tracking-tight">
-                  Satellite Precipitation & Rainfall Telemetry Report
-                </h3>
-                <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded border border-emerald-200">
-                  LIVE SATELLITE FEED
+          {/* 5 KEY MONITORED KPI CARDS (Shown when activeTab === "overview") */}
+          {activeTab === "overview" && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase">AI Failure Risk</span>
+                <div className="my-1 flex items-baseline gap-1">
+                  <span className="text-2xl font-black tracking-tight" style={{color: riskResult.color}}>
+                    {riskResult.probability}%
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded w-fit" style={{backgroundColor: riskResult.bgLight, color: riskResult.color}}>
+                  {riskResult.status}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500">
-                Real-Time Precipitation Curve vs Empirical Landslide Triggering Threshold (Caine / GSI Model: 120 mm)
+
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase">Factor of Safety (FoS)</span>
+                <div className="my-1">
+                  <span className={`text-2xl font-black tracking-tight ${riskResult.fos < 1.0 ? "text-red-600" : "text-emerald-600"}`}>
+                    {riskResult.fos}
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-500">
+                  {riskResult.fos < 1.0 ? "Active Shear Failure" : "Geotechnically Stable"}
+                </span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-slate-500 uppercase">24h Rainfall</span>
+                  <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1 rounded">LIVE API</span>
+                </div>
+                <div className="my-1">
+                  <span className="text-2xl font-black text-slate-900 tracking-tight">
+                    {activeRainfall} <span className="text-xs font-normal text-slate-500">mm</span>
+                  </span>
+                </div>
+                <span className={`text-[10px] font-bold ${activeRainfall >= 120 ? "text-red-600" : "text-slate-500"}`}>
+                  {activeRainfall >= 120 ? "+ " + (activeRainfall - 120) + "mm Threshold Breach" : "Within Safe Limits"}
+                </span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase">InSAR Displacement</span>
+                <div className="my-1">
+                  <span className="text-2xl font-black text-slate-900 tracking-tight">
+                    {insarVelocity} <span className="text-xs font-normal text-slate-500">mm/d</span>
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-500">Sentinel-1 Interferometry</span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between col-span-2 sm:col-span-1">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase">Estimated Impact</span>
+                <div className="my-1">
+                  <span className="text-lg font-black text-slate-900 tracking-tight">
+                    {riskResult.failureWindow}
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-500 truncate" title={riskResult.failureType}>
+                  {riskResult.failureType}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* 2-COLUMN OPERATIONAL WORKSPACE (7-col map + 5-col AI in overview, full-width map in map) */}
+          <div className={`grid gap-4 items-start ${activeTab === "overview" ? "grid-cols-1 lg:grid-cols-12" : "grid-cols-1"}`}>
+            {/* Map in Overview (7 cols) or Full-Width in Map */}
+            <div className={`${activeTab === "overview" ? "lg:col-span-7" : "w-full"} bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden flex flex-col`}>
+                <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#005B9E] text-lg">public</span>
+                    <span className="font-bold text-xs uppercase tracking-wide text-slate-800">
+                      Northeast Regional GIS Canvas
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSectorModalOpen(true)}
+                      className="bg-white hover:bg-slate-100 text-[#003B73] border border-slate-300 text-xs font-bold px-2.5 py-1 rounded flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-sm text-[#005B9E]">pin_drop</span>
+                      <span className="hidden sm:inline">Sector:</span>
+                      <span className="text-[#003B73] font-bold">{selectedZone.name.split("(")[0]}</span>
+                      <span className="material-symbols-outlined text-xs text-slate-500">arrow_drop_down</span>
+                    </button>
+                    <div className="flex items-center bg-slate-200/80 p-0.5 rounded-md text-xs">
+                      <button
+                        onClick={() => switchBaseLayer("topo")}
+                        className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "topo" ? "bg-white text-[#003B73] shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                      >
+                        Topographic
+                      </button>
+                      <button
+                        onClick={() => switchBaseLayer("satellite")}
+                        className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "satellite" ? "bg-white text-[#003B73] shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                      >
+                        Satellite
+                      </button>
+                      <button
+                        onClick={() => switchBaseLayer("street")}
+                        className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "street" ? "bg-white text-[#003B73] shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                      >
+                        Street
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Map Canvas */}
+                <div className="relative w-full h-[500px] xl:h-[560px] bg-slate-100">
+                  <div ref={mapContainerRef} className="w-full h-full z-0"></div>
+
+                  <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md p-3 rounded-lg shadow-sm border border-slate-200 z-10 max-w-xs text-xs">
+                    <div className="flex items-center gap-1.5 font-bold text-slate-900 mb-0.5">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: riskResult.color}}></span>
+                      <span>{selectedZone.name}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-snug">{selectedZone.description}</p>
+                    <div className="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                      <span>{selectedZone.lat}° N, {selectedZone.lon}° E</span>
+                      <span className="font-bold text-[#005B9E]">{selectedZone.state}</span>
+                    </div>
+                  </div>
+
+                  <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md p-2.5 rounded-lg shadow-md border border-slate-300 z-10 text-[10.5px] flex flex-col gap-1.5">
+                    <span className="font-black text-slate-800 uppercase tracking-wider text-[9px]">GSI Hazard Polygons</span>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-sm bg-[#DC2626] border border-[#991B1B]"></span>
+                      <span className="font-bold text-red-700">CRITICAL (Red)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-sm bg-[#EA580C] border border-[#C2410C]"></span>
+                      <span className="font-bold text-orange-700">HIGH (Orange)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-sm bg-[#EAB308] border border-[#A16207]"></span>
+                      <span className="font-bold text-yellow-700">MODERATE (Yellow)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-sm bg-[#22C55E] border border-[#15803D]"></span>
+                      <span className="font-bold text-emerald-600">LOW (Green)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-sm bg-[#14532D] border border-[#052E16]"></span>
+                      <span className="font-bold text-emerald-950">SAFE (Dark Green)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sector Quick Selector Pills */}
+                <div className="p-2 bg-slate-50 border-t border-slate-200 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs">
+                  <button
+                    onClick={() => setSectorModalOpen(true)}
+                    className="bg-[#003B73] hover:bg-[#002C57] text-white px-2.5 py-1 rounded text-xs font-bold whitespace-nowrap flex items-center gap-1 shadow-2xs shrink-0 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-xs text-amber-300">list</span>
+                    <span>All 18 Sectors</span>
+                    <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
+                  </button>
+                  <div className="h-4 w-[1px] bg-slate-300 mx-1 shrink-0"></div>
+                  {ZONES.map((z) => (
+                    <button
+                      key={z.id}
+                      onClick={() => handleZoneSelect(z)}
+                      className={`px-2.5 py-1 rounded text-xs font-semibold whitespace-nowrap transition-colors border flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                        selectedZone.id === z.id 
+                          ? "bg-[#003B73] text-white border-[#003B73] shadow-2xs font-bold" 
+                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: z.tierColor }}></span>
+                      <span>{z.name.split("(")[0]}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+            {/* Geotechnical AI Card (Rendered only on Overview; AI tab has dedicated full lab) */}
+            {activeTab === "overview" && (
+              <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-xs p-4 flex flex-col gap-3.5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                  <div>
+                    <h2 className="font-bold text-sm text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[#005B9E] text-lg">neurology</span>
+                      <span>Geotechnical AI Risk Assessment</span>
+                    </h2>
+                    <p className="text-[11px] text-slate-500">XGBoost ML v4.2 & Infinite Slope Stability Model</p>
+                  </div>
+                  <button
+                    onClick={() => setShowSimulator(!showSimulator)}
+                    className={`text-[11px] font-semibold px-2 py-1 rounded border flex items-center gap-1 transition-all cursor-pointer ${
+                      showSimulator 
+                        ? "bg-blue-50 text-[#005B9E] border-blue-200" 
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-xs">tune</span>
+                    <span>{showSimulator ? "Close Simulation" : "What-If Analysis"}</span>
+                  </button>
+                </div>
+
+                <div 
+                  className="p-3.5 rounded-xl border transition-all" 
+                  style={{backgroundColor: riskResult.bgLight, borderColor: riskResult.border}}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold uppercase" style={{color: riskResult.color}}>
+                      {riskResult.status}
+                    </span>
+                    <span className="text-xs font-mono font-bold" style={{color: riskResult.color}}>
+                      FoS: {riskResult.fos}
+                    </span>
+                  </div>
+
+                  <div className="flex items-baseline justify-between mb-1.5">
+                    <span className="text-3xl font-black tracking-tight" style={{color: riskResult.color}}>
+                      {riskResult.probability}%
+                    </span>
+                    <span className="text-xs font-semibold text-slate-600">
+                      Window: <strong className="text-slate-900">{riskResult.failureWindow}</strong>
+                    </span>
+                  </div>
+
+                  <div className="w-full bg-slate-200/80 h-2 rounded-full overflow-hidden mb-2">
+                    <div 
+                      className="h-full rounded-full transition-all duration-300"
+                      style={{width: `${riskResult.probability}%`, backgroundColor: riskResult.color}}
+                    ></div>
+                  </div>
+
+                  <div className="text-[11px] text-slate-700 flex items-center justify-between pt-1 border-t border-slate-200/60">
+                    <span>Predicted Mode: <strong>{riskResult.failureType}</strong></span>
+                    <span className="font-mono text-[10px] text-slate-500">Model: GSI-XGBoost</span>
+                  </div>
+                </div>
+
+                {/* Current Telemetry */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                    <span className="text-[10px] text-slate-500 uppercase block">Monitored 24h Rain</span>
+                    <span className="font-bold text-slate-800">{activeRainfall} mm</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                    <span className="text-[10px] text-slate-500 uppercase block">Slope Inclination</span>
+                    <span className="font-bold text-slate-800">{slope}° Angle</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                    <span className="text-[10px] text-slate-500 uppercase block">InSAR Deformation</span>
+                    <span className="font-bold text-violet-700">{insarVelocity} mm/day</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                    <span className="text-[10px] text-slate-500 uppercase block">Soil Saturation</span>
+                    <span className="font-bold text-sky-700">{soilWetness}% (SMAP)</span>
+                  </div>
+                </div>
+
+                {/* What-If Drawer */}
+                {showSimulator && (
+                  <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex flex-col gap-2.5 transition-all">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-blue-900 uppercase">Interactive Sensitivity Adjusters</span>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => setDataMode("live")}
+                          className={`text-[10px] px-1.5 py-0.5 rounded font-bold cursor-pointer ${dataMode === "live" ? "bg-[#005B9E] text-white" : "text-[#005B9E] underline"}`}
+                        >
+                          Use Live Rain ({liveWeather.total24h}mm)
+                        </button>
+                        <button 
+                          onClick={() => { setDataMode("whatif"); setSimRainfall(180); }}
+                          className={`text-[10px] px-1.5 py-0.5 rounded font-bold cursor-pointer ${dataMode === "whatif" ? "bg-red-700 text-white" : "text-red-700 underline"}`}
+                        >
+                          Stress Storm (180mm)
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[11px] mb-0.5">
+                        <span className="text-slate-700">Simulate 24h Rainfall</span>
+                        <span className="font-mono font-bold text-[#005B9E]">{activeRainfall} mm</span>
+                      </div>
+                      <input
+                        type="range" min="0" max="280" step="2" value={activeRainfall}
+                        onChange={(e) => { setDataMode("whatif"); setSimRainfall(Number(e.target.value)); }}
+                        className="w-full h-1 bg-slate-200 rounded appearance-none cursor-pointer accent-[#005B9E]"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[11px] mb-0.5">
+                        <span className="text-slate-700">Simulate Slope Angle</span>
+                        <span className="font-mono font-bold text-[#005B9E]">{slope}°</span>
+                      </div>
+                      <input
+                        type="range" min="15" max="65" step="1" value={slope}
+                        onChange={(e) => setSlope(Number(e.target.value))}
+                        className="w-full h-1 bg-slate-200 rounded appearance-none cursor-pointer accent-[#005B9E]"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[11px] mb-0.5">
+                        <span className="text-slate-700">Simulate InSAR Velocity</span>
+                        <span className="font-mono font-bold text-violet-800">{insarVelocity} mm/d</span>
+                      </div>
+                      <input
+                        type="range" min="0" max="55" step="0.5" value={insarVelocity}
+                        onChange={(e) => setInsarVelocity(Number(e.target.value))}
+                        className="w-full h-1 bg-slate-200 rounded appearance-none cursor-pointer accent-violet-700"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[11px] mb-0.5">
+                        <span className="text-slate-700">Simulate Soil Moisture</span>
+                        <span className="font-mono font-bold text-sky-800">{soilWetness}%</span>
+                      </div>
+                      <input
+                        type="range" min="10" max="100" step="1" value={soilWetness}
+                        onChange={(e) => setSoilWetness(Number(e.target.value))}
+                        className="w-full h-1 bg-slate-200 rounded appearance-none cursor-pointer accent-sky-700"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Risk Factors */}
+                <div className="border-t border-slate-100 pt-2.5">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase block mb-1.5">
+                    Key Contributing Risk Drivers (SHAP)
+                  </span>
+                  <div className="flex flex-col gap-1.5">
+                    {riskResult.featureContributions.map((fc) => (
+                      <div key={fc.name} className="flex items-center text-xs">
+                        <span className="w-36 text-slate-600 truncate text-[11px]">{fc.name}</span>
+                        <div className="flex-1 bg-slate-100 h-1.5 rounded-full overflow-hidden mx-2">
+                          <div className="bg-[#003B73] h-full rounded-full" style={{width: `${fc.pct * 2.2}%`}}></div>
+                        </div>
+                        <span className="font-mono text-[10px] text-slate-500 w-16 text-right">{fc.val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleDispatchBle}
+                  className="w-full bg-[#003B73] hover:bg-[#002C57] text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">cell_tower</span>
+                  <span>Broadcast Emergency Warning for this Sector</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Rainfall Report (Overview mode only) */}
+          {activeTab === "overview" && (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sky-600">water_drop</span>
+                    <h3 className="font-bold text-sm text-slate-900 uppercase tracking-tight">
+                      Satellite Precipitation & Rainfall Telemetry Report
+                    </h3>
+                    <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded border border-emerald-200">
+                      LIVE SATELLITE FEED
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Real-Time Precipitation Curve vs Empirical Landslide Triggering Threshold (Caine / GSI Model: 120 mm)
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs bg-red-50 text-red-700 px-2.5 py-1 rounded font-bold border border-red-200">
+                    Threshold: 120 mm / 24h
+                  </span>
+                  <button
+                    onClick={handleExportReport}
+                    className="text-xs text-[#005B9E] hover:text-[#003B73] font-bold flex items-center gap-1 bg-blue-50 px-2.5 py-1 rounded border border-blue-200 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-sm">download</span>
+                    <span>Download Official Report</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Chart */}
+              <div className="w-full my-3 bg-slate-50/60 rounded-xl p-3 border border-slate-100">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1 px-1 font-mono">
+                  <span>Past 24h Cumulative Precipitation Curve (mm) | {selectedZone.name}</span>
+                  <span className="text-red-600 font-bold flex items-center gap-1">
+                    <span className="w-3 h-0.5 bg-red-500 inline-block border-t border-dashed border-red-600"></span>
+                    Trigger Threshold (120 mm)
+                  </span>
+                </div>
+
+                <div className="w-full overflow-x-auto no-scrollbar">
+                  <svg viewBox="0 0 840 140" className="w-full h-32 select-none">
+                    <defs>
+                      <linearGradient id="rainGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#005B9E" stopOpacity="0.3" />
+                        <stop offset="100%" stopColor="#005B9E" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <line x1="40" y1="20" x2="820" y2="20" stroke="#E2E8F0" strokeWidth="1" strokeDasharray="3,3" />
+                    <text x="32" y="24" fontSize="9" fill="#94A3B8" textAnchor="end" fontFamily="monospace">180mm</text>
+                    <line x1="40" y1="55" x2="820" y2="55" stroke="#DC2626" strokeWidth="1.5" strokeDasharray="5,4" />
+                    <text x="32" y="58" fontSize="9" fill="#DC2626" fontWeight="bold" textAnchor="end" fontFamily="monospace">120mm</text>
+                    <line x1="40" y1="90" x2="820" y2="90" stroke="#E2E8F0" strokeWidth="1" strokeDasharray="3,3" />
+                    <text x="32" y="93" fontSize="9" fill="#94A3B8" textAnchor="end" fontFamily="monospace">60mm</text>
+                    <line x1="40" y1="120" x2="820" y2="120" stroke="#CBD5E1" strokeWidth="1" />
+                    <text x="32" y="123" fontSize="9" fill="#94A3B8" textAnchor="end" fontFamily="monospace">0mm</text>
+
+                    {chartData.length >= 2 && (() => {
+                      const pts = chartData.map((h, i) => {
+                        const cx = 50 + (i / (chartData.length - 1)) * 740
+                        const cy = Math.max(4, 120 - (h.cum / 150) * 115)
+                        return `${cx},${cy}`
+                      })
+                      const areaPts = `50,120 ${pts.join(" ")} ${50 + 740},120`
+                      return (
+                        <>
+                          <polygon points={areaPts} fill="url(#rainGrad)" />
+                          <polyline points={pts.join(" ")} fill="none" stroke="#005B9E" strokeWidth="2.5" strokeLinecap="round" />
+                          {chartData.map((h, i) => {
+                            const cx = 50 + (i / (chartData.length - 1)) * 740
+                            const cy = Math.max(4, 120 - (h.cum / 150) * 115)
+                            const isBreach = h.cum >= 120
+                            return (
+                              <g key={i}>
+                                <circle cx={cx} cy={cy} r={isBreach ? "4" : "3"} fill={isBreach ? "#DC2626" : "#005B9E"} stroke="#ffffff" strokeWidth="1.5" />
+                                {i % 2 === 0 && (
+                                  <text x={cx} y="134" fontSize="9" fill="#64748B" textAnchor="middle" fontFamily="monospace">{h.hour}</text>
+                                )}
+                              </g>
+                            )
+                          })}
+                        </>
+                      )
+                    })()}
+                  </svg>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 mt-2 pt-2 border-t border-slate-100 text-center text-xs">
+                  <div className="bg-white p-1.5 rounded border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Current Temp</span>
+                    <span className="font-bold text-slate-800">{liveWeather.temp}°C</span>
+                  </div>
+                  <div className="bg-white p-1.5 rounded border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Precipitation Rate</span>
+                    <span className="font-bold text-slate-800">{liveWeather.currentRain} mm/h</span>
+                  </div>
+                  <div className="bg-white p-1.5 rounded border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">24h Cumulative Rain</span>
+                    <span className="font-bold text-[#005B9E]">{activeRainfall} mm</span>
+                  </div>
+                  <div className="bg-white p-1.5 rounded border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Wind Speed</span>
+                    <span className="font-bold text-slate-800">{liveWeather.wind} km/h</span>
+                  </div>
+                  <div className="bg-white p-1.5 rounded border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Relative Humidity</span>
+                    <span className="font-bold text-sky-700">{liveWeather.humidity}%</span>
+                  </div>
+                  <div className="bg-white p-1.5 rounded border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Satellite Source</span>
+                    <span className="font-bold text-emerald-600">Open-Meteo Live</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 18-Sector Regional Geotechnical Hazard Registry Table (Map mode only) */}
+          {activeTab === "map" && (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#005B9E]">dataset</span>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-tight">
+                    18 Regional Hazard Sectors &amp; Telemetry Matrix
+                  </h4>
+                </div>
+                <span className="text-xs text-slate-500">Click any sector to center &amp; inspect</span>
+              </div>
+
+              <div className="overflow-x-auto mt-3">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                    <tr>
+                      <th className="py-2 px-3">Sector Corridor</th>
+                      <th className="py-2 px-3">State</th>
+                      <th className="py-2 px-3">Hazard Tier</th>
+                      <th className="py-2 px-3">FoS</th>
+                      <th className="py-2 px-3">AI Risk</th>
+                      <th className="py-2 px-3">InSAR Shearing</th>
+                      <th className="py-2 px-3">Default Slope</th>
+                      <th className="py-2 px-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {ZONES.map(z => {
+                      const isSel = z.id === selectedZone.id;
+                      return (
+                        <tr 
+                          key={z.id}
+                          onClick={() => handleZoneSelect(z)}
+                          className={`cursor-pointer transition-colors ${isSel ? "bg-blue-50/70 font-semibold" : "hover:bg-slate-50"}`}
+                        >
+                          <td className="py-2.5 px-3">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full shrink-0" style={{backgroundColor: z.tierColor}}></span>
+                              <span className={isSel ? "text-[#003B73] font-bold" : "text-slate-900"}>{z.name}</span>
+                            </div>
+                            <span className="text-[10px] text-slate-500 block pl-4">{z.sub}</span>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-700">{z.state}</td>
+                          <td className="py-2.5 px-3">
+                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded text-white" style={{backgroundColor: z.tierColor}}>
+                              {z.tier}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 font-mono">
+                            {z.id === selectedZone.id ? riskResult.fos : (z.tier === "CRITICAL" ? "0.67" : (z.tier === "HIGH" ? "1.12" : (z.tier === "MODERATE" ? "1.38" : "1.82")))}
+                          </td>
+                          <td className="py-2.5 px-3 font-mono font-bold" style={{color: z.tierColor}}>
+                            {z.id === selectedZone.id ? `${riskResult.probability}%` : (z.tier === "CRITICAL" ? "98.2%" : (z.tier === "HIGH" ? "68.4%" : (z.tier === "MODERATE" ? "42.1%" : "12.0%")))}
+                          </td>
+                          <td className="py-2.5 px-3 font-mono text-violet-700">{z.defaultInsar} mm/d</td>
+                          <td className="py-2.5 px-3 font-mono">{z.defaultSlope}°</td>
+                          <td className="py-2.5 px-3">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleZoneSelect(z); }}
+                              className={`px-2.5 py-1 rounded text-[11px] font-bold transition cursor-pointer ${
+                                isSel ? "bg-[#003B73] text-white shadow-2xs" : "bg-slate-100 hover:bg-slate-200 text-[#003B73]"
+                              }`}
+                            >
+                              {isSel ? "ACTIVE" : "Fly To"}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* =========================================================================
+            VIEW 3: GEOTECHNICAL AI LABORATORY (activeTab === "ai")
+            ========================================================================= */}
+        {activeTab === "ai" && (
+          <div className="flex flex-col gap-4 animate-in fade-in duration-200">
+            {/* Header Banner */}
+            <div className="bg-gradient-to-r from-[#003B73] to-[#005B9E] text-white p-4 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-amber-300">neurology</span>
+                  <h3 className="text-base font-black uppercase tracking-tight">
+                    Geotechnical AI Stability &amp; Sensitivity Laboratory
+                  </h3>
+                  <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded">
+                    XGBoost ML v4.2 + Infinite Slope Equilibrium
+                  </span>
+                </div>
+                <p className="text-xs text-sky-100 mt-0.5">
+                  Deep shear-plane mechanics, Mohr-Coulomb failure criteria, and real-time stress test simulator.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-sky-200">Inspecting Sector:</span>
+                <span className="px-3 py-1 rounded bg-white text-[#003B73] font-bold text-xs">
+                  {selectedZone.name}
+                </span>
+              </div>
+            </div>
+
+            {/* 2-Column Physics & Simulator Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+              
+              {/* LEFT (6 COLS): GEOTECHNICAL PHYSICS & SHAP ATTRIBUTION */}
+              <div className="lg:col-span-6 bg-white rounded-xl border border-slate-200 shadow-xs p-4 flex flex-col gap-4">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <h4 className="text-xs font-bold text-[#003B73] uppercase tracking-wide flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-sm">science</span>
+                    <span>Infinite Slope Stability Equilibrium Formulation</span>
+                  </h4>
+                  <span className="text-[10px] font-mono text-slate-400">Taylor (1948) &amp; GSI</span>
+                </div>
+
+                {/* Physics Formula Box */}
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono space-y-2">
+                  <div className="text-center font-bold text-slate-800 text-sm py-1 bg-white rounded border border-slate-200/80">
+                    FoS = [ c' + (γ - m·γw)·z·cos²β·tanφ ] / [ γ·z·sinβ·cosβ ]
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 pt-1">
+                    <div>• Cohesion (c'): <b>{((lithStrength/80)*25 + 5).toFixed(1)} kPa</b></div>
+                    <div>• Friction Angle (φ): <b>{(20 + (lithStrength/80)*18).toFixed(1)}°</b></div>
+                    <div>• Slope Angle (β): <b className="text-amber-700">{slope}°</b></div>
+                    <div>• Saturation Ratio (m): <b className="text-sky-700">{(Math.min(1.0, (soilWetness/100)*0.7 + (activeRainfall/250)*0.3)).toFixed(2)}</b></div>
+                    <div>• Failure Depth (z): <b>3.0 m</b></div>
+                    <div>• Unit Weight (γ): <b>19.0 kN/m³</b></div>
+                  </div>
+                </div>
+
+                {/* Current Classification Card */}
+                <div 
+                  className="p-4 rounded-xl border"
+                  style={{backgroundColor: riskResult.bgLight, borderColor: riskResult.border}}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold uppercase" style={{color: riskResult.color}}>
+                      {riskResult.status}
+                    </span>
+                    <span className="text-xs font-mono font-bold" style={{color: riskResult.color}}>
+                      FoS: {riskResult.fos} / 1.00
+                    </span>
+                  </div>
+                  <div className="flex items-baseline justify-between mb-2">
+                    <span className="text-3xl font-black tracking-tight" style={{color: riskResult.color}}>
+                      {riskResult.probability}% AI Failure Risk
+                    </span>
+                    <span className="text-xs font-semibold text-slate-700">
+                      Horizon: <b>{riskResult.failureWindow}</b>
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-200/80 h-2 rounded-full overflow-hidden mb-2">
+                    <div 
+                      className="h-full rounded-full transition-all duration-300"
+                      style={{width: `${riskResult.probability}%`, backgroundColor: riskResult.color}}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-slate-600">
+                    Failure Mechanism: <strong className="text-slate-900">{riskResult.failureType}</strong>
+                  </p>
+                </div>
+
+                {/* SHAP Feature Drivers */}
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                    SHAP Explainability (Feature Attributions)
+                  </span>
+                  <div className="space-y-1.5">
+                    {riskResult.featureContributions.map((fc) => (
+                      <div key={fc.name} className="flex items-center text-xs">
+                        <span className="w-40 text-slate-600 truncate text-[11px]">{fc.name}</span>
+                        <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden mx-2">
+                          <div className="bg-[#005B9E] h-full rounded-full" style={{width: `${fc.pct * 2.2}%`}}></div>
+                        </div>
+                        <span className="font-mono text-[10px] text-slate-700 w-16 text-right font-bold">{fc.val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* RIGHT (6 COLS): WHAT-IF SENSITIVITY LAB */}
+              <div className="lg:col-span-6 bg-white rounded-xl border border-slate-200 shadow-xs p-4 flex flex-col gap-4">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <h4 className="text-xs font-bold text-[#003B73] uppercase tracking-wide flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-sm">tune</span>
+                    <span>Interactive Stress &amp; Sensitivity Adjusters</span>
+                  </h4>
+                  <div className="flex items-center gap-1.5">
+                    <button 
+                      onClick={() => setDataMode("live")}
+                      className={`text-[10px] px-2 py-0.5 rounded font-bold cursor-pointer transition ${dataMode === "live" ? "bg-[#005B9E] text-white" : "bg-slate-100 text-slate-700"}`}
+                    >
+                      Live Feed
+                    </button>
+                    <button 
+                      onClick={() => { setDataMode("whatif"); setSimRainfall(210); }}
+                      className={`text-[10px] px-2 py-0.5 rounded font-bold cursor-pointer transition ${dataMode === "whatif" ? "bg-red-700 text-white" : "bg-slate-100 text-slate-700"}`}
+                    >
+                      Storm (210mm)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sliders */}
+                <div className="space-y-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-slate-700 font-medium">24h Cumulative Precipitation</span>
+                      <span className="font-mono font-bold text-[#005B9E]">{activeRainfall} mm</span>
+                    </div>
+                    <input
+                      type="range" min="0" max="280" step="2" value={activeRainfall}
+                      onChange={(e) => { setDataMode("whatif"); setSimRainfall(Number(e.target.value)); }}
+                      className="w-full h-1.5 bg-slate-200 rounded appearance-none cursor-pointer accent-[#005B9E]"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-slate-700 font-medium">Slope Inclination (β)</span>
+                      <span className="font-mono font-bold text-amber-700">{slope}° Angle</span>
+                    </div>
+                    <input
+                      type="range" min="15" max="65" step="1" value={slope}
+                      onChange={(e) => setSlope(Number(e.target.value))}
+                      className="w-full h-1.5 bg-slate-200 rounded appearance-none cursor-pointer accent-amber-600"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-slate-700 font-medium">InSAR Shearing Velocity</span>
+                      <span className="font-mono font-bold text-violet-700">{insarVelocity} mm/day</span>
+                    </div>
+                    <input
+                      type="range" min="0" max="55" step="0.5" value={insarVelocity}
+                      onChange={(e) => setInsarVelocity(Number(e.target.value))}
+                      className="w-full h-1.5 bg-slate-200 rounded appearance-none cursor-pointer accent-violet-700"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-slate-700 font-medium">Soil Moisture Saturation (SMAP)</span>
+                      <span className="font-mono font-bold text-sky-700">{soilWetness}% Sat</span>
+                    </div>
+                    <input
+                      type="range" min="10" max="100" step="1" value={soilWetness}
+                      onChange={(e) => setSoilWetness(Number(e.target.value))}
+                      className="w-full h-1.5 bg-slate-200 rounded appearance-none cursor-pointer accent-sky-700"
+                    />
+                  </div>
+                </div>
+
+                {/* Sensor Diagnostics Grid */}
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                    Ground Sensor Network Diagnostics
+                  </span>
+                  <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex justify-between">
+                      <span className="text-slate-500">Piezometer:</span>
+                      <b className="text-[#003B73]">PZ-NE-04 (29.4 kPa)</b>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex justify-between">
+                      <span className="text-slate-500">Inclinometer:</span>
+                      <b className="text-amber-700">INC-02 (4.8 mm)</b>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex justify-between">
+                      <span className="text-slate-500">Extensometer:</span>
+                      <b className="text-violet-700">EXT-01 (12.1 mm)</b>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex justify-between">
+                      <span className="text-slate-500">SAR Pass:</span>
+                      <b className="text-emerald-700">Sentinel-1D Orbit</b>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleDispatchBle}
+                  className="w-full bg-[#003B73] hover:bg-[#002C57] text-white font-bold py-2.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-base">cell_tower</span>
+                  <span>Broadcast Emergency Directive for this Sector</span>
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* =========================================================================
+            VIEW 4: PRECIPITATION ANALYSIS CENTER (activeTab === "rainfall")
+            ========================================================================= */}
+        {activeTab === "rainfall" && (
+          <div className="flex flex-col gap-4 animate-in fade-in duration-200">
+            {/* Header Banner */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-[#005B9E]">
+                  <span className="material-symbols-outlined text-2xl">water_drop</span>
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-[#003B73] uppercase tracking-tight">
+                    Hydro-Meteorological &amp; Live Satellite Precipitation Center
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Open-Meteo Satellites &amp; IMD Doppler Radar Feeds with Empirical Threshold Modeling
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-red-50 text-red-700 px-3 py-1 rounded font-bold border border-red-200">
+                  Trigger Limit: 120 mm / 24h
+                </span>
+                <button
+                  onClick={handleExportReport}
+                  className="text-xs text-[#005B9E] hover:text-[#003B73] font-bold flex items-center gap-1.5 bg-blue-50 px-3 py-1 rounded border border-blue-200 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">download</span>
+                  <span>Download Meteorological Report</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 6 Micro-Telemetry Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
+                <span className="text-[10px] text-slate-500 uppercase block">Ambient Temp</span>
+                <span className="text-xl font-black text-slate-900 font-mono mt-1 block">{liveWeather.temp}°C</span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
+                <span className="text-[10px] text-slate-500 uppercase block">Hourly Rain Rate</span>
+                <span className="text-xl font-black text-slate-900 font-mono mt-1 block">{liveWeather.currentRain} mm/h</span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
+                <span className="text-[10px] text-slate-500 uppercase block">24h Cumulative</span>
+                <span className="text-xl font-black text-[#005B9E] font-mono mt-1 block">{activeRainfall} mm</span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
+                <span className="text-[10px] text-slate-500 uppercase block">Wind Velocity</span>
+                <span className="text-xl font-black text-slate-900 font-mono mt-1 block">{liveWeather.wind} km/h</span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
+                <span className="text-[10px] text-slate-500 uppercase block">Relative Humidity</span>
+                <span className="text-xl font-black text-sky-700 font-mono mt-1 block">{liveWeather.humidity}%</span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
+                <span className="text-[10px] text-slate-500 uppercase block">Radar Source</span>
+                <span className="text-xs font-bold text-emerald-600 mt-2 block">Open-Meteo Live</span>
+              </div>
+            </div>
+
+            {/* Scientific Hydrograph Chart */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-4">
+              <div className="flex items-center justify-between text-xs text-slate-600 mb-2 font-mono">
+                <span>Antecedent Hydrograph Curve | {selectedZone.name} ({selectedZone.state})</span>
+                <span className="text-red-600 font-bold flex items-center gap-1">
+                  <span className="w-3 h-0.5 bg-red-500 inline-block border-t border-dashed border-red-600"></span>
+                  GSI Breach Threshold (120 mm)
+                </span>
+              </div>
+
+              <div className="w-full bg-slate-50 rounded-xl p-3 border border-slate-100 overflow-x-auto">
+                <svg viewBox="0 0 840 160" className="w-full h-40 select-none">
+                  <defs>
+                    <linearGradient id="precipAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#005B9E" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#005B9E" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+                  <line x1="40" y1="20" x2="820" y2="20" stroke="#E2E8F0" strokeWidth="1" strokeDasharray="3,3" />
+                  <text x="32" y="24" fontSize="9" fill="#94A3B8" textAnchor="end" fontFamily="monospace">180mm</text>
+                  <line x1="40" y1="60" x2="820" y2="60" stroke="#DC2626" strokeWidth="1.5" strokeDasharray="5,4" />
+                  <text x="32" y="64" fontSize="9" fill="#DC2626" fontWeight="bold" textAnchor="end" fontFamily="monospace">120mm</text>
+                  <line x1="40" y1="100" x2="820" y2="100" stroke="#E2E8F0" strokeWidth="1" strokeDasharray="3,3" />
+                  <text x="32" y="104" fontSize="9" fill="#94A3B8" textAnchor="end" fontFamily="monospace">60mm</text>
+                  <line x1="40" y1="140" x2="820" y2="140" stroke="#CBD5E1" strokeWidth="1" />
+                  <text x="32" y="144" fontSize="9" fill="#94A3B8" textAnchor="end" fontFamily="monospace">0mm</text>
+
+                  {chartData.length >= 2 && (() => {
+                    const pts = chartData.map((h, i) => {
+                      const cx = 50 + (i / (chartData.length - 1)) * 740
+                      const cy = Math.max(4, 140 - (h.cum / 160) * 130)
+                      return `${cx},${cy}`
+                    })
+                    const areaPts = `50,140 ${pts.join(" ")} ${50 + 740},140`
+                    return (
+                      <>
+                        <polygon points={areaPts} fill="url(#precipAreaGrad)" />
+                        <polyline points={pts.join(" ")} fill="none" stroke="#005B9E" strokeWidth="3" strokeLinecap="round" />
+                        {chartData.map((h, i) => {
+                          const cx = 50 + (i / (chartData.length - 1)) * 740
+                          const cy = Math.max(4, 140 - (h.cum / 160) * 130)
+                          const isBreach = h.cum >= 120
+                          return (
+                            <g key={i}>
+                              <circle cx={cx} cy={cy} r={isBreach ? "4.5" : "3.5"} fill={isBreach ? "#DC2626" : "#005B9E"} stroke="#ffffff" strokeWidth="1.5" />
+                              {i % 2 === 0 && (
+                                <text x={cx} y="154" fontSize="9" fill="#64748B" textAnchor="middle" fontFamily="monospace">{h.hour}</text>
+                              )}
+                            </g>
+                          )
+                        })}
+                      </>
+                    )
+                  })()}
+                </svg>
+              </div>
+            </div>
+
+            {/* Caine (1980) Empirical Formula & 8-State Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
+                <span className="text-xs font-bold text-[#003B73] uppercase tracking-wider block">
+                  Caine (1980) Rainfall Intensity-Duration Trigger Law
+                </span>
+                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 font-mono text-xs text-slate-800">
+                  I = 14.82 · D^(-0.39)  [mm/hr vs Duration hours]
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  In weak Disang and Barail formation shales across Northeast India, sustained rainfall duration accelerates pore-water pressure buildup along joint bedding planes, triggering sudden translational shear failure.
+                </p>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
+                <span className="text-xs font-bold text-[#003B73] uppercase tracking-wider block">
+                  8 Northeast States Monitored Rainfall
+                </span>
+                <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between">
+                    <span className="text-slate-500">Meghalaya:</span>
+                    <b className="text-red-600 font-bold">{activeRainfall} mm</b>
+                  </div>
+                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between">
+                    <span className="text-slate-500">Sikkim:</span>
+                    <b className="text-amber-700 font-bold">18.4 mm</b>
+                  </div>
+                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between">
+                    <span className="text-slate-500">Assam:</span>
+                    <b className="text-slate-800">8.2 mm</b>
+                  </div>
+                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between">
+                    <span className="text-slate-500">Arunachal:</span>
+                    <b className="text-slate-800">14.6 mm</b>
+                  </div>
+                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between">
+                    <span className="text-slate-500">Mizoram:</span>
+                    <b className="text-amber-700">22.1 mm</b>
+                  </div>
+                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex justify-between">
+                    <span className="text-slate-500">Nagaland:</span>
+                    <b className="text-slate-800">11.5 mm</b>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* =========================================================================
+            VIEW 5: DISASTER ADVISORIES & EOC DIRECTIVES (activeTab === "advisories")
+            ========================================================================= */}
+        {activeTab === "advisories" && (
+          <div className="flex flex-col gap-4 animate-in fade-in duration-200">
+            {/* Header Banner */}
+            <div className="bg-red-700 text-white p-4 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-white/15 flex items-center justify-center text-white">
+                  <span className="material-symbols-outlined text-2xl animate-pulse">campaign</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-black uppercase tracking-tight">
+                    MDoNER / NDMA Active Disaster Directives &amp; Evacuation Center
+                  </h3>
+                  <p className="text-xs text-red-100">
+                    National Disaster Management Authority • State Disaster Management Authority (SDMA)
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-white text-red-700 font-bold text-xs uppercase shadow-xs">
+                  Active Directives: 1 Sector
+                </span>
+              </div>
+            </div>
+
+            {/* Active Directive Notice */}
+            <div className="bg-red-50 border-2 border-red-300 p-4 rounded-xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase text-red-700 flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping"></span>
+                  IMMEDIATE EVACUATION DIRECTIVE — SECTOR 4 ({selectedZone.name})
+                </span>
+                <span className="text-xs font-mono text-red-700">Directive Ref: NDMA-LEWS-2026/09</span>
+              </div>
+              <p className="text-xs text-red-900 leading-relaxed">
+                Geotechnical sensors and InSAR radar interferometry confirm active shear plane deformation ({insarVelocity} mm/day) along the NH-44 highway chainage KM 114 in {selectedZone.name}. Factor of Safety has deteriorated to {riskResult.fos} (below 1.0 critical limit). Evacuate vulnerable slopes to designated bedrock safe havens immediately.
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs bg-red-50 text-red-700 px-2.5 py-1 rounded font-bold border border-red-200">
-                Threshold: 120 mm / 24h
-              </span>
-              <button
-                onClick={handleExportReport}
-                className="text-xs text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1 bg-blue-50 px-2.5 py-1 rounded border border-blue-200"
-              >
-                <span className="material-symbols-outlined text-sm">download</span>
-                <span>Download Official Report</span>
-              </button>
+            {/* BLE Offline Beacon Relay Console */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <h4 className="text-xs font-bold text-[#003B73] uppercase tracking-wide flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm">cell_tower</span>
+                  <span>Offline Bluetooth Low Energy (BLE) Mesh Broadcast Relay</span>
+                </h4>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  48 RELAYS SYNCHRONIZED
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                  <span className="text-slate-500 block">Broadcast Mode:</span>
+                  <b className="text-[#003B73] font-bold mt-1 block">Zero-Internet Bluetooth Beacon</b>
+                </div>
+                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                  <span className="text-slate-500 block">Citizen Smartphone Reach:</span>
+                  <b className="text-emerald-700 font-bold mt-1 block">~3.8 km Mesh Coverage</b>
+                </div>
+                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                  <span className="text-slate-500 block">Siren Alarm Frequency:</span>
+                  <b className="text-amber-700 font-bold mt-1 block">800 Hz – 1150 Hz Warble</b>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  onClick={handleDispatchBle}
+                  className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase px-4 py-2 rounded-lg shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">cell_tower</span>
+                  <span>{bleBroadcasting ? "Silence BLE Alert" : "Dispatch BLE Offline Alert"}</span>
+                </button>
+                <button
+                  onClick={toggleSirenAudio}
+                  className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold uppercase px-4 py-2 rounded-lg shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-sm">{sirenPlaying ? "volume_off" : "campaign"}</span>
+                  <span>{sirenPlaying ? "Stop EOC Siren" : "Test EOC Siren Alarm"}</span>
+                </button>
+              </div>
             </div>
+
+            {/* Designated Safe Havens & Helplines Table */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
+                <span className="text-xs font-bold text-[#003B73] uppercase tracking-wider block">
+                  Designated Bedrock Safe Havens &amp; Shelters
+                </span>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                      <tr>
+                        <th className="p-2">Shelter Haven</th>
+                        <th className="p-2">Location</th>
+                        <th className="p-2">Capacity</th>
+                        <th className="p-2">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      <tr>
+                        <td className="p-2 font-bold text-slate-900">Khliehriat Higher Secondary</td>
+                        <td className="p-2 text-slate-600">Stable Bedrock Ridge (KM 118)</td>
+                        <td className="p-2 font-mono">850 Persons</td>
+                        <td className="p-2"><span className="text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">OPEN</span></td>
+                      </tr>
+                      <tr>
+                        <td className="p-2 font-bold text-slate-900">Lad Rymbai Community Hall</td>
+                        <td className="p-2 text-slate-600">Granite Plateau (KM 122)</td>
+                        <td className="p-2 font-mono">1,200 Persons</td>
+                        <td className="p-2"><span className="text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">OPEN</span></td>
+                      </tr>
+                      <tr>
+                        <td className="p-2 font-bold text-slate-900">Chungthang Sub-Divisional Center</td>
+                        <td className="p-2 text-slate-600">North Sikkim Terraces</td>
+                        <td className="p-2 font-mono">650 Persons</td>
+                        <td className="p-2"><span className="text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded">STANDBY</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
+                <span className="text-xs font-bold text-[#003B73] uppercase tracking-wider block">
+                  Regional Emergency Operations Helpline Directory
+                </span>
+                <div className="space-y-2 text-xs">
+                  <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex justify-between items-center">
+                    <div>
+                      <b className="text-slate-900 block">National Disaster Response Force (NDRF)</b>
+                      <span className="text-[11px] text-slate-500">1st Battalion (Guwahati) &amp; 12th Battalion (Arunachal)</span>
+                    </div>
+                    <span className="font-mono font-bold text-[#005B9E]">1078 / 011-24363260</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex justify-between items-center">
+                    <div>
+                      <b className="text-slate-900 block">Meghalaya SDRF Emergency Operations</b>
+                      <span className="text-[11px] text-slate-500">State Disaster Management Authority (SDMA) Shillong</span>
+                    </div>
+                    <span className="font-mono font-bold text-[#005B9E]">1070 / 0364-2503022</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex justify-between items-center">
+                    <div>
+                      <b className="text-slate-900 block">Border Roads Organisation (BRO) Task Force</b>
+                      <span className="text-[11px] text-slate-500">Project Sewak / Vartak Highway Heavy Clearing Unit</span>
+                    </div>
+                    <span className="font-mono font-bold text-[#005B9E]">0370-2244222</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
-
-          {/* Scientific Hydrograph SVG Chart */}
-          <div className="w-full my-3 bg-slate-50/60 rounded-xl p-3 border border-slate-100">
-            <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1 px-1 font-mono">
-              <span>Past 24h Cumulative Precipitation Curve (mm) | {selectedZone.name}</span>
-              <span className="text-red-600 font-bold flex items-center gap-1">
-                <span className="w-3 h-0.5 bg-red-500 inline-block border-t border-dashed border-red-600"></span>
-                Trigger Threshold (120 mm)
-              </span>
-            </div>
-
-            <div className="w-full overflow-x-auto no-scrollbar">
-              <svg viewBox="0 0 840 140" className="w-full h-32 select-none">
-                <defs>
-                  <linearGradient id="rainGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0284C7" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#0284C7" stopOpacity="0.0" />
-                  </linearGradient>
-                  <linearGradient id="breachGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#DC2626" stopOpacity="0.35" />
-                    <stop offset="100%" stopColor="#DC2626" stopOpacity="0.02" />
-                  </linearGradient>
-                </defs>
-
-                {/* Grid horizontal lines */}
-                <line x1="40" y1="20" x2="820" y2="20" stroke="#E2E8F0" strokeWidth="1" strokeDasharray="3,3" />
-                <text x="32" y="24" fontSize="9" fill="#94A3B8" textAnchor="end" fontFamily="monospace">180mm</text>
-
-                {/* Threshold line at 120mm -> Y ~ 55 */}
-                <line x1="40" y1="55" x2="820" y2="55" stroke="#DC2626" strokeWidth="1.5" strokeDasharray="5,4" />
-                <text x="32" y="58" fontSize="9" fill="#DC2626" fontWeight="bold" textAnchor="end" fontFamily="monospace">120mm</text>
-
-                <line x1="40" y1="90" x2="820" y2="90" stroke="#E2E8F0" strokeWidth="1" strokeDasharray="3,3" />
-                <text x="32" y="93" fontSize="9" fill="#94A3B8" textAnchor="end" fontFamily="monospace">60mm</text>
-
-                <line x1="40" y1="120" x2="820" y2="120" stroke="#CBD5E1" strokeWidth="1" />
-                <text x="32" y="123" fontSize="9" fill="#94A3B8" textAnchor="end" fontFamily="monospace">0mm</text>
-
-                {/* Dynamic Curve Points */}
-                {chartData.length >= 2 && (() => {
-                  const pts = chartData.map((h, i) => {
-                    const cx = 50 + (i / (chartData.length - 1)) * 740
-                    const cy = Math.max(4, 120 - (h.cum / 150) * 115)
-                    return `${cx},${cy}`
-                  })
-                  const areaPts = `50,120 ${pts.join(" ")} ${50 + 740},120`
-
-                  return (
-                    <>
-                      <polygon points={areaPts} fill="url(#rainGrad)" />
-                      <polyline points={pts.join(" ")} fill="none" stroke="#0284C7" strokeWidth="2.5" strokeLinecap="round" />
-                      {chartData.map((h, i) => {
-                        const cx = 50 + (i / (chartData.length - 1)) * 740
-                        const cy = Math.max(4, 120 - (h.cum / 150) * 115)
-                        const isBreach = h.cum >= 120
-                        return (
-                          <g key={i}>
-                            <circle cx={cx} cy={cy} r={isBreach ? "4" : "3"} fill={isBreach ? "#DC2626" : "#0284C7"} stroke="#ffffff" strokeWidth="1.5" />
-                            {i % 2 === 0 && (
-                              <text x={cx} y="134" fontSize="9" fill="#64748B" textAnchor="middle" fontFamily="monospace">{h.hour}</text>
-                            )}
-                          </g>
-                        )
-                      })}
-                    </>
-                  )
-                })()}
-              </svg>
-            </div>
-
-            {/* Micro Telemetry Metrics strip (100% REAL LIVE TELEMETRY) */}
-            <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 mt-2 pt-2 border-t border-slate-100 text-center text-xs">
-              <div className="bg-white p-1.5 rounded border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Current Temp</span>
-                <span className="font-bold text-slate-800">{liveWeather.temp}°C</span>
-              </div>
-              <div className="bg-white p-1.5 rounded border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Precipitation Rate</span>
-                <span className="font-bold text-slate-800">{liveWeather.currentRain} mm/h</span>
-              </div>
-              <div className="bg-white p-1.5 rounded border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">24h Cumulative Rain</span>
-                <span className="font-bold text-blue-700">{activeRainfall} mm</span>
-              </div>
-              <div className="bg-white p-1.5 rounded border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Wind Speed</span>
-                <span className="font-bold text-slate-800">{liveWeather.wind} km/h</span>
-              </div>
-              <div className="bg-white p-1.5 rounded border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Relative Humidity</span>
-                <span className="font-bold text-sky-700">{liveWeather.humidity}%</span>
-              </div>
-              <div className="bg-white p-1.5 rounded border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Satellite Source</span>
-                <span className="font-bold text-emerald-600">Open-Meteo Live</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Official Footnotes */}
-          <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-600">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-              <span>Live Meteorological Telemetry: Open-Meteo Satellites (Updated at {liveWeather.updatedAt} IST).</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
-              <span>GSI Regional Threshold: 120 mm / 24-hour critical antecedent limit.</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-violet-500"></span>
-              <span>ESA Sentinel-1 Radar Interferometry: 12-day temporal repeat pass.</span>
-            </div>
-          </div>
-
-        </div>
+        )}
 
       </main>
 
