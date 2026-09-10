@@ -175,7 +175,7 @@ const Icons = {
 
 // GEOSPATIAL & SENSOR DATA
 const ZONES = [
-  // 1. CRITICAL (RED) - FoS < 1.0
+  // 1. CRITICAL (RED) - FoS < 1.00 (Active Shearing & High Risk Faults)
   {
     id: "z-ejh",
     shortName: "East Jaintia",
@@ -187,15 +187,16 @@ const ZONES = [
     tier: "CRITICAL",
     tierColor: "#DC2626", // RED
     borderColor: "#991B1B",
+    fillOpacity: 0.50,
     defaultSlope: 51,
     defaultWetness: 94,
     defaultLith: 22,
     defaultInsar: 42.1,
     coords: [
-      [25.46, 92.20],
-      [25.44, 92.50],
-      [25.24, 92.48],
-      [25.26, 92.18]
+      [25.50, 92.15],
+      [25.48, 92.65],
+      [25.18, 92.62],
+      [25.20, 92.12]
     ],
     description: "Active thrust fault shearing zone. Intense Disang shale saturation along NH-44 corridor KM 114."
   },
@@ -210,21 +211,46 @@ const ZONES = [
     tier: "CRITICAL",
     tierColor: "#DC2626", // RED
     borderColor: "#991B1B",
+    fillOpacity: 0.50,
     defaultSlope: 56,
     defaultWetness: 88,
     defaultLith: 38,
     defaultInsar: 36.8,
     coords: [
-      [27.75, 88.38],
-      [27.72, 88.65],
-      [27.48, 88.62],
-      [27.52, 88.35]
+      [28.05, 88.20],
+      [28.00, 88.85],
+      [27.45, 88.80],
+      [27.50, 88.15]
     ],
     description: "Main Central Thrust (MCT) active glacial-fluvial erosion with high-angle debris accumulation."
   },
   {
+    id: "z-tawang-west",
+    shortName: "Tawang & Kameng",
+    name: "West Kameng & Tawang MCT Corridor",
+    sub: "Sela Tunnel & MCT Shear Zone",
+    state: "Arunachal Pradesh",
+    lat: 27.5861,
+    lng: 92.1500,
+    tier: "CRITICAL",
+    tierColor: "#DC2626", // RED
+    borderColor: "#991B1B",
+    fillOpacity: 0.50,
+    defaultSlope: 54,
+    defaultWetness: 90,
+    defaultLith: 30,
+    defaultInsar: 34.2,
+    coords: [
+      [28.00, 91.50],
+      [28.05, 92.80],
+      [27.15, 92.75],
+      [27.10, 91.55]
+    ],
+    description: "High-altitude permafrost degradation and active freeze-thaw bedrock shearing along Sela pass."
+  },
+  {
     id: "z-haflong",
-    shortName: "Haflong Pass",
+    shortName: "Dima Hasao",
     name: "Haflong Pass (Dima Hasao)",
     sub: "Lumding-Badarpur Railway Hill Cut",
     state: "Assam",
@@ -233,24 +259,49 @@ const ZONES = [
     tier: "CRITICAL",
     tierColor: "#DC2626", // RED
     borderColor: "#991B1B",
+    fillOpacity: 0.50,
     defaultSlope: 52,
     defaultWetness: 92,
     defaultLith: 26,
     defaultInsar: 38.5,
     coords: [
-      [25.28, 92.90],
-      [25.26, 93.15],
-      [25.08, 93.12],
-      [25.10, 92.88]
+      [25.45, 92.65],
+      [25.42, 93.45],
+      [24.95, 93.40],
+      [24.98, 92.68]
     ],
-    description: "Historic debris avalanche corridor along vital hill railway and NH-54 arterial link."
+    description: "Barail range debris avalanche corridor along critical railway line and NH-54 highway."
+  },
+  {
+    id: "z-aizawl-north",
+    shortName: "Aizawl North",
+    name: "Aizawl Urban & Northern Ridge",
+    sub: "Ramhlun / Chite Valley Overloaded Slopes",
+    state: "Mizoram",
+    lat: 23.7307,
+    lng: 92.7173,
+    tier: "CRITICAL",
+    tierColor: "#DC2626", // RED
+    borderColor: "#991B1B",
+    fillOpacity: 0.50,
+    defaultSlope: 45,
+    defaultWetness: 86,
+    defaultLith: 28,
+    defaultInsar: 28.4,
+    coords: [
+      [24.15, 92.40],
+      [24.10, 93.10],
+      [23.40, 93.05],
+      [23.45, 92.42]
+    ],
+    description: "High urban slope load with overloaded drainage gullies. Saturated siltstone translational hazard."
   },
 
-  // 2. HIGH (ORANGE) - FoS 1.0 - 1.25
+  // 2. HIGH (ORANGE) - FoS 1.00 - 1.25 (Steep Active Hill Slopes)
   {
     id: "z-kohima",
-    shortName: "Kohima Bypass",
-    name: "Kohima District Bypass (NH-29)",
+    shortName: "Kohima Central",
+    name: "Kohima Dzudza Corridor (NH-29)",
     sub: "Pagla Pahar Subsidence Zone",
     state: "Nagaland",
     lat: 25.6701,
@@ -258,184 +309,312 @@ const ZONES = [
     tier: "HIGH",
     tierColor: "#EA580C", // ORANGE
     borderColor: "#C2410C",
-    defaultSlope: 38,
-    defaultWetness: 76,
-    defaultLith: 45,
-    defaultInsar: 19.2,
+    fillOpacity: 0.45,
+    defaultSlope: 40,
+    defaultWetness: 78,
+    defaultLith: 42,
+    defaultInsar: 22.1,
     coords: [
-      [25.76, 94.00],
-      [25.74, 94.22],
-      [25.58, 94.18],
-      [25.60, 93.96]
+      [26.15, 93.75],
+      [26.10, 94.60],
+      [25.35, 94.55],
+      [25.40, 93.78]
     ],
-    description: "Active road cutting and slope subsidence with heavy vehicular vibration sensitivity."
+    description: "Active road cutting and slope subsidence with heavy vehicular vibration sensitivity along NH-29."
   },
   {
-    id: "z-aizawl",
-    shortName: "Aizawl East",
-    name: "Aizawl East Residential Slopes",
-    sub: "Ramhlun / Chite Valley",
-    state: "Mizoram",
-    lat: 23.7307,
-    lng: 92.7173,
+    id: "z-siang-canyon",
+    shortName: "Central Arunachal",
+    name: "Siang & Subansiri Canyon Axis",
+    sub: "Great Himalayan Syntaxis Fault",
+    state: "Arunachal Pradesh",
+    lat: 28.1500,
+    lng: 94.6000,
     tier: "HIGH",
     tierColor: "#EA580C", // ORANGE
     borderColor: "#C2410C",
-    defaultSlope: 42,
+    fillOpacity: 0.45,
+    defaultSlope: 48,
     defaultWetness: 82,
-    defaultLith: 32,
-    defaultInsar: 21.5,
+    defaultLith: 44,
+    defaultInsar: 24.6,
     coords: [
-      [23.82, 92.65],
-      [23.80, 92.78],
-      [23.65, 92.76],
-      [23.67, 92.64]
+      [28.85, 93.00],
+      [28.95, 96.00],
+      [27.65, 95.80],
+      [27.55, 93.10]
     ],
-    description: "High urban slope load with overloaded drainage gullies. Saturated translational hazard."
+    description: "Steep river canyon cuts with high seismic acceleration and monsoonal toe erosion."
   },
-
-  // 3. MODERATE (YELLOW) - FoS 1.25 - 1.50
   {
     id: "z-sohra",
-    shortName: "Sohra Gorge",
+    shortName: "Sohra Escarpment",
     name: "Sohra Escarpment (Cherrapunji)",
-    sub: "Mawkdok Dympep Gorge",
+    sub: "Mawkdok Dympep Deep Gorge",
     state: "Meghalaya",
     lat: 25.2800,
     lng: 91.7200,
-    tier: "MODERATE",
-    tierColor: "#EAB308", // YELLOW
-    borderColor: "#A16207",
+    tier: "HIGH",
+    tierColor: "#EA580C", // ORANGE
+    borderColor: "#C2410C",
+    fillOpacity: 0.45,
     defaultSlope: 46,
-    defaultWetness: 91,
-    defaultLith: 48,
-    defaultInsar: 18.4,
+    defaultWetness: 89,
+    defaultLith: 45,
+    defaultInsar: 19.8,
     coords: [
-      [25.38, 91.60],
-      [25.36, 91.82],
-      [25.18, 91.80],
-      [25.20, 91.58]
+      [25.45, 91.25],
+      [25.42, 92.15],
+      [25.10, 92.12],
+      [25.12, 91.22]
     ],
     description: "Extreme monsoon precipitation funnel with deep limestone jointing and rotational slips."
   },
   {
-    id: "z-tawang",
-    shortName: "Tawang Pass",
-    name: "Tawang High-Altitude Pass",
-    sub: "Sela Tunnel West Approach",
-    state: "Arunachal Pradesh",
-    lat: 27.5861,
-    lng: 91.8594,
-    tier: "MODERATE",
-    tierColor: "#EAB308", // YELLOW
-    borderColor: "#A16207",
-    defaultSlope: 49,
-    defaultWetness: 85,
-    defaultLith: 58,
-    defaultInsar: 31.4,
+    id: "z-senapati-manipur",
+    shortName: "Manipur West",
+    name: "Senapati & Tamenglong Corridor",
+    sub: "NH-2 & NH-37 Hill Sector",
+    state: "Manipur",
+    lat: 25.0500,
+    lng: 93.8000,
+    tier: "HIGH",
+    tierColor: "#EA580C", // ORANGE
+    borderColor: "#C2410C",
+    fillOpacity: 0.45,
+    defaultSlope: 42,
+    defaultWetness: 80,
+    defaultLith: 40,
+    defaultInsar: 21.0,
     coords: [
-      [27.70, 91.70],
-      [27.72, 92.00],
-      [27.46, 91.98],
-      [27.48, 91.68]
+      [25.55, 93.30],
+      [25.50, 94.40],
+      [24.50, 94.35],
+      [24.55, 93.25]
     ],
-    description: "Permafrost degradation and freeze-thaw rock fracturing above 11,000 ft MSL."
+    description: "Western Manipur thrust belt. Regular translational soil slips blocking transport lifelines."
   },
 
-  // 4. LOW (GREEN) - FoS 1.50 - 2.00
+  // 3. MODERATE (YELLOW) - FoS 1.25 - 1.50 (Moderate Hills & Ridges)
+  {
+    id: "z-sikkim-south",
+    shortName: "South Sikkim",
+    name: "South & West Sikkim Terraces",
+    sub: "Namchi & Gyalshing Ridges",
+    state: "Sikkim",
+    lat: 27.2200,
+    lng: 88.4200,
+    tier: "MODERATE",
+    tierColor: "#EAB308", // YELLOW
+    borderColor: "#CA8A04",
+    fillOpacity: 0.40,
+    defaultSlope: 32,
+    defaultWetness: 68,
+    defaultLith: 55,
+    defaultInsar: 14.5,
+    coords: [
+      [27.45, 88.10],
+      [27.42, 88.75],
+      [27.05, 88.70],
+      [27.08, 88.08]
+    ],
+    description: "Terraced agricultural hillslopes with moderate soil saturation and managed drainage."
+  },
+  {
+    id: "z-karbi-anglong",
+    shortName: "Karbi Uplands",
+    name: "Karbi Anglong Uplands",
+    sub: "Diphu Dissected Plateau",
+    state: "Assam",
+    lat: 26.0500,
+    lng: 93.3500,
+    tier: "MODERATE",
+    tierColor: "#EAB308", // YELLOW
+    borderColor: "#CA8A04",
+    fillOpacity: 0.40,
+    defaultSlope: 28,
+    defaultWetness: 65,
+    defaultLith: 58,
+    defaultInsar: 12.0,
+    coords: [
+      [26.45, 92.80],
+      [26.40, 93.90],
+      [25.65, 93.85],
+      [25.70, 92.85]
+    ],
+    description: "Dissected crystalline plateau with moderate soil depth and localized gully incision."
+  },
+  {
+    id: "z-lunglei-south",
+    shortName: "South Mizoram",
+    name: "Lunglei Longitudinal Valleys",
+    sub: "Tlawng River Basin Ridges",
+    state: "Mizoram",
+    lat: 22.8500,
+    lng: 92.7500,
+    tier: "MODERATE",
+    tierColor: "#EAB308", // YELLOW
+    borderColor: "#CA8A04",
+    fillOpacity: 0.40,
+    defaultSlope: 30,
+    defaultWetness: 64,
+    defaultLith: 52,
+    defaultInsar: 11.4,
+    coords: [
+      [23.40, 92.35],
+      [23.35, 93.20],
+      [22.10, 93.15],
+      [22.15, 92.38]
+    ],
+    description: "Longitudinal anticlinal valley slopes with moderate forest cover and seasonal slips."
+  },
+
+  // 4. LOW (GREEN) - FoS 1.50 - 2.00 (Stable Foothills & Terraces)
   {
     id: "z-ribhoi",
-    shortName: "Ri-Bhoi Foothills",
-    name: "Ri-Bhoi Foothills Corridor",
+    shortName: "Meghalaya Foothills",
+    name: "Ri-Bhoi & Garo Foothills",
     sub: "Nongpoh Undulating Ridge",
     state: "Meghalaya",
-    lat: 25.9000,
-    lng: 91.8800,
+    lat: 25.8500,
+    lng: 91.2000,
     tier: "LOW",
     tierColor: "#22C55E", // GREEN
-    borderColor: "#15803D",
-    defaultSlope: 24,
-    defaultWetness: 58,
-    defaultLith: 62,
-    defaultInsar: 6.2,
+    borderColor: "#16A34A",
+    fillOpacity: 0.35,
+    defaultSlope: 18,
+    defaultWetness: 50,
+    defaultLith: 68,
+    defaultInsar: 5.2,
     coords: [
-      [26.02, 91.72],
-      [26.00, 92.05],
-      [25.78, 92.02],
-      [25.80, 91.70]
+      [26.15, 89.80],
+      [26.10, 92.10],
+      [25.45, 92.05],
+      [25.48, 89.85]
     ],
-    description: "Gentle dip slopes with thick vegetative canopy and low historical slip incidence."
+    description: "Forested northern slopes and undulating crystalline hills with high root cohesion."
+  },
+  {
+    id: "z-mon-nagaland",
+    shortName: "North Nagaland",
+    name: "Mon & Northern Nagaland Slopes",
+    sub: "Patkai Foothill Dip Slopes",
+    state: "Nagaland",
+    lat: 26.5000,
+    lng: 94.9000,
+    tier: "LOW",
+    tierColor: "#22C55E", // GREEN
+    borderColor: "#16A34A",
+    fillOpacity: 0.35,
+    defaultSlope: 22,
+    defaultWetness: 52,
+    defaultLith: 66,
+    defaultInsar: 5.8,
+    coords: [
+      [27.05, 94.40],
+      [27.00, 95.40],
+      [26.15, 95.35],
+      [26.20, 94.35]
+    ],
+    description: "Stable dip slopes of the Patkai range with dense canopy and low historical displacement."
   },
   {
     id: "z-barak",
-    shortName: "Barak Terraces",
+    shortName: "Barak Valley",
     name: "Barak Valley Terraces (Silchar)",
-    sub: "Surma Series Terraced Slopes",
+    sub: "Surma Basin Undulating Tea Terraces",
     state: "Assam",
-    lat: 24.8200,
-    lng: 92.8000,
+    lat: 24.7800,
+    lng: 92.7800,
     tier: "LOW",
     tierColor: "#22C55E", // GREEN
-    borderColor: "#15803D",
-    defaultSlope: 20,
-    defaultWetness: 52,
-    defaultLith: 68,
-    defaultInsar: 4.8,
+    borderColor: "#16A34A",
+    fillOpacity: 0.35,
+    defaultSlope: 12,
+    defaultWetness: 48,
+    defaultLith: 74,
+    defaultInsar: 3.4,
     coords: [
-      [24.95, 92.68],
-      [24.92, 92.95],
-      [24.72, 92.92],
-      [24.75, 92.65]
+      [24.95, 92.35],
+      [24.90, 93.20],
+      [24.25, 93.15],
+      [24.30, 92.38]
     ],
-    description: "Stable terraced tea garden slopes with low gradient bedrock bedding."
+    description: "Low-gradient undulating tea garden terraces with thick alluvium and stable bedrock."
   },
 
-  // 5. SAFE (DARK GREEN) - FoS > 2.00
+  // 5. SAFE (DARK GREEN) - FoS > 2.00 (Flat River Floodplains)
   {
-    id: "z-guwahati",
-    shortName: "Brahmaputra Basin",
-    name: "Brahmaputra Alluvial Basin (Guwahati)",
-    sub: "Flat River Plain Alluvium",
+    id: "z-brahmaputra",
+    shortName: "Brahmaputra Valley",
+    name: "Brahmaputra Valley Alluvial Plain",
+    sub: "Guwahati-Jorhat Alluvial Floor",
     state: "Assam",
-    lat: 26.1800,
-    lng: 91.7500,
+    lat: 26.5000,
+    lng: 92.5000,
     tier: "SAFE",
     tierColor: "#14532D", // DARK GREEN
     borderColor: "#052E16",
-    defaultSlope: 5,
+    fillOpacity: 0.30,
+    defaultSlope: 3,
     defaultWetness: 35,
-    defaultLith: 85,
-    defaultInsar: 1.1,
+    defaultLith: 88,
+    defaultInsar: 0.8,
     coords: [
-      [26.30, 91.55],
-      [26.28, 91.95],
-      [26.08, 91.92],
-      [26.10, 91.52]
+      [27.35, 90.00],
+      [27.80, 95.80],
+      [26.20, 95.60],
+      [25.90, 90.20]
     ],
-    description: "Flat stable alluvial river basin floor. Zero slope failure gradient."
+    description: "Vast flat alluvial floodplain along the Brahmaputra River. 0% slope failure risk."
   },
   {
-    id: "z-agartala",
-    shortName: "Agartala Basin",
-    name: "Agartala Plain Floodplain",
-    sub: "Stable Tipam Sandstone Plain",
+    id: "z-imphal-basin",
+    shortName: "Imphal Plain",
+    name: "Imphal Loktak Valley Basin",
+    sub: "Central Manipur Alluvial Floor",
+    state: "Manipur",
+    lat: 24.7800,
+    lng: 93.9200,
+    tier: "SAFE",
+    tierColor: "#14532D", // DARK GREEN
+    borderColor: "#052E16",
+    fillOpacity: 0.30,
+    defaultSlope: 4,
+    defaultWetness: 32,
+    defaultLith: 86,
+    defaultInsar: 0.6,
+    coords: [
+      [25.00, 93.75],
+      [24.98, 94.15],
+      [24.45, 94.12],
+      [24.48, 93.72]
+    ],
+    description: "Flat lacustrine and alluvial valley floor surrounding Loktak Lake. Zero slope hazard."
+  },
+  {
+    id: "z-tripura-plains",
+    shortName: "Tripura Basin",
+    name: "Agartala & Tripura Basin Plains",
+    sub: "Tertiary Sandstone Lowland",
     state: "Tripura",
     lat: 23.8300,
     lng: 91.2800,
     tier: "SAFE",
     tierColor: "#14532D", // DARK GREEN
     borderColor: "#052E16",
-    defaultSlope: 4,
-    defaultWetness: 32,
-    defaultLith: 88,
-    defaultInsar: 0.8,
+    fillOpacity: 0.30,
+    defaultSlope: 5,
+    defaultWetness: 30,
+    defaultLith: 85,
+    defaultInsar: 0.9,
     coords: [
-      [23.95, 91.15],
-      [23.92, 91.42],
-      [23.72, 91.40],
-      [23.75, 91.12]
+      [24.55, 91.10],
+      [24.50, 92.35],
+      [22.95, 92.25],
+      [23.05, 91.15]
     ],
-    description: "Flat stable river alluvium and Tertiary sandstone tableland with no failure record."
+    description: "Stable low-relief floodplain and rolling low hillocks with zero historical landslide records."
   }
 ];
 
@@ -1224,6 +1403,7 @@ function MapView({ t, onBack }) {
             {ZONES.map(z => {
               const color = z.tierColor || getRiskColor(z.defaultWetness);
               const borderColor = z.borderColor || color;
+              const fillOpacity = z.fillOpacity || 0.40;
               return (
                 <Polygon 
                   key={z.id} 
@@ -1231,19 +1411,19 @@ function MapView({ t, onBack }) {
                   pathOptions={{ 
                     color: borderColor, 
                     fillColor: color, 
-                    fillOpacity: 0.52, 
-                    weight: 2.5
+                    fillOpacity: fillOpacity, 
+                    weight: 2
                   }}
                 >
                   <Popup>
-                    <div style={{ fontFamily: "sans-serif", padding: 2 }}>
+                    <div style={{ fontFamily: "sans-serif", padding: 4 }}>
                       <strong style={{ fontSize: 13, color: color }}>
                         {z.name} ({z.state})
                       </strong>
-                      <div style={{ fontWeight: 800, color: color, margin: "2px 0" }}>
+                      <div style={{ fontWeight: 800, color: color, margin: "2px 0", fontSize: 12 }}>
                         HAZARD TIER: {z.tier}
                       </div>
-                      <div style={{ fontSize: 11, color: "#475569" }}>{z.desc || z.description}</div>
+                      <div style={{ fontSize: 11, color: "#475569" }}>{z.sub || z.desc || z.description}</div>
                     </div>
                   </Popup>
                 </Polygon>
