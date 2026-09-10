@@ -784,7 +784,7 @@ function SplashScreen({ onEnter }) {
       <div className="splash-logo-wrap">
         <div className="splash-logo-ring" />
         <div className="splash-logo-ring2" />
-        <img src="/logo.jpg" alt="AEGIS" className="splash-logo" />
+        <img src="/logo.png" alt="AEGIS" className="splash-logo" />
       </div>
       <div className="splash-badge">TEAM AEGIS · SIH 2026 INITIATIVE</div>
       <h1 className="splash-title">NER <span>Landslide</span><br />Early Warning System</h1>
@@ -1277,7 +1277,7 @@ function HomeView({ t, onOpenSection, onOpenSOS }) {
         <div className="govt-footer-emblems">
           <img src="/emblem_of_india.svg" alt="Emblem of India" className="govt-footer-emblem" />
           <div style={{ width: "1px", height: "26px", background: "#cbd5e1" }} />
-          <img src="/logo.jpg" alt="Team AEGIS" className="govt-footer-aegis" />
+          <img src="/logo.png" alt="Team AEGIS" className="govt-footer-aegis" />
         </div>
         <div className="govt-footer-title">पूर्वोत्तर क्षेत्र विकास मंत्रालय &bull; MDoNER</div>
         <div className="govt-footer-sub">Ministry of Development of North Eastern Region &bull; Government of India</div>
@@ -3134,7 +3134,7 @@ export default function AppMobile({ onSwitchToDesktop }) {
         try {
           new Notification("🚨 AEGIS RED ALERT: EVACUATION SIREN", {
             body: data.message,
-            icon: "/logo.jpg",
+            icon: "/logo.png",
             tag: "aegis_emergency_siren",
             requireInteraction: true,
             vibrate: [1000, 300, 1000, 300, 1500]
@@ -3400,7 +3400,7 @@ export default function AppMobile({ onSwitchToDesktop }) {
 
           {/* Center: App Logo + Native App Name */}
           <div className="mobile-brand-wrap" onClick={() => setActiveView("home")} style={{ cursor: "pointer" }}>
-            <img src="/logo.jpg" alt="AEGIS" className="mobile-brand-logo" />
+            <img src="/logo.png" alt="AEGIS" className="mobile-brand-logo" />
             <div className="mobile-brand-text">
               <div className="mobile-brand-title">
                 <span>AEGIS</span>
