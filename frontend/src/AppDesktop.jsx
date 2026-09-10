@@ -1080,42 +1080,55 @@ function get30mTerrainRisk(lat, lon, activeRainfall = 28, stateFilter = "ALL") {
     insar = Number((0.8 + Math.abs(h3) * 1.5).toFixed(1))
   }
 
-  // 5. Hazard Classification
+  // 5. Hazard Classification (5 Tiers: CRITICAL, HIGH, MODERATE, SAFE_HAVEN, SAFE)
   let tier = "SAFE"
   let colorHex = "#16A34A"
-  let fillColor = "rgba(22, 163, 74, 0.48)"
-  let borderColor = "rgba(21, 128, 61, 0.25)"
-  let directive = `STABLE TERRAIN: Equilibrium slope on ${lithology.split(' ')[0]}.`
+  let fillColor = isTargetState ? "rgba(22, 163, 74, 0.44)" : "rgba(22, 163, 74, 0.20)"
+  let borderColor = isTargetState ? "rgba(21, 128, 61, 0.90)" : "rgba(21, 128, 61, 0.45)"
+  let directive = `OPEN — Normal Speed Permitted (Stable ${lithology.split(' ')[0]} bedrock).`
+  let type = "Alluvial Valley Floor"
 
   if (fos < 1.0 || slope > 46) {
     tier = "CRITICAL"
     colorHex = "#DC2626"
-    fillColor = isTargetState ? "rgba(220, 38, 38, 0.78)" : "rgba(220, 38, 38, 0.40)"
-    borderColor = "rgba(153, 27, 27, 0.35)"
-    directive = `CRITICAL HAZARD: Active shear instability on ${slope}° slope. Mandatory warning.`
+    fillColor = isTargetState ? "rgba(220, 38, 38, 0.48)" : "rgba(220, 38, 38, 0.22)"
+    borderColor = isTargetState ? "rgba(185, 28, 28, 0.92)" : "rgba(185, 28, 28, 0.45)"
+    directive = "CRITICAL CHOKEPOINT — Active fault creep. Hold convoys at nearest Safe Haven."
+    type = "Mountain Headwall Scarp"
   } else if (fos < 1.25 || slope > 35) {
     tier = "HIGH"
     colorHex = "#EA580C"
-    fillColor = isTargetState ? "rgba(234, 88, 12, 0.72)" : "rgba(234, 88, 12, 0.35)"
-    borderColor = "rgba(194, 65, 12, 0.30)"
-    directive = `HIGH RISK: Colluvium creep & rockfall potential on ${slope}° slope.`
+    fillColor = isTargetState ? "rgba(234, 88, 12, 0.46)" : "rgba(234, 88, 12, 0.22)"
+    borderColor = isTargetState ? "rgba(194, 65, 12, 0.90)" : "rgba(194, 65, 12, 0.45)"
+    directive = "HIGH RISK — Debris Flow Influx Zone (20 km/h Limit, Convoy Escort)."
+    type = "Colluvial Hillslope"
   } else if (fos < 1.55 || slope > 22) {
     tier = "MODERATE"
     colorHex = "#EAB308"
-    fillColor = isTargetState ? "rgba(234, 179, 8, 0.65)" : "rgba(234, 179, 8, 0.30)"
-    borderColor = "rgba(161, 98, 7, 0.25)"
-    directive = `MODERATE WATCH: Saturated regolith on ${slope}° hillside.`
+    fillColor = isTargetState ? "rgba(234, 179, 8, 0.44)" : "rgba(234, 179, 8, 0.20)"
+    borderColor = isTargetState ? "rgba(161, 98, 7, 0.88)" : "rgba(161, 98, 7, 0.42)"
+    directive = "ADVISORY — Wet Subgrade Slump (Proceed with Caution, Watch for Stones)."
+    type = "Valley Flank / Terrace"
+  } else if (slope <= 16 && fos >= 1.75 && !isAssamPlain) {
+    tier = "SAFE_HAVEN"
+    colorHex = "#0284C7"
+    fillColor = isTargetState ? "rgba(2, 132, 199, 0.48)" : "rgba(2, 132, 199, 0.22)"
+    borderColor = isTargetState ? "rgba(3, 105, 161, 0.92)" : "rgba(3, 105, 161, 0.45)"
+    directive = "SAFE HOLDING BAY (Stable Bedrock Layby with Driver Welfare Shelter)"
+    type = "Safe Holding Bay / Layby"
   } else {
     tier = "SAFE"
     colorHex = "#16A34A"
-    fillColor = isTargetState ? "rgba(22, 163, 74, 0.48)" : "rgba(22, 163, 74, 0.20)"
-    borderColor = "rgba(21, 128, 61, 0.15)"
-    directive = `SAFE BEDROCK / PLAIN: Stable ${lithology.split(' ')[0]} slope.`
+    fillColor = isTargetState ? "rgba(22, 163, 74, 0.42)" : "rgba(22, 163, 74, 0.18)"
+    borderColor = isTargetState ? "rgba(21, 128, 61, 0.88)" : "rgba(21, 128, 61, 0.40)"
+    directive = `OPEN — Normal Speed Permitted (Stable ${lithology.split(' ')[0]}).`
+    type = "Alluvial Valley Floor"
   }
 
   return {
     tier,
     color: fillColor,
+    fillColor,
     colorHex,
     borderColor,
     slope: Number(slope.toFixed(1)),
@@ -1126,6 +1139,7 @@ function get30mTerrainRisk(lat, lon, activeRainfall = 28, stateFilter = "ALL") {
     lithology,
     stateName,
     directive,
+    type,
     isTargetState
   }
 }
@@ -1146,7 +1160,26 @@ export default function AppDesktop({ onSwitchToMobile }) {
   const chainagesGroupRef = useRef(null)
   const prevZoneIdRef = useRef(null)
   const rasterGridLayerRef = useRef(null)
-  const [inspectedCell, setInspectedCell] = useState(null)
+  const [inspectedCell, setInspectedCell] = useState(() => ({
+    lat: 27.5861,
+    lon: 92.1524,
+    parcelNum: 32,
+    tier: "SAFE_HAVEN",
+    color: "rgba(2, 132, 199, 0.48)",
+    fillColor: "rgba(2, 132, 199, 0.48)",
+    colorHex: "#0284C7",
+    borderColor: "rgba(3, 105, 161, 0.92)",
+    slope: 12.0,
+    elevation: 2840,
+    fos: 2.40,
+    insar: 0.8,
+    saturation: 42,
+    lithology: "Precambrian Hard Gneiss Bedrock",
+    stateName: "Arunachal Pradesh",
+    directive: "SAFE HOLDING BAY (Stable Bedrock Layby with Driver Welfare Shelter)",
+    type: "Roadbed 1-KM Area",
+    isTargetState: true
+  }))
   const [showMilestonePins, setShowMilestonePins] = useState(false)
 
   // Zonation Mode: "micro" (1-KM Micro-Polygons) or "macro" (8-State Regional)
@@ -1575,9 +1608,21 @@ export default function AppDesktop({ onSwitchToMobile }) {
     if (!mapContainerRef.current) return
     if (mapInstanceRef.current) return
 
+    let initCenter = [28.20, 94.40]
+    let initZoom = 7.6
+    try {
+      const p = new URLSearchParams(window.location.search)
+      if (p.get("lat") && p.get("lng")) {
+        initCenter = [parseFloat(p.get("lat")), parseFloat(p.get("lng"))]
+      }
+      if (p.get("zoom")) {
+        initZoom = parseFloat(p.get("zoom"))
+      }
+    } catch (e) {}
+
     const map = L.map(mapContainerRef.current, {
-      center: [28.20, 94.40], // Default center at Arunachal Pradesh (Whole State View)
-      zoom: 7.6,
+      center: initCenter,
+      zoom: initZoom,
       minZoom: 5,
       maxZoom: 18,
       scrollWheelZoom: true,
@@ -1594,8 +1639,8 @@ export default function AppDesktop({ onSwitchToMobile }) {
     })
     topoLayer.addTo(map)
 
-    // Continuous 30m DEM Geotechnical Hazard Canvas Layer (L.GridLayer)
-    // Covers the ENTIRE STATE of Arunachal Pradesh and ALL NER STATES with 30m micro-cells
+    // Continuous Micro-Polygon Geotechnical Hazard Canvas Layer (L.GridLayer)
+    // Covers the ENTIRE MAP (Arunachal Pradesh & ALL 8 NER STATES) with lakhs of small contiguous bordered polygons
     const RasterGridLayerClass = L.GridLayer.extend({
       createTile: function(coords) {
         const tile = document.createElement('canvas')
@@ -1616,13 +1661,16 @@ export default function AppDesktop({ onSwitchToMobile }) {
         const stateFilter = selectedStateFilterRef.current || "ALL"
         const rain = activeRainfallRef.current || 28
 
-        // 24x24 = 576 continuous 30m micro-cells per 256x256 tile
-        const gridSize = 24
+        // Adaptive small polygon grid: 16x16 (overview) to 20x20 / 24x24 (detailed zoom)
+        const gridSize = coords.z <= 8 ? 16 : (coords.z <= 11 ? 20 : 24)
         const cellW = size.x / gridSize
         const cellH = size.y / gridSize
 
         const latStep = (nw.lat - se.lat) / gridSize
         const lonStep = (se.lng - nw.lng) / gridSize
+
+        const pad = coords.z <= 8 ? 0.7 : 1.0
+        const strokeWidth = coords.z <= 8 ? 0.9 : 1.2
 
         for (let gy = 0; gy < gridSize; gy++) {
           const cellLat = nw.lat - (gy + 0.5) * latStep
@@ -1634,7 +1682,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
             if (stateFilter !== "ALL" && !cellRisk.isTargetState) {
               // Dim background for neighboring states when a specific state like Arunachal is focused
-              ctx.fillStyle = "rgba(148, 163, 184, 0.06)"
+              ctx.fillStyle = "rgba(148, 163, 184, 0.04)"
               ctx.fillRect(gx * cellW, gy * cellH, cellW, cellH)
               continue
             }
@@ -1642,18 +1690,14 @@ export default function AppDesktop({ onSwitchToMobile }) {
             const px = gx * cellW
             const py = gy * cellH
 
-            ctx.fillStyle = cellRisk.color
+            // 1. Semi-transparent polygon fill (translucent so streets, rivers & topography are visible beneath)
+            ctx.fillStyle = cellRisk.fillColor
+            ctx.fillRect(px + pad, py + pad, cellW - pad * 2, cellH - pad * 2)
 
-            if (coords.z >= 11) {
-              // Deep zoom: crisp micro-parcels with subtle cell boundaries
-              ctx.fillRect(px + 0.5, py + 0.5, cellW - 1, cellH - 1)
-              ctx.strokeStyle = cellRisk.borderColor
-              ctx.lineWidth = 0.5
-              ctx.strokeRect(px + 0.5, py + 0.5, cellW - 1, cellH - 1)
-            } else {
-              // State or regional scale: continuous dense 30m dots/pixels across mountains
-              ctx.fillRect(px, py, cellW, cellH)
-            }
+            // 2. Distinct colored border around EVERY small polygon
+            ctx.strokeStyle = cellRisk.borderColor
+            ctx.lineWidth = strokeWidth
+            ctx.strokeRect(px + pad, py + pad, cellW - pad * 2, cellH - pad * 2)
           }
         }
 
@@ -1677,7 +1721,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
     markersGroupRef.current = markersGroup
     chainagesGroupRef.current = chainagesGroup
 
-    // Interactive click anywhere on map to inspect 30m cell
+    // Interactive click anywhere on map to inspect small polygon parcel
     const onMapClick = (e) => {
       const lat = e.latlng.lat
       const lon = e.latlng.lng
@@ -1687,34 +1731,39 @@ export default function AppDesktop({ onSwitchToMobile }) {
       const cell = get30mTerrainRisk(lat, lon, rain, stateFilter)
       if (!cell) return
 
+      const parcelNum = Math.abs(Math.round((lat * 1000) ^ (lon * 1000))) % 9000 + 1000
+
       setInspectedCell({
         lat: Number(lat.toFixed(4)),
         lon: Number(lon.toFixed(4)),
+        parcelNum,
         ...cell
       })
 
+      const tierBadgeColor = cell.tier === "SAFE_HAVEN" ? "#0284C7" : cell.colorHex
+      const tierName = cell.tier === "SAFE_HAVEN" ? "SAFE HAVEN" : cell.tier
+
       const popupHtml = `
-        <div style="font-family:system-ui,-apple-system,sans-serif;font-size:12px;line-height:1.45;padding:6px;min-width:260px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid ${cell.colorHex};padding-bottom:5px;margin-bottom:6px;">
-            <span style="font-weight:900;font-size:13px;color:#0F172A;">30m × 30m DEM Cell</span>
-            <span style="font-weight:900;font-size:11px;background:${cell.colorHex};color:#FFFFFF;padding:2px 7px;border-radius:4px;">${cell.tier}</span>
+        <div style="font-family:system-ui,-apple-system,sans-serif;font-size:12px;line-height:1.45;padding:8px 10px;min-width:280px;background:#FFFFFF;border-radius:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid ${tierBadgeColor};padding-bottom:5px;margin-bottom:6px;">
+            <span style="font-weight:900;font-size:13px;color:#0F172A;">Parcel #${parcelNum} · ${cell.type}</span>
+            <span style="font-weight:900;font-size:11px;background:${tierBadgeColor};color:#FFFFFF;padding:2px 7px;border-radius:4px;">● ${tierName}</span>
           </div>
-          <div style="font-size:11px;color:#475569;font-family:monospace;font-weight:bold;margin-bottom:6px;">
-            📍 ${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E · ${cell.stateName}
+          <div style="font-size:11px;color:${tierBadgeColor};font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+            <span>● ${tierName}</span>
+            <span style="color:#94A3B8;">·</span>
+            <span>FoS: ${cell.fos}</span>
+            <span style="color:#94A3B8;">·</span>
+            <span>${cell.insar} mm/d</span>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;background:#F8FAFC;padding:7px;border-radius:6px;font-size:11px;border:1px solid #E2E8F0;margin-bottom:6px;">
-            <div>Elevation: <b>${cell.elevation} m</b></div>
-            <div>Slope: <b>${cell.slope}°</b></div>
-            <div>FoS Factor: <b style="color:${cell.colorHex};font-size:12px;">${cell.fos}</b></div>
-            <div>InSAR Shear: <b style="color:#7C3AED;">${cell.insar} mm/d</b></div>
-            <div>Saturation: <b>${cell.saturation}%</b></div>
-            <div>Rock Unit: <b style="font-size:10px;">${cell.lithology.split(' ')[0]}</b></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;background:#F8FAFC;padding:7px 9px;border-radius:6px;font-size:11px;border:1px solid #E2E8F0;margin-bottom:6px;">
+            <div><span style="color:#64748B;">Slope:</span> <b style="color:#0F172A;">${cell.slope}°</b></div>
+            <div><span style="color:#64748B;">Area:</span> <b style="color:#0F172A;">${cell.type}</b></div>
+            <div><span style="color:#64748B;">Elevation:</span> <b style="color:#0F172A;">${cell.elevation}m</b></div>
+            <div><span style="color:#64748B;">State:</span> <b style="color:#0F172A;">${cell.stateName.split(' ')[0]}</b></div>
           </div>
-          <div style="font-size:10.5px;color:#334155;background:#F1F5F9;padding:5px 7px;border-radius:4px;margin-bottom:6px;border-left:3px solid ${cell.colorHex};">
-            <b>Lithology:</b> ${cell.lithology}
-          </div>
-          <div style="font-size:11px;font-weight:700;color:${cell.colorHex};line-height:1.35;">
-            ${cell.directive}
+          <div style="font-size:11px;font-weight:700;color:#334155;background:#F8FAFC;padding:6px 9px;border-radius:4px;border-left:3.5px solid ${tierBadgeColor};line-height:1.35;">
+            ${cell.tier === 'SAFE_HAVEN' ? '🅿️ ' : (cell.tier === 'CRITICAL' ? '⛔ ' : (cell.tier === 'HIGH' ? '⚠️ ' : (cell.tier === 'MODERATE' ? '⚡ ' : '✅ ')))} ${cell.directive}
           </div>
         </div>
       `
@@ -1769,70 +1818,10 @@ export default function AppDesktop({ onSwitchToMobile }) {
     markGroup.clearLayers()
     chainGroup.clearLayers()
 
-    // 1. Render Macro Sector Outlines (subtle reference boundaries that don't block 30m DEM risk dots)
-    ZONES.forEach((z) => {
-      const isSelected = z.id === selectedZone.id
-      
-      const zRisk = isSelected 
-        ? riskResult 
-        : calculateGeotechnicalRisk(activeRainfall, 180, z.defaultSlope, z.defaultWetness, z.defaultLith, z.defaultInsar)
+    // 1. All macro polygons are removed completely: The entire map is tiled exclusively with lakhs of small continuous bordered micro-polygons via RasterGridLayerClass
 
-      let strokeColor = z.borderColor
-      let fillColor = z.tierColor
-      let tierLabel = z.tier
-
-      if (zRisk.fos < 1.0 || zRisk.probability >= 80) {
-        fillColor = "#DC2626"
-        strokeColor = "#991B1B"
-        tierLabel = "CRITICAL"
-      } else if (zRisk.fos < 1.25 || zRisk.probability >= 65) {
-        fillColor = "#EA580C"
-        strokeColor = "#C2410C"
-        tierLabel = "HIGH"
-      } else if (zRisk.fos < 1.50 || zRisk.probability >= 45) {
-        fillColor = "#EAB308"
-        strokeColor = "#CA8A04"
-        tierLabel = "MODERATE"
-      } else if (zRisk.fos < 2.0 || zRisk.probability >= 20) {
-        fillColor = "#22C55E"
-        strokeColor = "#16A34A"
-        tierLabel = "LOW"
-      } else {
-        fillColor = "#14532D"
-        strokeColor = "#052E16"
-        tierLabel = "SAFE"
-      }
-
-      if (z.polygon && z.polygon.length >= 3) {
-        const poly = L.polygon(z.polygon, {
-          color: strokeColor,
-          weight: isSelected ? 2 : 1,
-          dashArray: "4, 4",
-          fillColor: fillColor,
-          fillOpacity: 0.04, // very faint fill so the 30m continuous raster shines through!
-          opacity: isSelected ? 0.6 : 0.25
-        })
-
-        poly.bindTooltip(`
-          <div style="font-family:system-ui,sans-serif;font-size:12px;line-height:1.4;padding:4px 8px;border-left:4px solid ${fillColor};background:#FFFFFF;">
-            <div style="font-weight:800;color:#0F172A;font-size:13px;">${z.name}</div>
-            <div style="font-weight:800;color:${fillColor};font-size:11.5px;margin:2px 0;">
-              ● ${tierLabel} TIER (${zRisk.probability}%) · FoS: ${zRisk.fos}
-            </div>
-            <div style="font-size:11px;color:#475569;">${z.sub} (${z.state})</div>
-            <div style="font-size:10px;color:#0284C7;margin-top:3px;font-weight:600;">
-              Continuous 30m DEM risk active · Click map to inspect
-            </div>
-          </div>
-        `, { sticky: true, opacity: 0.98 })
-
-        poly.on("click", () => handleZoneSelect(z))
-        poly.addTo(polyGroup)
-      }
-    })
-
-    // 2. Highway Milestone Pins & Corridor (ONLY shown when showMilestonePins is true AND currentZoom >= 13)
-    if (showMilestonePins && currentZoom >= 13 && selectedZone) {
+    // 2. Highway Milestone Pins & Corridor (Shown when showMilestonePins is true and currentZoom >= 11)
+    if (showMilestonePins && currentZoom >= 11 && selectedZone) {
       // Roadway Centerline Spline
       const roadLine = L.polyline(corridorSegments.map(s => s.center), {
         color: "#0F172A",
@@ -2422,11 +2411,11 @@ export default function AppDesktop({ onSwitchToMobile }) {
                 <div className="relative w-full h-[500px] xl:h-[560px] bg-slate-100">
                   <div ref={mapContainerRef} className="w-full h-full z-0"></div>
 
-                  {/* Semantic Zoom / 30m Raster Status Badge */}
+                  {/* Semantic Zoom / Micro-Polygons Status Badge */}
                   <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 z-10 text-xs flex items-center gap-2 pointer-events-auto">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
                     <span className="font-mono font-bold text-slate-800">
-                      30m × 30m CONTINUOUS GIS RISK RASTER · {selectedStateFilter === "ALL" ? "WHOLE NER (8 STATES)" : selectedStateFilter.toUpperCase()} (100,000+ DEM Cells)
+                      MICRO-POLYGON CONTINUOUS RISK · {selectedStateFilter === "ALL" ? "WHOLE NER (8 STATES)" : selectedStateFilter.toUpperCase()} (Lakhs of Contiguous Cells)
                     </span>
                     <button
                       onClick={() => handleStateFilterChange("ALL")}
@@ -2448,87 +2437,106 @@ export default function AppDesktop({ onSwitchToMobile }) {
                     </div>
                   </div>
 
-                  {/* 30m Legend */}
+                  {/* 5-Tier Micro-Polygon Legend (Identical to User Reference) */}
                   <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md p-2.5 rounded-lg shadow-md border border-slate-300 z-10 text-[10.5px] flex flex-col gap-1.5 pointer-events-auto">
                     <span className="font-black text-slate-800 uppercase tracking-wider text-[9px]">
-                      30m Geotechnical Risk Model
+                      Micro-Polygon Risk Zonation
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3 rounded-sm bg-[#DC2626] border border-[#991B1B]"></span>
-                      <span className="font-bold text-red-700">CRITICAL (FoS &lt; 1.0 · Fault/Gorge)</span>
+                      <span className="w-3.5 h-3 rounded-sm bg-[#DC2626] border border-[#B91C1C]"></span>
+                      <span className="font-bold text-red-700">CRITICAL</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-3.5 h-3 rounded-sm bg-[#EA580C] border border-[#C2410C]"></span>
-                      <span className="font-bold text-orange-700">HIGH (FoS 1.0–1.25 · Steep Slope)</span>
+                      <span className="font-bold text-orange-700">HIGH</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3 rounded-sm bg-[#EAB308] border border-[#CA8A04]"></span>
-                      <span className="font-bold text-amber-700">MODERATE (FoS 1.25–1.55 · Hillside)</span>
+                      <span className="w-3.5 h-3 rounded-sm bg-[#EAB308] border border-[#A16207]"></span>
+                      <span className="font-bold text-amber-700">MODERATE</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3.5 h-3 rounded-sm bg-[#0284C7] border border-[#0369A1]"></span>
+                      <span className="font-bold text-sky-700">SAFE HAVEN</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-3.5 h-3 rounded-sm bg-[#16A34A] border border-[#15803D]"></span>
-                      <span className="font-bold text-emerald-600">SAFE (FoS &gt; 1.55 · Valleys/Plains)</span>
+                      <span className="font-bold text-emerald-700">SAFE</span>
                     </div>
-                    <div className="pt-1 border-t border-slate-200 text-[9.5px] text-slate-500 font-mono flex items-center justify-between gap-2">
-                      <span>Grid: 30m × 30m DEM</span>
-                      <span className="text-blue-600 font-bold">Click map to inspect</span>
+                    <div className="pt-1 border-t border-slate-200 text-[9px] text-slate-500 font-mono flex items-center justify-between gap-2">
+                      <span>Lakhs of Micro-Polygons</span>
+                      <span className="text-blue-600 font-bold">Click to inspect</span>
                     </div>
                   </div>
 
-                  {/* Floating Inspected 30m Cell Inspector Card */}
+                  {/* Floating Inspected Micro-Polygon Card (Matches user screenshot style) */}
                   {inspectedCell && (
-                    <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md p-3 rounded-xl shadow-xl border border-slate-300 z-10 max-w-xs text-xs animate-in fade-in slide-in-from-bottom-2 pointer-events-auto">
-                      <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1.5 mb-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: inspectedCell.colorHex}}></span>
-                          <span className="font-black text-slate-900">30m Micro-Cell Telemetry</span>
+                    <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md p-3.5 rounded-xl shadow-2xl border border-slate-300 z-10 max-w-sm text-xs animate-in fade-in slide-in-from-bottom-2 pointer-events-auto">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div>
+                          <div className="font-black text-slate-900 text-[13px] leading-tight">
+                            Parcel #{inspectedCell.parcelNum} · {inspectedCell.type}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[11.5px] font-extrabold mt-0.5" style={{color: inspectedCell.colorHex}}>
+                            <span>● {inspectedCell.tier.replace('_', ' ')}</span>
+                            <span className="text-slate-400">·</span>
+                            <span>FoS: {inspectedCell.fos}</span>
+                            <span className="text-slate-400">·</span>
+                            <span>{inspectedCell.insar} mm/d</span>
+                          </div>
                         </div>
-                        <button onClick={() => setInspectedCell(null)} className="text-slate-400 hover:text-slate-700 text-xs font-bold cursor-pointer">✕</button>
+                        <button onClick={() => setInspectedCell(null)} className="text-slate-400 hover:text-slate-700 text-xs font-bold cursor-pointer p-0.5">✕</button>
                       </div>
-                      <div className="font-mono text-[10.5px] text-slate-600 font-bold mb-1.5 flex items-center justify-between">
-                        <span>{inspectedCell.lat}° N, {inspectedCell.lon}° E</span>
-                        <span className="text-blue-700 font-bold">{inspectedCell.stateName}</span>
+
+                      <div className="grid grid-cols-2 gap-1.5 bg-slate-50 p-2 rounded-lg border border-slate-200 text-[11px] mb-2">
+                        <div><span className="text-slate-500">Slope:</span> <b className="text-slate-900">{inspectedCell.slope}°</b></div>
+                        <div><span className="text-slate-500">Area:</span> <b className="text-slate-900">{inspectedCell.type}</b></div>
+                        <div><span className="text-slate-500">Elevation:</span> <b className="text-slate-900">{inspectedCell.elevation}m</b></div>
+                        <div><span className="text-slate-500">State:</span> <b className="text-slate-900">{inspectedCell.stateName.split(' ')[0]}</b></div>
                       </div>
-                      <div className="grid grid-cols-2 gap-1.5 bg-slate-50 p-2 rounded-lg border border-slate-200 font-mono text-[11px] mb-1.5">
-                        <div>Elevation: <b>{inspectedCell.elevation}m</b></div>
-                        <div>Slope: <b>{inspectedCell.slope}°</b></div>
-                        <div>FoS: <b style={{color: inspectedCell.colorHex}}>{inspectedCell.fos}</b></div>
-                        <div>InSAR: <b>{inspectedCell.insar} mm/d</b></div>
-                        <div>Saturation: <b>{inspectedCell.saturation}%</b></div>
-                        <div>Rock: <b>{inspectedCell.lithology.split(' ')[0]}</b></div>
-                      </div>
-                      <div className="text-[10px] text-slate-600 bg-slate-100 p-1.5 rounded mb-1.5 leading-snug">
-                        <b>Formation:</b> {inspectedCell.lithology}
-                      </div>
-                      <div className="text-[10.5px] font-bold leading-tight" style={{color: inspectedCell.colorHex}}>
+
+                      <div 
+                        className="text-[11px] font-bold p-2 rounded leading-snug border-l-4"
+                        style={{
+                          backgroundColor: inspectedCell.tier === 'SAFE_HAVEN' ? '#F0F9FF' : (inspectedCell.tier === 'CRITICAL' ? '#FEF2F2' : (inspectedCell.tier === 'HIGH' ? '#FFF7ED' : (inspectedCell.tier === 'MODERATE' ? '#FEFCE8' : '#F0FDF4'))),
+                          borderLeftColor: inspectedCell.colorHex,
+                          color: '#1E293B'
+                        }}
+                      >
+                        {inspectedCell.tier === 'SAFE_HAVEN' ? '🅿️ ' : (inspectedCell.tier === 'CRITICAL' ? '⛔ ' : (inspectedCell.tier === 'HIGH' ? '⚠️ ' : (inspectedCell.tier === 'MODERATE' ? '⚡ ' : '✅ ')))}
                         {inspectedCell.directive}
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* State-Wide Continuous 30m Geotechnical Ribbon */}
+                {/* State-Wide Continuous Micro-Polygons Geotechnical Ribbon */}
                 <div className="px-3.5 py-2.5 bg-slate-900 text-white border-t border-slate-800 flex flex-col gap-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-sm">terrain</span>
-                        <span>{selectedStateFilter === "ALL" ? "All NER 8-State Risk Model:" : `${selectedStateFilter.toUpperCase()} Continuous 30m Risk Model:`}</span>
+                        <span>{selectedStateFilter === "ALL" ? "All NER 8-State Risk Model:" : `${selectedStateFilter.toUpperCase()} Micro-Polygon Model:`}</span>
                       </span>
                       <span className="text-xs font-mono font-bold text-slate-300">
-                        {selectedStateFilter === "ALL" ? "Northeast India (8 States · 100,000+ DEM Cells)" : `${selectedStateFilter} (Eastern Himalayas · 30m Resolution)`}
+                        {selectedStateFilter === "ALL" ? "Northeast India (8 States · Lakhs of Micro-Polygons)" : `${selectedStateFilter} (Contiguous Micro-Polygons · Eastern Himalayas)`}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 text-[11px] font-mono">
                       <span className="bg-red-950 text-red-400 border border-red-800 px-2 py-0.5 rounded font-bold">
-                        🔴 Critical Fault (FoS &lt; 1.0)
+                        🔴 Critical Fault
+                      </span>
+                      <span className="bg-orange-950 text-orange-300 border border-orange-800 px-2 py-0.5 rounded font-bold">
+                        🟠 High Influx
                       </span>
                       <span className="bg-amber-950 text-amber-300 border border-amber-800 px-2 py-0.5 rounded font-bold">
-                        🟡 Moderate Hillside (FoS 1.25–1.55)
+                        🟡 Moderate Hillside
+                      </span>
+                      <span className="bg-sky-950 text-sky-300 border border-sky-700 px-2 py-0.5 rounded font-bold">
+                        🔵 Safe Haven (Layby)
                       </span>
                       <span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded font-bold">
-                        🟢 Stable Valley/Plain (FoS &gt; 1.55)
+                        🟢 Stable Valley
                       </span>
                       <button
                         onClick={() => setShowMilestonePins(!showMilestonePins)}
@@ -2537,7 +2545,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
                             ? "bg-blue-600 text-white border-blue-400" 
                             : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
                         }`}
-                        title="Toggle road corridor milestone pins (only visible at zoom 13+)"
+                        title="Toggle road corridor milestone pins (visible at zoom 11+)"
                       >
                         {showMilestonePins ? "Milestones: ON" : "Milestones: OFF"}
                       </button>
