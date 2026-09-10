@@ -1393,7 +1393,13 @@ function MapView({ t, onBack }) {
         <div style={{ height: 280 }}>
           <MapContainer center={[25.5, 92.8]} zoom={6} style={{ height: "100%", width: "100%" }} maxBounds={[[6.0, 68.0], [38.0, 98.0]]} maxBoundsViscosity={1.0}>
             {mapType === "terrain" ? (
-              <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" keepBuffer={12} />
+              <TileLayer 
+                url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png" 
+                subdomains={['a', 'b', 'c']}
+                maxZoom={17}
+                keepBuffer={12} 
+                attribution="Map: © OpenTopoMap, SRTM"
+              />
             ) : (
               <>
                 <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" keepBuffer={12} />

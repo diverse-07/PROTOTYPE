@@ -851,11 +851,12 @@ export default function AppDesktop({ onSwitchToMobile }) {
     })
     mapInstanceRef.current = map
 
-    // Primary High-Speed Topographic Relief Base (Esri World Topo Map)
-    const topoLayer = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
+    // High-Definition Topographic Elevation Relief Map (OpenTopoMap with full hillshading & contours)
+    const topoLayer = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
       maxZoom: 17,
-      attribution: 'Map: © Esri, Survey of India, USGS',
-      keepBuffer: 8
+      subdomains: ['a', 'b', 'c'],
+      attribution: 'Map: © OpenTopoMap, OpenStreetMap contributors, SRTM',
+      keepBuffer: 12
     })
     topoLayer.addTo(map)
 
@@ -911,27 +912,27 @@ export default function AppDesktop({ onSwitchToMobile }) {
       if (zRisk.fos < 1.0 || zRisk.probability >= 80) {
         fillColor = "#DC2626" // CRITICAL -> RED
         strokeColor = "#991B1B"
-        fillOpacity = isSelected ? 0.65 : 0.48
+        fillOpacity = isSelected ? 0.45 : 0.30
         tierLabel = "CRITICAL"
       } else if (zRisk.fos < 1.25 || zRisk.probability >= 65) {
         fillColor = "#EA580C" // HIGH -> ORANGE
         strokeColor = "#C2410C"
-        fillOpacity = isSelected ? 0.60 : 0.42
+        fillOpacity = isSelected ? 0.50 : 0.34
         tierLabel = "HIGH"
       } else if (zRisk.fos < 1.50 || zRisk.probability >= 45) {
         fillColor = "#EAB308" // MODERATE -> YELLOW
         strokeColor = "#CA8A04"
-        fillOpacity = isSelected ? 0.55 : 0.38
+        fillOpacity = isSelected ? 0.45 : 0.30
         tierLabel = "MODERATE"
       } else if (zRisk.fos < 2.0 || zRisk.probability >= 20) {
         fillColor = "#22C55E" // LOW -> GREEN
         strokeColor = "#16A34A"
-        fillOpacity = isSelected ? 0.50 : 0.32
+        fillOpacity = isSelected ? 0.40 : 0.26
         tierLabel = "LOW"
       } else {
         fillColor = "#14532D" // SAFE -> DARK GREEN
         strokeColor = "#052E16"
-        fillOpacity = isSelected ? 0.45 : 0.28
+        fillOpacity = isSelected ? 0.35 : 0.22
         tierLabel = "SAFE"
       }
 
@@ -990,9 +991,11 @@ export default function AppDesktop({ onSwitchToMobile }) {
         maxZoom: 18
       }).addTo(map)
     } else if (type === "topo") {
-      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
+      L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
         maxZoom: 17,
-        attribution: 'Map: © Esri, Survey of India, USGS'
+        subdomains: ['a', 'b', 'c'],
+        attribution: 'Map: © OpenTopoMap, OpenStreetMap contributors, SRTM',
+        keepBuffer: 12
       }).addTo(map)
     } else {
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
