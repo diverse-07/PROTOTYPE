@@ -793,34 +793,45 @@ function HomeView({ t, onOpenSection, onOpenSOS }) {
         </div>
       </div>
 
-      {/* Live Geotechnical Gauges Card */}
+      {/* Live Open-Meteo Satellite Telemetry Card */}
       <div className="card">
         <div className="card-header">
           <div className="card-title">
             <Icons.Sensors size={18} color="var(--navy)" />
-            <span>Station JH-082 Telemetry</span>
+            <span>Live Satellite &amp; Soil Telemetry</span>
           </div>
-          <span style={{ fontSize: 10, color: "var(--green)", fontWeight: 700 }}>● LIVE 15m</span>
+          <span style={{ fontSize: 10, color: "var(--green)", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#16a34a", display: "inline-block" }}></span>
+            LIVE COPERNICUS
+          </span>
         </div>
         <div className="card-body">
           <div className="gauge-row">
             <div className="gauge-item">
               <div className="gauge-label-row">
-                <span className="gauge-label">Soil Moisture (Pore Pressure)</span>
-                <span className="gauge-value" style={{ color: liveSoil > 80 ? "#b91c1c" : "#ca8a04" }}>{liveSoil.toFixed(0)}%</span>
+                <span className="gauge-label">Volumetric Soil Saturation (SMAP)</span>
+                <span className="gauge-value" style={{ color: effectiveWetness > 80 ? "#b91c1c" : "#ca8a04" }}>{effectiveWetness.toFixed(0)}%</span>
               </div>
               <div className="gauge-bar-bg">
-                <div className="gauge-bar-fill" style={{ width: `${liveSoil}%`, background: liveSoil > 80 ? "#b91c1c" : "#ca8a04" }} />
+                <div className="gauge-bar-fill" style={{ width: `${effectiveWetness}%`, background: effectiveWetness > 80 ? "#b91c1c" : "#ca8a04" }} />
               </div>
             </div>
             <div className="gauge-item">
               <div className="gauge-label-row">
-                <span className="gauge-label">Shear Displacement Rate</span>
-                <span className="gauge-value" style={{ color: liveDisp > 3 ? "#b91c1c" : "#d97706" }}>{liveDisp.toFixed(1)} mm/h</span>
+                <span className="gauge-label">Sentinel-1 InSAR Surface Creep</span>
+                <span className="gauge-value" style={{ color: Number(insarVelocity) > 3 ? "#b91c1c" : "#d97706" }}>{insarVelocity} mm/d</span>
               </div>
               <div className="gauge-bar-bg">
-                <div className="gauge-bar-fill" style={{ width: `${(liveDisp / 6) * 100}%`, background: liveDisp > 3 ? "#b91c1c" : "#d97706" }} />
+                <div className="gauge-bar-fill" style={{ width: `${Math.min(100, (Number(insarVelocity) / 8) * 100)}%`, background: Number(insarVelocity) > 3 ? "#b91c1c" : "#d97706" }} />
               </div>
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--border)" }}>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+              24h Precip: <strong style={{ color: "var(--text)" }}>{effectiveRain} mm</strong>
+            </div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", textAlign: "right" }}>
+              Ambient Temp: <strong style={{ color: "var(--text)" }}>{weather.temp}°C</strong>
             </div>
           </div>
         </div>
