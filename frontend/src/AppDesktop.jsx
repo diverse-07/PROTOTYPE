@@ -572,13 +572,13 @@ function calculateGeotechnicalRisk(rainfall24, api72, slope, soilWetness, lithol
   }
 }
 
-// Micro-Zonation 1-KM Highway Chainages Generator
-// Models high-resolution highway segments (KM posts) along strategic mountain corridors
-function getCorridorChainages(zone, riskResult) {
-  if (!zone) return []
+// Micro-Zonation 1-KM Highway Chainages & Slope Micro-Parcels Generator
+// Models high-resolution highway segments and surrounding hillside hazard parcels in 1-KM radius
+function getCorridorChainages(zone, riskResult, activeRainfall = 28) {
+  if (!zone) return { segments: [], microPolygons: [] }
 
   let highwayName = "NH Corridor"
-  let baseKm = 40
+  let baseKm = 30
   if (zone.sub?.includes("NH-44") || zone.description?.includes("NH-44")) {
     highwayName = "NH-44 (Meghalaya Lifeline)"
     baseKm = 110
@@ -602,14 +602,18 @@ function getCorridorChainages(zone, riskResult) {
     baseKm = 30
   }
 
-  const isCritical = riskResult?.status?.includes("CRITICAL")
-  const isHigh = riskResult?.status?.includes("HIGH")
-  const isModerate = riskResult?.status?.includes("MODERATE")
+  const isRainEscalated = (activeRainfall >= 60) || riskResult?.status?.includes("CRITICAL") || riskResult?.status?.includes("HIGH")
 
   const segments = []
+  const allMicroPolygons = []
   const count = 10
   const latStart = zone.lat - 0.040
   const lonStart = zone.lon - 0.038
+
+  // Buffer offsets in degrees (~1 km radius is approx 0.0090° lat by 0.0098° lon)
+  const w0 = 0.0019 // ~200m half-width for roadbed corridor polygon
+  const w1 = 0.0055 // ~600m offset for mountain scarp & valley runout
+  const w2 = 0.0092 // ~1000m (1 km radius) outer ridge & riverbed footings
 
   for (let i = 0; i < count; i++) {
     const kmNum = baseKm + i
@@ -619,58 +623,257 @@ function getCorridorChainages(zone, riskResult) {
     const p2Lat = latStart + ((i + 1) * 0.0082) + (Math.sin((i + 1) * 0.85) * 0.004)
     const p2Lon = lonStart + ((i + 1) * 0.0078) + (Math.cos((i + 1) * 0.75) * 0.004)
 
+    // Tangent and normal vectors for perpendicular geometric buffer
+    const dLat = p2Lat - p1Lat
+    const dLon = p2Lon - p1Lon
+    const len = Math.hypot(dLat, dLon) || 0.01
+    const nx = -dLon / len
+    const ny = dLat / len
+
     let tier = "SAFE"
     let color = "#16A34A" // Green
     let bgColor = "#DCFCE7"
-    let borderColor = "#86EFAC"
-    let fos = 1.95 - (i % 3) * 0.1
-    let shear = (1.2 + (i % 2) * 0.6).toFixed(1)
+    let borderColor = "#15803D"
+    let fos = 1.95 - (i % 3) * 0.08
+    let shear = (1.2 + (i % 2) * 0.5).toFixed(1)
     let action = "OPEN — Normal Speed Permitted (Stable Bedrock)"
     let isHaven = false
     let isChokepoint = false
 
+    // Distinct 1-KM Danger Distribution across chainages
     if (i === 2) {
+      // Safe Haven Staging Bay
       isHaven = true
       tier = "SAFE_HAVEN"
       color = "#0284C7"
       bgColor = "#E0F2FE"
-      borderColor = "#7DD3FC"
-      action = "🅿️ SAFE HOLDING BAY (Stable Bedrock Layby with Driver Shelter)"
-    } else if (i === 4 && (isCritical || isHigh)) {
+      borderColor = "#0369A1"
+      fos = 2.40
+      shear = "0.8"
+      action = "🅿️ SAFE HOLDING BAY (Stable Bedrock Layby with Driver Welfare Shelter)"
+    } else if (i === 4) {
+      // Critical Chokepoint (Steep Fault Escarpment)
       isChokepoint = true
-      tier = isCritical ? "CRITICAL" : "HIGH"
-      color = isCritical ? "#DC2626" : "#EA580C"
-      bgColor = isCritical ? "#FEE2E2" : "#FFEDD5"
-      borderColor = isCritical ? "#FCA5A5" : "#FDBA74"
-      fos = riskResult?.fos || 0.82
+      tier = "CRITICAL"
+      color = "#DC2626"
+      bgColor = "#FEE2E2"
+      borderColor = "#991B1B"
+      fos = riskResult?.fos ? Math.min(riskResult.fos, 0.90) : 0.82
       shear = (riskResult?.featureContributions?.[2]?.val?.replace(" mm/d", "") || "38.2")
-      action = isCritical 
-        ? `⛔ RESTRICTED CHOKEPOINT — STOP TRUCKS AT KM ${baseKm + 2} HAVEN` 
-        : "⚠️ HIGH RISK — Metered Convoy Passing (No Stopping)"
-    } else if (i === 5 && (isCritical || isHigh)) {
-      tier = isCritical ? "HIGH" : "MODERATE"
-      color = isCritical ? "#EA580C" : "#EAB308"
-      bgColor = isCritical ? "#FFEDD5" : "#FEF9C3"
-      borderColor = isCritical ? "#FDBA74" : "#FDE047"
-      fos = Number(((riskResult?.fos || 1.0) + 0.32).toFixed(2))
+      action = `⛔ RESTRICTED CHOKEPOINT — Active fault creep. Hold trucks at KM ${baseKm + 2} Haven`
+    } else if (i === 5) {
+      // High-Risk Debris Influx
+      tier = isRainEscalated ? "CRITICAL" : "HIGH"
+      color = isRainEscalated ? "#DC2626" : "#EA580C"
+      bgColor = isRainEscalated ? "#FEE2E2" : "#FFEDD5"
+      borderColor = isRainEscalated ? "#991B1B" : "#C2410C"
+      fos = isRainEscalated ? 0.95 : 1.14
       shear = "14.5"
-      action = "⚠️ CAUTION — Debris Flow Influx Zone (20 km/h Limit)"
-    } else if (i === 3 && (isCritical || isHigh || isModerate)) {
+      action = "⚠️ HIGH RISK — Debris Flow Influx Zone (20 km/h Limit, Convoy Escort)"
+    } else if (i === 3) {
+      // Moderate Watch Zone
+      tier = isRainEscalated ? "HIGH" : "MODERATE"
+      color = isRainEscalated ? "#EA580C" : "#EAB308"
+      bgColor = isRainEscalated ? "#FFEDD5" : "#FEF9C3"
+      borderColor = isRainEscalated ? "#C2410C" : "#CA8A04"
+      fos = isRainEscalated ? 1.18 : 1.38
+      shear = "7.8"
+      action = "ADVISORY — Reduced Speed Limit (Watch for Minor Rockfall)"
+    } else if (i === 6 && isRainEscalated) {
       tier = "MODERATE"
       color = "#EAB308"
       bgColor = "#FEF9C3"
-      borderColor = "#FDE047"
-      fos = 1.38
-      shear = "7.8"
-      action = "ADVISORY — Slow Speed Limit (Lookout for Rockfall)"
+      borderColor = "#CA8A04"
+      fos = 1.42
+      shear = "6.2"
+      action = "ADVISORY — Wet Subgrade Slump (Proceed with Caution)"
     }
 
+    // 1. Central Road Corridor Polygon (1-KM Roadbed Area)
+    const roadPoly = [
+      [p1Lat + nx * w0, p1Lon + ny * w0],
+      [p2Lat + nx * w0, p2Lon + ny * w0],
+      [p2Lat - nx * w0, p2Lon - ny * w0],
+      [p1Lat - nx * w0, p1Lon - ny * w0]
+    ]
+
+    // 2. Upslope Hillside Scarp Polygon (1-KM Mountain Influx Area)
+    const upslopePoly = [
+      [p1Lat + nx * w0, p1Lon + ny * w0],
+      [p2Lat + nx * w0, p2Lon + ny * w0],
+      [p2Lat + nx * w1, p2Lon + ny * w1],
+      [p1Lat + nx * w1, p1Lon + ny * w1]
+    ]
+
+    // 3. Downslope Valley / Runout Polygon (1-KM Drainage Area)
+    const downslopePoly = [
+      [p1Lat - nx * w0, p1Lon - ny * w0],
+      [p2Lat - nx * w0, p2Lon - ny * w0],
+      [p2Lat - nx * w1, p2Lon - ny * w1],
+      [p1Lat - nx * w1, p1Lon - ny * w1]
+    ]
+
+    // 4. Upper Mountain Crest Ridge Parcel
+    const crestPoly = [
+      [p1Lat + nx * w1, p1Lon + ny * w1],
+      [p2Lat + nx * w1, p2Lon + ny * w1],
+      [p2Lat + nx * w2, p2Lon + ny * w2],
+      [p1Lat + nx * w2, p1Lon + ny * w2]
+    ]
+
+    // 5. Lower River Canyon Parcel
+    const canyonPoly = [
+      [p1Lat - nx * w1, p1Lon - ny * w1],
+      [p2Lat - nx * w1, p2Lon - ny * w1],
+      [p2Lat - nx * w2, p2Lon - ny * w2],
+      [p1Lat - nx * w2, p1Lon - ny * w2]
+    ]
+
+    // Determine colors for flanking parcels
+    let upColor = color
+    let upBorder = borderColor
+    let upTier = tier
+    let upFos = Math.max(0.65, Number((fos - 0.12).toFixed(2)))
+    if (i === 4) {
+      upColor = "#DC2626"
+      upBorder = "#991B1B"
+      upTier = "CRITICAL"
+      upFos = 0.74
+    } else if (i === 5) {
+      upColor = isRainEscalated ? "#DC2626" : "#EA580C"
+      upBorder = isRainEscalated ? "#991B1B" : "#C2410C"
+      upTier = isRainEscalated ? "CRITICAL" : "HIGH"
+      upFos = 0.98
+    } else if (i === 2) {
+      upColor = "#0284C7"
+      upBorder = "#0369A1"
+      upTier = "SAFE_HAVEN"
+      upFos = 2.45
+    }
+
+    let downColor = isHaven ? "#0284C7" : (isChokepoint ? "#EA580C" : (i === 5 ? "#EAB308" : color))
+    let downBorder = isHaven ? "#0369A1" : (isChokepoint ? "#C2410C" : (i === 5 ? "#CA8A04" : borderColor))
+    let downTier = isHaven ? "SAFE_HAVEN" : (isChokepoint ? "HIGH" : (i === 5 ? "MODERATE" : tier))
+    let downFos = Math.min(2.30, Number((fos + 0.18).toFixed(2)))
+
+    let crestColor = isChokepoint ? "#EAB308" : (isHaven ? "#0284C7" : "#16A34A")
+    let crestBorder = isChokepoint ? "#CA8A04" : (isHaven ? "#0369A1" : "#15803D")
+
+    let canyonColor = isChokepoint ? "#EA580C" : (isHaven ? "#0284C7" : "#16A34A")
+    let canyonBorder = isChokepoint ? "#C2410C" : (isHaven ? "#0369A1" : "#15803D")
+
+    // Push into 50+ micro-polygons list
+    allMicroPolygons.push(
+      // Road corridor parcel
+      {
+        id: `poly-road-${kmNum}`,
+        km: kmNum,
+        name: `KM ${kmNum} · Roadway Corridor (1-KM)`,
+        coords: roadPoly,
+        center: [(p1Lat + p2Lat) / 2, (p1Lon + p2Lon) / 2],
+        tier,
+        color,
+        borderColor,
+        fos: Number(fos.toFixed(2)),
+        shear: `${shear} mm/d`,
+        slope: isChokepoint ? 42 : (i === 5 ? 36 : (isHaven ? 12 : 21)),
+        lithology: isChokepoint ? "Crushed Gouge / Sandstone" : (isHaven ? "Hard Gneiss Bedrock" : "Interbedded Shale"),
+        directive: action,
+        isRoadCorridor: true,
+        isHaven,
+        isChokepoint,
+        type: "Roadbed 1-KM Area"
+      },
+      // Upslope scarp parcel
+      {
+        id: `poly-up-${kmNum}`,
+        km: kmNum,
+        name: `KM ${kmNum} · Upslope Mountain Scarp (1-KM)`,
+        coords: upslopePoly,
+        center: [(p1Lat + p2Lat) / 2 + nx * (w0 + w1) / 2, (p1Lon + p2Lon) / 2 + ny * (w0 + w1) / 2],
+        tier: upTier,
+        color: upColor,
+        borderColor: upBorder,
+        fos: upFos,
+        shear: `${(parseFloat(shear) * 1.15).toFixed(1)} mm/d`,
+        slope: isChokepoint ? 46 : (i === 5 ? 40 : 26),
+        lithology: "Upper Colluvial Overburden",
+        directive: isChokepoint ? "Active tension cracking. Rockfall barrier inspection required." : "Slope stable.",
+        isRoadCorridor: false,
+        isHaven,
+        isChokepoint,
+        type: "Upslope Scarp"
+      },
+      // Downslope runout parcel
+      {
+        id: `poly-down-${kmNum}`,
+        km: kmNum,
+        name: `KM ${kmNum} · Downslope Valley Runout (1-KM)`,
+        coords: downslopePoly,
+        center: [(p1Lat + p2Lat) / 2 - nx * (w0 + w1) / 2, (p1Lon + p2Lon) / 2 - ny * (w0 + w1) / 2],
+        tier: downTier,
+        color: downColor,
+        borderColor: downBorder,
+        fos: downFos,
+        shear: `${(parseFloat(shear) * 0.85).toFixed(1)} mm/d`,
+        slope: isChokepoint ? 38 : 22,
+        lithology: "Valley Colluvial Fan",
+        directive: isChokepoint ? "Debris accumulation basin. Maintain clear culverts." : "Valley floor clear.",
+        isRoadCorridor: false,
+        isHaven,
+        isChokepoint,
+        type: "Downslope Valley"
+      },
+      // Crest ridge parcel
+      {
+        id: `poly-crest-${kmNum}`,
+        km: kmNum,
+        name: `KM ${kmNum} · Upper Ridge Crest (1-KM)`,
+        coords: crestPoly,
+        center: [(p1Lat + p2Lat) / 2 + nx * (w1 + w2) / 2, (p1Lon + p2Lon) / 2 + ny * (w1 + w2) / 2],
+        tier: isChokepoint ? "MODERATE" : (isHaven ? "SAFE_HAVEN" : "SAFE"),
+        color: crestColor,
+        borderColor: crestBorder,
+        fos: isChokepoint ? 1.34 : 2.10,
+        shear: "3.5 mm/d",
+        slope: 28,
+        lithology: "Weathered Ridge Cap",
+        directive: "Forest cover intact. Surface runoff monitoring.",
+        isRoadCorridor: false,
+        isHaven,
+        isChokepoint: false,
+        type: "Ridge Crest"
+      },
+      // Canyon riverbed parcel
+      {
+        id: `poly-canyon-${kmNum}`,
+        km: kmNum,
+        name: `KM ${kmNum} · Canyon Riverbed Footing (1-KM)`,
+        coords: canyonPoly,
+        center: [(p1Lat + p2Lat) / 2 - nx * (w1 + w2) / 2, (p1Lon + p2Lon) / 2 - ny * (w1 + w2) / 2],
+        tier: isChokepoint ? "HIGH" : (isHaven ? "SAFE_HAVEN" : "SAFE"),
+        color: canyonColor,
+        borderColor: canyonBorder,
+        fos: isChokepoint ? 1.18 : 2.25,
+        shear: "4.2 mm/d",
+        slope: 16,
+        lithology: "Riverbed Alluvium",
+        directive: isChokepoint ? "River scour monitoring active at toe of slope." : "River toe stable.",
+        isRoadCorridor: false,
+        isHaven,
+        isChokepoint: false,
+        type: "Riverbed Footing"
+      }
+    )
+
+    // Segment summary for chainage ribbon & centerline
     segments.push({
       id: `${zone.id}-km-${kmNum}`,
       km: kmNum,
       label: `KM ${kmNum}`,
       coords: [[p1Lat, p1Lon], [p2Lat, p2Lon]],
       center: [(p1Lat + p2Lat) / 2, (p1Lon + p2Lon) / 2],
+      polygon: roadPoly,
       tier,
       color,
       bgColor,
@@ -684,7 +887,7 @@ function getCorridorChainages(zone, riskResult) {
     })
   }
 
-  return segments
+  return { segments, microPolygons: allMicroPolygons }
 }
 
 // High-Resolution 500m Geotechnical Raster Risk Evaluator
@@ -818,9 +1021,8 @@ export default function AppDesktop({ onSwitchToMobile }) {
   const chainagesGroupRef = useRef(null)
   const prevZoneIdRef = useRef(null)
 
-  // High-Density Micro-Zonation Grid Layer (Lakhs of 500m cells)
-  const [showMicroGrid, setShowMicroGrid] = useState(true)
-  const microGridLayerRef = useRef(null)
+  // Zonation Mode: "micro" (1-KM Micro-Polygons) or "macro" (8-State Regional)
+  const [zonationMode, setZonationMode] = useState("micro")
 
   // Active Navigation Tab: "overview" | "map" | "ai" | "rainfall" | "advisories"
   const getInitialTab = () => {
@@ -956,10 +1158,11 @@ export default function AppDesktop({ onSwitchToMobile }) {
     return calculateGeotechnicalRisk(activeRainfall, api72, slope, soilWetness, lithStrength, insarVelocity)
   }, [activeRainfall, api72, slope, soilWetness, lithStrength, insarVelocity])
 
-  // 1-KM Corridor Chainages for currently selected zone
-  const currentCorridorChainages = useMemo(() => {
-    return getCorridorChainages(selectedZone, riskResult)
-  }, [selectedZone, riskResult])
+  // 1-KM Corridor Chainages & Micro-Polygons for currently selected zone
+  const { segments: corridorSegments, microPolygons: corridorMicroPolygons } = useMemo(() => {
+    return getCorridorChainages(selectedZone, riskResult, activeRainfall)
+  }, [selectedZone, riskResult, activeRainfall])
+  const currentCorridorChainages = corridorSegments
 
   // Fetch real live weather whenever selected sector changes
   useEffect(() => {
@@ -996,8 +1199,9 @@ export default function AppDesktop({ onSwitchToMobile }) {
     setLithStrength(zone.defaultLith)
     setInsarVelocity(zone.defaultInsar)
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([zone.lat, zone.lon], 9, {
-        duration: 1.2
+      const targetZoom = zonationMode === "micro" ? 11.5 : 9
+      mapInstanceRef.current.flyTo([zone.lat, zone.lon], targetZoom, {
+        duration: 1.0
       })
     }
   }
@@ -1183,10 +1387,10 @@ export default function AppDesktop({ onSwitchToMobile }) {
     if (mapInstanceRef.current) return
 
     const map = L.map(mapContainerRef.current, {
-      center: [26.0, 93.2],
-      zoom: 6.5,
+      center: [selectedZone.lat, selectedZone.lon],
+      zoom: 11.5,
       minZoom: 5,
-      maxZoom: 16,
+      maxZoom: 17,
       scrollWheelZoom: true,
       zoomControl: true
     })
@@ -1209,95 +1413,6 @@ export default function AppDesktop({ onSwitchToMobile }) {
     markersGroupRef.current = markersGroup
     chainagesGroupRef.current = chainagesGroup
 
-    // High-Density Micro-Zonation Raster Grid Layer (Lakhs of 500m cells across Northeast India)
-    const microGrid = L.gridLayer({
-      tileSize: 256,
-      opacity: 0.72,
-      maxZoom: 18,
-      minZoom: 6,
-      zIndex: 350
-    })
-
-    microGrid.createTile = function(coords) {
-      const tile = document.createElement("canvas")
-      tile.width = 256
-      tile.height = 256
-      const ctx = tile.getContext("2d")
-      if (!ctx) return tile
-
-      const z = coords.z
-      const x = coords.x
-      const y = coords.y
-      const n = Math.pow(2, z)
-
-      // 16x16 grid = 256 micro-polygons per tile!
-      const cellSize = 16
-      const steps = 16
-
-      for (let r = 0; r < steps; r++) {
-        const py = r * cellSize
-        const latRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * (y + (py + cellSize / 2) / 256) / n)))
-        const lat = (latRad * 180) / Math.PI
-
-        if (lat < 21.5 || lat > 29.8) continue
-
-        for (let c = 0; c < steps; c++) {
-          const px = c * cellSize
-          const lon = ((x + (px + cellSize / 2) / 256) / n) * 360 - 180
-
-          if (lon < 88.0 || lon > 97.5) continue
-
-          const risk = getMicroCellGeotechnicalRisk(lat, lon, activeRainfall, ZONES)
-          if (!risk) continue
-
-          ctx.fillStyle = risk.color
-          ctx.fillRect(px, py, cellSize, cellSize)
-
-          ctx.strokeStyle = risk.strokeColor || "rgba(0, 0, 0, 0.15)"
-          ctx.lineWidth = 0.5
-          ctx.strokeRect(px, py, cellSize, cellSize)
-        }
-      }
-
-      return tile
-    }
-
-    microGrid.addTo(map)
-    microGridLayerRef.current = microGrid
-
-    // Interactive map click popup showing exact 500m cell telemetry
-    const onMapClick = (e) => {
-      const { lat, lng } = e.latlng
-      const cellRisk = getMicroCellGeotechnicalRisk(lat, lng, activeRainfall, ZONES)
-      if (!cellRisk) return
-
-      const popupContent = `
-        <div style="font-family:system-ui,sans-serif;font-size:12px;padding:4px 6px;line-height:1.4;min-width:220px;">
-          <div style="display:flex;align-items:center;gap:6px;border-bottom:1.5px solid #E2E8F0;padding-bottom:5px;margin-bottom:6px;">
-            <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:${cellRisk.color};border:1px solid rgba(0,0,0,0.3);"></span>
-            <span style="font-weight:900;color:#0F172A;font-size:12.5px;">500m Micro-Zonation Cell</span>
-          </div>
-          <div style="font-size:10px;color:#64748B;font-family:monospace;">
-            LAT: ${lat.toFixed(4)}° | LON: ${lng.toFixed(4)}°
-          </div>
-          <div style="font-weight:800;font-size:12px;color:${cellRisk.tier === 'CRITICAL' ? '#DC2626' : cellRisk.tier === 'HIGH' ? '#EA580C' : cellRisk.tier === 'MODERATE' ? '#D97706' : '#16A34A'};margin:4px 0;">
-            ● ${cellRisk.tier} HAZARD (FoS: ${cellRisk.fos})
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#F8FAFC;padding:6px;border-radius:6px;border:1px solid #E2E8F0;font-size:10.5px;margin:6px 0;">
-            <div>Slope: <b>${cellRisk.slope}°</b></div>
-            <div>InSAR: <b>${cellRisk.insar} mm/d</b></div>
-            <div style="grid-column:span 2;">Lithology: <b>${cellRisk.lithology}</b></div>
-            <div style="grid-column:span 2;color:#005B9E;">Sector: <b>${cellRisk.closestZone.split('(')[0]}</b></div>
-          </div>
-          <div style="font-size:10px;color:#334155;line-height:1.3;border-left:2.5px solid ${cellRisk.color};padding-left:5px;">
-            ${cellRisk.directive}
-          </div>
-        </div>
-      `
-      L.popup().setLatLng(e.latlng).setContent(popupContent).openOn(map)
-    }
-    map.on("click", onMapClick)
-
     const onZoom = () => {
       if (mapInstanceRef.current) {
         setCurrentZoom(mapInstanceRef.current.getZoom())
@@ -1318,7 +1433,6 @@ export default function AppDesktop({ onSwitchToMobile }) {
     return () => {
       window.removeEventListener("resize", handleResize)
       map.off("zoomend", onZoom)
-      map.off("click", onMapClick)
       clearTimeout(t1)
       clearTimeout(t2)
       try { map.remove() } catch(e) {}
@@ -1326,27 +1440,9 @@ export default function AppDesktop({ onSwitchToMobile }) {
     }
   }, [])
 
-  // Toggle / Redraw Micro-Grid Layer
-  useEffect(() => {
-    const map = mapInstanceRef.current
-    const grid = microGridLayerRef.current
-    if (!map || !grid) return
 
-    if (showMicroGrid) {
-      if (!map.hasLayer(grid)) {
-        grid.addTo(map)
-      }
-      grid.redraw()
-    } else {
-      if (map.hasLayer(grid)) {
-        map.removeLayer(grid)
-      }
-    }
-  }, [showMicroGrid, activeRainfall])
-
-
-  // Pure Geological GIS Hazard Polygons & 1-KM Highway Chainages
-  // Semantic Zoom: Macro 8-State Polygons (zoom < 10) vs 1-KM Highway Chainages (zoom >= 10)
+  // Pure Geological GIS Hazard Polygons & 1-KM Highway Micro-Zonation
+  // Semantic Zoom & Mode: Macro 8-State Polygons vs 1-KM Micro-Zonation Polygons (50+ Parcels)
   useEffect(() => {
     const map = mapInstanceRef.current
     const polyGroup = polygonsGroupRef.current
@@ -1358,9 +1454,9 @@ export default function AppDesktop({ onSwitchToMobile }) {
     markGroup.clearLayers()
     chainGroup.clearLayers()
 
-    const isZoomedIn = currentZoom >= 10
+    const showMicroPolygons = (currentZoom >= 9) || (zonationMode === "micro")
 
-    // 1. Render Macro Polygons (subtle outline when zoomed in, full prominent when zoomed out)
+    // 1. Render Macro Polygons (subtle outline when in micro-mode, full prominent when zoomed out)
     ZONES.forEach((z) => {
       const isSelected = z.id === selectedZone.id
       
@@ -1371,8 +1467,8 @@ export default function AppDesktop({ onSwitchToMobile }) {
       // Strict 5-tier standard colors
       let fillColor = z.tierColor
       let strokeColor = z.borderColor
-      let fillOpacity = isZoomedIn ? (isSelected ? 0.08 : 0.03) : (isSelected ? 0.45 : 0.30)
-      let strokeOpacity = isZoomedIn ? (isSelected ? 0.45 : 0.20) : 0.95
+      let fillOpacity = showMicroPolygons ? (isSelected ? 0.05 : 0.02) : (isSelected ? 0.45 : 0.30)
+      let strokeOpacity = showMicroPolygons ? (isSelected ? 0.40 : 0.15) : 0.95
       let tierLabel = z.tier
 
       if (zRisk.fos < 1.0 || zRisk.probability >= 80) {
@@ -1400,8 +1496,8 @@ export default function AppDesktop({ onSwitchToMobile }) {
       if (z.polygon && z.polygon.length >= 3) {
         const poly = L.polygon(z.polygon, {
           color: strokeColor,
-          weight: isSelected ? (isZoomedIn ? 2 : 3.5) : 1.5,
-          dashArray: isZoomedIn || isSelected ? "4, 4" : null,
+          weight: isSelected ? (showMicroPolygons ? 2 : 3.5) : 1.5,
+          dashArray: showMicroPolygons || isSelected ? "4, 4" : null,
           fillColor: fillColor,
           fillOpacity: fillOpacity,
           opacity: strokeOpacity
@@ -1415,7 +1511,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
             </div>
             <div style="font-size:11px;color:#475569;">${z.sub} (${z.state})</div>
             <div style="font-size:10px;color:#0284C7;margin-top:3px;font-weight:600;">
-              ${isZoomedIn ? "1-KM chainages active" : "Click or zoom in to inspect 1-km road chainages"}
+              ${showMicroPolygons ? "1-KM micro-zonation active (50+ parcels)" : "Click or zoom in to inspect 1-km road chainages"}
             </div>
           </div>
         `, { sticky: true, opacity: 0.98 })
@@ -1425,36 +1521,55 @@ export default function AppDesktop({ onSwitchToMobile }) {
       }
     })
 
-    // 2. If Zoomed In (currentZoom >= 10), render 1-KM Highway Chainages!
-    if (isZoomedIn && selectedZone) {
-      currentCorridorChainages.forEach((seg) => {
-        // 1-KM Road Segment Line
-        const line = L.polyline(seg.coords, {
-          color: seg.isHaven ? "#0284C7" : seg.color,
-          weight: seg.isChokepoint ? 9 : 7,
-          opacity: 0.95,
-          lineCap: "round",
-          dashArray: seg.isChokepoint ? "8, 4" : null
+    // 2. Render 1-KM Highway Micro-Zonation Polygons (50+ Parcels)!
+    if (showMicroPolygons && selectedZone) {
+      // A. Render each 1-KM Micro-Polygon (Roadbed, Upslope Scarp, Downslope Valley, Ridge Crest, Riverbed)
+      corridorMicroPolygons.forEach((poly) => {
+        const isSelected = selectedChainage && (selectedChainage.km === poly.km)
+        const lPoly = L.polygon(poly.coords, {
+          color: poly.borderColor || poly.color,
+          weight: isSelected ? (poly.isRoadCorridor ? 3 : 2) : (poly.isRoadCorridor ? 2 : 1),
+          fillColor: poly.color,
+          fillOpacity: isSelected ? 0.65 : (poly.isRoadCorridor ? 0.48 : 0.32),
+          dashArray: poly.isChokepoint ? "5, 3" : null
         })
 
-        line.bindTooltip(`
-          <div style="font-family:system-ui,sans-serif;font-size:12px;line-height:1.4;padding:5px 8px;border-left:4px solid ${seg.color};background:#FFFFFF;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
-            <div style="font-weight:800;color:#0F172A;font-size:13px;">${seg.highway} · ${seg.label}</div>
-            <div style="font-weight:800;color:${seg.color};font-size:11.5px;margin:2px 0;">
-              ● ${seg.tier.replace('_', ' ')} · FoS: ${seg.fos} · InSAR: ${seg.shear}
+        lPoly.bindTooltip(`
+          <div style="font-family:system-ui,sans-serif;font-size:12px;line-height:1.4;padding:6px 9px;border-left:4px solid ${poly.color};background:#FFFFFF;box-shadow:0 3px 10px rgba(0,0,0,0.2);min-width:210px;">
+            <div style="font-weight:900;color:#0F172A;font-size:13px;">${poly.name}</div>
+            <div style="font-weight:800;color:${poly.color};font-size:11.5px;margin:3px 0;">
+              ● ${poly.tier.replace('_', ' ')} · FoS: ${poly.fos} · ${poly.shear}
             </div>
-            <div style="font-size:11px;font-weight:600;color:#334155;margin-top:2px;">${seg.action}</div>
-            <div style="font-size:10px;color:#0284C7;margin-top:3px;">Click to inspect this 1-km stretch</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#F8FAFC;padding:4px 6px;border-radius:4px;font-size:10.5px;margin:4px 0;border:1px solid #E2E8F0;">
+              <div>Slope: <b>${poly.slope}°</b></div>
+              <div>Area: <b>${poly.type}</b></div>
+            </div>
+            <div style="font-size:10.5px;font-weight:600;color:#334155;">${poly.directive}</div>
           </div>
         `, { sticky: true, opacity: 0.98 })
 
-        line.on("click", () => {
-          setSelectedChainage(seg)
-          map.panTo(seg.center, { animate: true, duration: 0.4 })
+        lPoly.on("click", () => {
+          const matched = corridorSegments.find(s => s.km === poly.km)
+          if (matched) setSelectedChainage(matched)
+          map.panTo(poly.center, { animate: true, duration: 0.4 })
         })
-        line.addTo(chainGroup)
 
-        // Custom Milestone Pin Icon
+        lPoly.addTo(chainGroup)
+      })
+
+      // B. Roadway Centerline Spline
+      const roadLine = L.polyline(corridorSegments.map(s => s.center), {
+        color: "#0F172A",
+        weight: 3.5,
+        opacity: 0.85,
+        lineCap: "round",
+        dashArray: "6, 4"
+      })
+      roadLine.addTo(chainGroup)
+
+      // C. Milestone Markers on Centerline
+      corridorSegments.forEach((seg) => {
+        const isSel = selectedChainage?.id === seg.id
         const markerHtml = `
           <div style="
             background: ${seg.isHaven ? '#0284C7' : seg.color};
@@ -1464,22 +1579,24 @@ export default function AppDesktop({ onSwitchToMobile }) {
             font-weight: 900;
             padding: 2px 6px;
             border-radius: 4px;
-            border: 1.5px solid #FFFFFF;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+            border: ${isSel ? '2.5px solid #FFFFFF' : '1.5px solid #FFFFFF'};
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
             white-space: nowrap;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 3px;
+            transform: ${isSel ? 'scale(1.12)' : 'scale(1)'};
+            transition: transform 0.15s ease;
           ">
-            ${seg.isHaven ? '🅿️' : seg.isChokepoint ? '⚠️' : '📍'} ${seg.label}
+            ${seg.isHaven ? '🅿️' : seg.isChokepoint ? '⛔' : (seg.tier === 'MODERATE' ? '⚠️' : '📍')} ${seg.label}
           </div>
         `
         const customIcon = L.divIcon({
           className: "custom-milestone-pin",
           html: markerHtml,
-          iconSize: [64, 22],
-          iconAnchor: [32, 11]
+          iconSize: [68, 22],
+          iconAnchor: [34, 11]
         })
 
         const marker = L.marker(seg.center, { icon: customIcon })
@@ -1496,7 +1613,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
       prevZoneIdRef.current = selectedZone.id
       map.panTo([selectedZone.lat, selectedZone.lon], { animate: true, duration: 0.6 })
     }
-  }, [selectedZone, riskResult, activeRainfall, currentZoom, currentCorridorChainages])
+  }, [selectedZone, riskResult, activeRainfall, currentZoom, zonationMode, corridorSegments, corridorMicroPolygons, selectedChainage])
 
 
   // Instant Layer Switching between Topo, Satellite, and Street
@@ -1980,55 +2097,44 @@ export default function AppDesktop({ onSwitchToMobile }) {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* View Mode Switcher: Regional Macro vs 1-KM Chainage */}
-                    <div className="flex items-center bg-slate-200/80 p-0.5 rounded-md text-xs">
+                    {/* View Mode Switcher: Macro 8-State vs 1-KM Micro-Polygons */}
+                    <div className="flex items-center bg-slate-200/90 p-0.5 rounded-md text-xs">
                       <button
                         onClick={() => {
+                          setZonationMode("macro")
                           if (mapInstanceRef.current) {
-                            mapInstanceRef.current.flyTo([26.0, 93.2], 6.5, { duration: 1.0 })
+                            mapInstanceRef.current.flyTo([26.0, 93.2], 6.5, { duration: 0.8 })
                           }
                         }}
-                        className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-                          currentZoom < 10 
-                            ? "bg-white text-[#003B73] shadow-xs font-bold" 
+                        className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          zonationMode === "macro" 
+                            ? "bg-white text-[#003B73] shadow-xs" 
                             : "text-slate-600 hover:text-slate-900"
                         }`}
-                        title="Macro 8-State Overview"
+                        title="Macro 8-State Regional Overview"
                       >
                         <span className="material-symbols-outlined text-xs">public</span>
-                        <span>Macro (12 Zones)</span>
+                        <span>Macro (8 Zones)</span>
                       </button>
                       <button
                         onClick={() => {
-                          if (mapInstanceRef.current) {
-                            mapInstanceRef.current.flyTo([selectedZone.lat, selectedZone.lon], 12, { duration: 1.0 })
+                          setZonationMode("micro")
+                          if (mapInstanceRef.current && selectedZone) {
+                            mapInstanceRef.current.flyTo([selectedZone.lat, selectedZone.lon], 11.5, { duration: 0.8 })
                           }
                         }}
-                        className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-                          currentZoom >= 10 
-                            ? "bg-[#003B73] text-white shadow-xs font-bold" 
+                        className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          zonationMode === "micro" 
+                            ? "bg-[#003B73] text-white shadow-xs" 
                             : "text-slate-600 hover:text-slate-900"
                         }`}
-                        title="Zoom in to 1-KM Highway Micro-Zonation"
+                        title="1-KM Micro-Zonation Polygons (50+ Danger Parcels)"
                       >
-                        <span className="material-symbols-outlined text-xs">route</span>
-                        <span>1-KM Chainage</span>
+                        <span className="material-symbols-outlined text-xs">grid_view</span>
+                        <span>1-KM Polygons (Micro)</span>
+                        <span className="bg-emerald-400 text-slate-900 text-[9px] font-mono px-1 rounded-full font-black">50+</span>
                       </button>
                     </div>
-
-                    {/* High-Density 500m Micro-Zonation Grid Toggle */}
-                    <button
-                      onClick={() => setShowMicroGrid(!showMicroGrid)}
-                      className={`px-2 py-1 rounded text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-                        showMicroGrid 
-                          ? "bg-purple-900 text-purple-100 border border-purple-400 shadow-xs font-bold" 
-                          : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-100"
-                      }`}
-                      title="Toggle 500m High-Density Micro-Zonation Raster Grid (Lakhs of Cells)"
-                    >
-                      <span className="material-symbols-outlined text-xs">grid_on</span>
-                      <span>500m Grid {showMicroGrid ? "(Lakhs)" : "(Off)"}</span>
-                    </button>
 
                     <button
                       onClick={() => setSectorModalOpen(true)}
@@ -2068,17 +2174,18 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
                   {/* Semantic Zoom Status Badge */}
                   <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 z-10 text-xs flex items-center gap-2">
-                    <span className={`w-2.5 h-2.5 rounded-full ${currentZoom >= 10 ? "bg-red-600 animate-pulse" : "bg-emerald-600"}`}></span>
+                    <span className={`w-2.5 h-2.5 rounded-full ${zonationMode === "micro" || currentZoom >= 9 ? "bg-red-600 animate-pulse" : "bg-emerald-600"}`}></span>
                     <span className="font-mono font-bold text-slate-800">
-                      {currentZoom >= 10 
-                        ? `1-KM CHAINAGES ACTIVE · ${selectedZone.name.split("(")[0]}` 
+                      {zonationMode === "micro" || currentZoom >= 9
+                        ? `1-KM MICRO-ZONATION ACTIVE · ${selectedZone.name.split("(")[0]} (50+ Parcels)` 
                         : `8-STATE REGIONAL MACRO VIEW (Zoom: ${currentZoom.toFixed(1)})`}
                     </span>
-                    {currentZoom < 10 ? (
+                    {zonationMode !== "micro" && currentZoom < 9 ? (
                       <button
                         onClick={() => {
+                          setZonationMode("micro")
                           if (mapInstanceRef.current) {
-                            mapInstanceRef.current.flyTo([selectedZone.lat, selectedZone.lon], 12, { duration: 1.0 })
+                            mapInstanceRef.current.flyTo([selectedZone.lat, selectedZone.lon], 11.5, { duration: 0.8 })
                           }
                         }}
                         className="text-[10px] text-[#005B9E] font-bold underline hover:text-[#003B73] ml-1 cursor-pointer"
@@ -2088,24 +2195,17 @@ export default function AppDesktop({ onSwitchToMobile }) {
                     ) : (
                       <button
                         onClick={() => {
+                          setZonationMode("macro")
                           if (mapInstanceRef.current) {
-                            mapInstanceRef.current.flyTo([26.0, 93.2], 6.5, { duration: 1.0 })
+                            mapInstanceRef.current.flyTo([26.0, 93.2], 6.5, { duration: 0.8 })
                           }
                         }}
                         className="text-[10px] text-slate-500 font-bold underline hover:text-slate-800 ml-1 cursor-pointer"
                       >
-                        Zoom Out ←
+                        Zoom Out to Macro ←
                       </button>
                     )}
                   </div>
-
-                  {/* 500m Raster Grid HUD Badge */}
-                  {showMicroGrid && (
-                    <div className="absolute top-11 left-3 bg-purple-950/90 text-purple-200 backdrop-blur-md px-2.5 py-1 rounded-md shadow-sm border border-purple-800/80 z-10 text-[10.5px] font-mono flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
-                      <span>500m Raster Grid: <b>284,000+ Micro-Cells</b> (Click any cell to inspect)</span>
-                    </div>
-                  )}
 
                   <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md p-3 rounded-lg shadow-sm border border-slate-200 z-10 max-w-xs text-xs">
                     <div className="flex items-center gap-1.5 font-bold text-slate-900 mb-0.5">
@@ -2121,31 +2221,27 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
                   <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md p-2.5 rounded-lg shadow-md border border-slate-300 z-10 text-[10.5px] flex flex-col gap-1.5">
                     <span className="font-black text-slate-800 uppercase tracking-wider text-[9px]">
-                      {currentZoom >= 10 ? "1-KM Chainage Legend" : "GSI Hazard Polygons"}
+                      1-KM Micro-Zonation Legend
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-sm bg-[#DC2626] border border-[#991B1B]"></span>
-                      <span className="font-bold text-red-700">CRITICAL (Chokepoint)</span>
+                      <span className="w-3.5 h-3 rounded-sm bg-[#DC2626] border border-[#991B1B]"></span>
+                      <span className="font-bold text-red-700">CRITICAL (FoS &lt; 1.0 · Chokepoint)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-sm bg-[#EA580C] border border-[#C2410C]"></span>
-                      <span className="font-bold text-orange-700">HIGH (Debris Influx)</span>
+                      <span className="w-3.5 h-3 rounded-sm bg-[#EA580C] border border-[#C2410C]"></span>
+                      <span className="font-bold text-orange-700">HIGH (FoS 1.0–1.25 · Debris Influx)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-sm bg-[#EAB308] border border-[#A16207]"></span>
-                      <span className="font-bold text-yellow-700">MODERATE (Watch)</span>
+                      <span className="w-3.5 h-3 rounded-sm bg-[#EAB308] border border-[#CA8A04]"></span>
+                      <span className="font-bold text-amber-700">MODERATE (FoS 1.25–1.50 · Watch)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-sm bg-[#0284C7] border border-[#0369A1]"></span>
-                      <span className="font-bold text-sky-700">SAFE HAVEN (Holding Bay)</span>
+                      <span className="w-3.5 h-3 rounded-sm bg-[#0284C7] border border-[#0369A1]"></span>
+                      <span className="font-bold text-sky-700">SAFE HAVEN (Holding Bay · Staging)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-sm bg-[#16A34A] border border-[#15803D]"></span>
-                      <span className="font-bold text-emerald-600">SAFE (Normal Speed)</span>
-                    </div>
-                    <div className="pt-1.5 mt-0.5 border-t border-slate-200 text-[10px] text-purple-900 font-mono flex items-center gap-1">
-                      <span className="w-2.5 h-2.5 rounded-sm bg-purple-700"></span>
-                      <span>500m Raster Micro-Grid</span>
+                      <span className="w-3.5 h-3 rounded-sm bg-[#16A34A] border border-[#15803D]"></span>
+                      <span className="font-bold text-emerald-600">SAFE BEDROCK (FoS &gt; 1.8 · Open)</span>
                     </div>
                   </div>
                 </div>
