@@ -971,12 +971,49 @@ function MapView({ t, onBack }) {
                 <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" keepBuffer={12} />
               </>
             )}
-            {ZONES.map(z => (
-              <Polygon key={z.id} positions={z.coords} pathOptions={{ color: getRiskColor(z.score), fillColor: getRiskColor(z.score), fillOpacity: 0.45, weight: 2 }}>
-                <Popup><strong>{z.name}</strong><br />{z.state}<br />Risk: {z.risk} ({z.score}%)<br />{z.desc}</Popup>
-              </Polygon>
-            ))}
-            {/* Sensors removed per specification - Clean hazard zones only */}
+            {ZONES.map(z => {
+              const isCrit = z.score >= 80;
+              const color = getRiskColor(z.score);
+              return (
+                <React.Fragment key={z.id}>
+                  <Polygon 
+                    positions={z.coords} 
+                    pathOptions={{ 
+                      color: isCrit ? "#991b1b" : color, 
+                      fillColor: color, 
+                      fillOpacity: isCrit ? 0.55 : 0.35, 
+                      weight: isCrit ? 3 : 1.5,
+                      dashArray: isCrit ? null : "3, 3"
+                    }}
+                  >
+                    <Popup>
+                      <div style={{ fontFamily: "sans-serif", padding: 2 }}>
+                        <strong style={{ fontSize: 13, color: isCrit ? "#b91c1c" : "#1e3a8a" }}>
+                          {isCrit ? "🚨 " : ""}{z.name} ({z.state})
+                        </strong>
+                        <div style={{ fontWeight: 800, color: color, margin: "2px 0" }}>
+                          Hazard Tier: {z.risk} ({z.score}%)
+                        </div>
+                        <div style={{ fontSize: 11, color: "#475569" }}>{z.desc}</div>
+                      </div>
+                    </Popup>
+                  </Polygon>
+                  {isCrit && (
+                    <CircleMarker 
+                      center={[z.lat, z.lng]} 
+                      radius={9} 
+                      pathOptions={{ color: "#ffffff", fillColor: "#dc2626", fillOpacity: 0.95, weight: 2 }}
+                    >
+                      <Popup>
+                        <strong>🚨 CRITICAL ZONE: {z.name}</strong><br/>
+                        Failure probability: {z.score}%<br/>
+                        {z.desc}
+                      </Popup>
+                    </CircleMarker>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </MapContainer>
         </div>
       </div>

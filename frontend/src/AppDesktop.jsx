@@ -7,6 +7,7 @@ import { dispatchBleBroadcast, silenceBleBroadcast } from "./api/client"
 const ZONES = [
   {
     id: "z-ejh",
+    shortName: "East Jaintia",
     name: "East Jaintia Hills (Sector 4)",
     sub: "NH-44 Artery / Disang Weak Shale",
     state: "Meghalaya",
@@ -14,12 +15,20 @@ const ZONES = [
     lon: 92.3614,
     defaultSlope: 51,
     defaultWetness: 94,
-    defaultLith: 22, // Disang weak shale
+    defaultLith: 22,
     defaultInsar: 42.1,
+    isCriticalDefault: true,
+    polygon: [
+      [25.48, 92.18],
+      [25.44, 92.52],
+      [25.22, 92.48],
+      [25.24, 92.14]
+    ],
     description: "Active thrust fault shearing zone. Intense Disang shale saturation along NH-44 corridor KM 114."
   },
   {
     id: "z-teesta",
+    shortName: "North Sikkim",
     name: "North Sikkim (Teesta MCT Basin)",
     sub: "Chungthang - Singtam Axis",
     state: "Sikkim",
@@ -27,12 +36,41 @@ const ZONES = [
     lon: 88.5140,
     defaultSlope: 56,
     defaultWetness: 88,
-    defaultLith: 38, // Pelitic Schist
+    defaultLith: 38,
     defaultInsar: 36.8,
+    isCriticalDefault: true,
+    polygon: [
+      [27.75, 88.38],
+      [27.72, 88.65],
+      [27.48, 88.62],
+      [27.52, 88.35]
+    ],
     description: "Main Central Thrust (MCT) active glacial-fluvial erosion with high-angle debris accumulation."
   },
   {
+    id: "z-haflong",
+    shortName: "Haflong Pass",
+    name: "Haflong Pass (Dima Hasao)",
+    sub: "Lumding-Badarpur Railway Hill Cut",
+    state: "Assam",
+    lat: 25.1800,
+    lon: 93.0200,
+    defaultSlope: 52,
+    defaultWetness: 92,
+    defaultLith: 26,
+    defaultInsar: 38.5,
+    isCriticalDefault: true,
+    polygon: [
+      [25.28, 92.90],
+      [25.26, 93.15],
+      [25.08, 93.12],
+      [25.10, 92.88]
+    ],
+    description: "Historic debris avalanche corridor along vital hill railway and NH-54 arterial link."
+  },
+  {
     id: "z-kohima",
+    shortName: "Kohima Bypass",
     name: "Kohima District Bypass (NH-29)",
     sub: "Pagla Pahar Subsidence Zone",
     state: "Nagaland",
@@ -40,12 +78,20 @@ const ZONES = [
     lon: 94.1077,
     defaultSlope: 38,
     defaultWetness: 76,
-    defaultLith: 45, // Sandstone-Shale interbed
+    defaultLith: 45,
     defaultInsar: 19.2,
+    isCriticalDefault: false,
+    polygon: [
+      [25.76, 94.00],
+      [25.74, 94.22],
+      [25.58, 94.18],
+      [25.60, 93.96]
+    ],
     description: "Active road cutting and slope subsidence with heavy vehicular vibration sensitivity."
   },
   {
     id: "z-aizawl",
+    shortName: "Aizawl East",
     name: "Aizawl East Residential Slopes",
     sub: "Ramhlun / Chite Valley",
     state: "Mizoram",
@@ -53,12 +99,20 @@ const ZONES = [
     lon: 92.7173,
     defaultSlope: 42,
     defaultWetness: 82,
-    defaultLith: 32, // Siltstone
+    defaultLith: 32,
     defaultInsar: 21.5,
+    isCriticalDefault: false,
+    polygon: [
+      [23.80, 92.65],
+      [23.79, 92.78],
+      [23.65, 92.76],
+      [23.67, 92.64]
+    ],
     description: "High urban slope load with overloaded drainage gullies. Saturated translational hazard."
   },
   {
     id: "z-sohra",
+    shortName: "Sohra Gorge",
     name: "Sohra Escarpment (Cherrapunji)",
     sub: "Mawkdok Dympep Gorge",
     state: "Meghalaya",
@@ -66,12 +120,20 @@ const ZONES = [
     lon: 91.7200,
     defaultSlope: 46,
     defaultWetness: 91,
-    defaultLith: 48, // Karstified Limestone & Sandstone
+    defaultLith: 48,
     defaultInsar: 18.4,
+    isCriticalDefault: false,
+    polygon: [
+      [25.38, 91.58],
+      [25.35, 91.85],
+      [25.18, 91.82],
+      [25.20, 91.56]
+    ],
     description: "Extreme monsoon precipitation funnel with deep limestone jointing and rotational slips."
   },
   {
     id: "z-tawang",
+    shortName: "Tawang Pass",
     name: "Tawang High-Altitude Pass",
     sub: "Sela Tunnel West Approach",
     state: "Arunachal Pradesh",
@@ -79,13 +141,19 @@ const ZONES = [
     lon: 91.8594,
     defaultSlope: 49,
     defaultWetness: 85,
-    defaultLith: 58, // Gneiss / Granite
+    defaultLith: 58,
     defaultInsar: 31.4,
+    isCriticalDefault: true,
+    polygon: [
+      [27.70, 91.70],
+      [27.72, 92.00],
+      [27.46, 91.98],
+      [27.48, 91.68]
+    ],
     description: "Permafrost degradation and freeze-thaw rock fracturing above 11,000 ft MSL."
   }
 ]
 
-// Fetch Real Live Weather & Past 24h Precipitation from Open-Meteo Satellite API
 async function fetchRealLiveWeather(lat, lon) {
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,rain,wind_speed_10m,relative_humidity_2m&hourly=precipitation,rain&past_days=1&forecast_days=1&timezone=Asia%2FKolkata`
@@ -472,40 +540,65 @@ export default function AppDesktop({ onSwitchToMobile }) {
   const mapContainerRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const markersGroupRef = useRef(null)
+  const polygonsGroupRef = useRef(null)
 
+  // Initialize Map with 100% Reliable High-Speed Esri World Topo
   useEffect(() => {
     if (!mapContainerRef.current) return
     if (mapInstanceRef.current) return
 
     const map = L.map(mapContainerRef.current, {
-      center: [25.8, 92.5],
+      center: [25.8, 92.6],
       zoom: 7,
-      scrollWheelZoom: false,
+      minZoom: 5,
+      maxZoom: 16,
+      scrollWheelZoom: true,
       zoomControl: true
     })
     mapInstanceRef.current = map
 
-    L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+    // Primary High-Speed Topographic Relief Base (Esri World Topo Map)
+    const topoLayer = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
       maxZoom: 17,
-      attribution: 'Map: © OpenTopoMap, Survey of India'
-    }).addTo(map)
+      attribution: 'Map: © Esri, Survey of India, USGS',
+      keepBuffer: 8
+    })
+    topoLayer.addTo(map)
 
+    // Layer groups for Polygons (Critical Envelopes) and Markers
+    const polygonsGroup = L.layerGroup().addTo(map)
     const markersGroup = L.layerGroup().addTo(map)
+    polygonsGroupRef.current = polygonsGroup
     markersGroupRef.current = markersGroup
 
+    // Force Leaflet to recalculate container dimensions immediately and after render
+    map.invalidateSize()
+    const t1 = setTimeout(() => { if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize() }, 150)
+    const t2 = setTimeout(() => { if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize() }, 600)
+
+    const handleResize = () => {
+      if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize()
+    }
+    window.addEventListener("resize", handleResize)
+
     return () => {
+      window.removeEventListener("resize", handleResize)
+      clearTimeout(t1)
+      clearTimeout(t2)
       try { map.remove() } catch(e) {}
       mapInstanceRef.current = null
     }
   }, [])
 
-  // Sync Markers & Center
+  // Sync Geotechnical Hazard Polygons & Critical Region Highlights
   useEffect(() => {
     const map = mapInstanceRef.current
-    const group = markersGroupRef.current
-    if (!map || !group) return
+    const polyGroup = polygonsGroupRef.current
+    const markGroup = markersGroupRef.current
+    if (!map || !polyGroup || !markGroup) return
 
-    group.clearLayers()
+    polyGroup.clearLayers()
+    markGroup.clearLayers()
 
     ZONES.forEach((z) => {
       const isSelected = z.id === selectedZone.id
@@ -513,49 +606,114 @@ export default function AppDesktop({ onSwitchToMobile }) {
         ? riskResult 
         : calculateGeotechnicalRisk(activeRainfall, 180, z.defaultSlope, z.defaultWetness, z.defaultLith, z.defaultInsar)
 
-      const color = zRisk.color
-      const radius = isSelected ? 15 : 10
+      const isCritical = zRisk.fos < 1.0 || zRisk.status.includes("CRITICAL")
+      const isHigh = zRisk.status.includes("HIGH")
+      const color = isCritical ? "#DC2626" : isHigh ? "#EA580C" : zRisk.color
 
+      // 1. DRAW CRITICAL HAZARD POLYGON REGION
+      if (z.polygon && z.polygon.length >= 3) {
+        const poly = L.polygon(z.polygon, {
+          color: isSelected ? "#FFFFFF" : isCritical ? "#991B1B" : color,
+          weight: isSelected ? 3.5 : isCritical ? 2.5 : 1.8,
+          dashArray: isSelected ? "6, 6" : isCritical ? null : "4, 4",
+          fillColor: color,
+          fillOpacity: isSelected ? 0.48 : isCritical ? 0.38 : 0.22
+        })
+
+        poly.bindTooltip(`
+          <div style="font-family:Segoe UI,sans-serif;font-size:12px;padding:4px 8px;border-left:4px solid ${color};">
+            <strong style="color:#0B3C68;font-size:13px;">${z.name}</strong><br/>
+            <span style="color:${color};font-weight:800;font-size:12px;">${isCritical ? '🚨 CRITICAL HAZARD ENVELOPE' : zRisk.status} (${zRisk.probability}%)</span><br/>
+            <span>FoS: <strong>${zRisk.fos}</strong> | 24h Rain: <strong>${isSelected ? activeRainfall : z.defaultWetness}mm</strong></span><br/>
+            <span style="color:#64748B;font-size:10px;">${z.sub}</span>
+          </div>
+        `, { sticky: true })
+
+        poly.on("click", () => handleZoneSelect(z))
+        poly.addTo(polyGroup)
+      }
+
+      // 2. DRAW CENTER CIRCLULAR MARKER & PULSING RADAR RING
+      const radius = isSelected ? 16 : isCritical ? 13 : 9
       const marker = L.circleMarker([z.lat, z.lon], {
         radius,
         fillColor: color,
-        fillOpacity: isSelected ? 0.95 : 0.75,
-        color: "#ffffff",
-        weight: isSelected ? 3 : 1.5
+        fillOpacity: isSelected ? 0.95 : 0.85,
+        color: "#FFFFFF",
+        weight: isSelected ? 3 : 2
       })
 
       marker.bindTooltip(`
-        <div style="font-family:sans-serif;font-size:12px;padding:3px 6px;">
+        <div style="font-family:Segoe UI,sans-serif;font-size:12px;padding:4px 6px;">
           <strong style="color:#0B3C68;">${z.name}</strong><br/>
           <span style="color:${color};font-weight:bold;">${zRisk.status} (${zRisk.probability}%)</span><br/>
-          <span>FoS: ${zRisk.fos} | Rain: ${isSelected ? activeRainfall : 5}mm</span>
+          <span>FoS: ${zRisk.fos} | Mode: ${zRisk.failureType}</span>
         </div>
-      `, { direction: "top", offset: [0, -8] })
+      `, { direction: "top", offset: [0, -10] })
 
-      marker.on("click", () => {
-        handleZoneSelect(z)
-      })
+      marker.on("click", () => handleZoneSelect(z))
+      marker.addTo(markGroup)
 
-      marker.addTo(group)
+      // 3. SPECIAL HIGHLIGHT FOR CRITICAL REGIONS: ANIMATED HALO & TEXT BADGE
+      if (isCritical) {
+        // Outer glowing danger ring
+        L.circleMarker([z.lat, z.lon], {
+          radius: isSelected ? 32 : 24,
+          fillColor: "#DC2626",
+          fillOpacity: 0.15,
+          color: "#DC2626",
+          weight: 2,
+          dashArray: "3, 3"
+        }).addTo(markGroup)
 
-      if (isSelected) {
+        // Permanent on-map danger label badge
+        const badgeIcon = L.divIcon({
+          className: "custom-hazard-divicon",
+          html: `
+            <div style="
+              background: ${isSelected ? '#991B1B' : '#DC2626'};
+              color: white;
+              font-family: system-ui, sans-serif;
+              font-size: 10px;
+              font-weight: 800;
+              padding: 2px 6px;
+              border-radius: 4px;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+              border: 1.5px solid white;
+              white-space: nowrap;
+              pointer-events: none;
+              transform: translate(-50%, -100%);
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              letter-spacing: 0.02em;
+            ">
+              <span style="width:6px;height:6px;border-radius:50%;background:#FEE2E2;display:inline-block;"></span>
+              ${z.shortName || z.name}: FoS ${zRisk.fos}
+            </div>
+          `,
+          iconSize: [0, 0]
+        })
+        L.marker([z.lat, z.lon], { icon: badgeIcon, interactive: false }).addTo(markGroup)
+      } else if (isSelected) {
+        // Selected non-critical halo
         L.circleMarker([z.lat, z.lon], {
           radius: 26,
           fillColor: color,
           fillOpacity: 0.15,
           color: color,
-          weight: 1.5,
+          weight: 2,
           dashArray: "4, 4"
-        }).addTo(group)
+        }).addTo(markGroup)
       }
     })
 
     if (selectedZone) {
-      map.panTo([selectedZone.lat, selectedZone.lon], { animate: true, duration: 0.7 })
+      map.panTo([selectedZone.lat, selectedZone.lon], { animate: true, duration: 0.6 })
     }
   }, [selectedZone, riskResult, activeRainfall])
 
-  // Layer Switching
+  // Instant Layer Switching between Topo, Satellite, and Street
   const switchBaseLayer = (type) => {
     setBaseLayer(type)
     const map = mapInstanceRef.current
@@ -572,10 +730,14 @@ export default function AppDesktop({ onSwitchToMobile }) {
         maxZoom: 18,
         attribution: 'Tiles: © Esri, USGS'
       }).addTo(map)
+      // Overlay place names & borders on top of satellite imagery
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 18
+      }).addTo(map)
     } else if (type === "topo") {
-      L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
         maxZoom: 17,
-        attribution: 'Map: © OpenTopoMap, Survey of India'
+        attribution: 'Map: © Esri, Survey of India, USGS'
       }).addTo(map)
     } else {
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
