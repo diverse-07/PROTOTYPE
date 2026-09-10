@@ -175,19 +175,269 @@ const Icons = {
 
 // GEOSPATIAL & SENSOR DATA
 const ZONES = [
-  { id:1, name:"Jaintia Hills", state:"Meghalaya", score:87, risk:"CRITICAL", coords:[[25.20,92.30],[25.00,92.00],[24.85,92.40],[25.05,92.70]], lat:25.4484, lng:92.2152, desc:"Active Disang shale thrust. NH-44 debris flow corridor." },
-  { id:2, name:"Sohra / Cherrapunji", state:"Meghalaya", score:74, risk:"HIGH", coords:[[25.40,91.60],[25.20,91.40],[25.10,91.70],[25.30,91.90]], lat:25.2986, lng:91.7322, desc:"Extreme rainfall zone. Limestone escarpment failure." },
-  { id:3, name:"Ri-Bhoi Foothills", state:"Meghalaya", score:52, risk:"MODERATE", coords:[[26.00,91.70],[25.70,91.50],[25.60,92.00],[25.90,92.20]], lat:25.8500, lng:91.8800, desc:"Seasonal translational soil slips along highway." },
-  { id:4, name:"North Sikkim MCT", state:"Sikkim", score:83, risk:"CRITICAL", coords:[[28.00,88.40],[27.60,88.10],[27.40,88.50],[27.70,88.80]], lat:27.7330, lng:88.5160, desc:"Main Central Thrust active fault. Glacial moraine instability." },
-  { id:5, name:"Gangtok South Ridge", state:"Sikkim", score:78, risk:"HIGH", coords:[[27.40,88.65],[27.20,88.50],[27.15,88.75],[27.35,88.85]], lat:27.3389, lng:88.6065, desc:"Terraced hill slope weathering. NH-10 connectivity link." },
-  { id:6, name:"Aizawl East Flank", state:"Mizoram", score:76, risk:"HIGH", coords:[[23.85,92.60],[23.65,92.40],[23.55,92.80],[23.75,93.00]], lat:23.7271, lng:92.7176, desc:"Urban slope cutting. Sandstone formation saturation." },
-  { id:7, name:"Lunglei Ridge", state:"Mizoram", score:48, risk:"MODERATE", coords:[[23.10,92.80],[22.75,92.60],[22.65,93.00],[22.95,93.20]], lat:22.8830, lng:92.7330, desc:"Longitudinal valley slope with moderate moisture." },
-  { id:8, name:"Kohima Dzudza", state:"Nagaland", score:68, risk:"HIGH", coords:[[25.80,94.00],[25.55,93.75],[25.45,94.20],[25.65,94.45]], lat:25.6751, lng:94.1086, desc:"NH-29 bridge corridor. Active slope subsidence." },
-  { id:9, name:"Tawang MCT Zone", state:"Arunachal", score:81, risk:"CRITICAL", coords:[[27.75,91.95],[27.45,91.65],[27.30,92.05],[27.60,92.35]], lat:27.5861, lng:91.8594, desc:"High altitude permafrost degradation along passes." },
-  { id:10, name:"Haflong Hill Station", state:"Assam", score:85, risk:"CRITICAL", coords:[[25.25,93.10],[25.05,92.90],[24.95,93.25],[25.15,93.35]], lat:25.1800, lng:93.0200, desc:"Dima Hasao railway hill cut. High debris flow record." },
-  { id:11, name:"Senapati Terraces", state:"Manipur", score:54, risk:"MODERATE", coords:[[25.40,93.90],[25.10,93.65],[24.95,94.10],[25.25,94.35]], lat:25.2660, lng:94.0160, desc:"Hill agricultural slopes. Seasonal monsoon erosion." },
-  { id:12, name:"Agartala Basin", state:"Tripura", score:18, risk:"SAFE", coords:[[23.95,91.20],[23.70,91.00],[23.60,91.40],[23.85,91.60]], lat:23.8315, lng:91.5600, desc:"Stable alluvial terrain. Very low gradient." },
-]
+  // 1. CRITICAL (RED) - FoS < 1.0
+  {
+    id: "z-ejh",
+    shortName: "East Jaintia",
+    name: "East Jaintia Hills (Sector 4)",
+    sub: "NH-44 Artery / Disang Weak Shale",
+    state: "Meghalaya",
+    lat: 25.3412,
+    lng: 92.3614,
+    tier: "CRITICAL",
+    tierColor: "#DC2626", // RED
+    borderColor: "#991B1B",
+    defaultSlope: 51,
+    defaultWetness: 94,
+    defaultLith: 22,
+    defaultInsar: 42.1,
+    coords: [
+      [25.46, 92.20],
+      [25.44, 92.50],
+      [25.24, 92.48],
+      [25.26, 92.18]
+    ],
+    description: "Active thrust fault shearing zone. Intense Disang shale saturation along NH-44 corridor KM 114."
+  },
+  {
+    id: "z-teesta",
+    shortName: "North Sikkim",
+    name: "North Sikkim (Teesta MCT Basin)",
+    sub: "Chungthang - Singtam Axis",
+    state: "Sikkim",
+    lat: 27.6012,
+    lng: 88.5140,
+    tier: "CRITICAL",
+    tierColor: "#DC2626", // RED
+    borderColor: "#991B1B",
+    defaultSlope: 56,
+    defaultWetness: 88,
+    defaultLith: 38,
+    defaultInsar: 36.8,
+    coords: [
+      [27.75, 88.38],
+      [27.72, 88.65],
+      [27.48, 88.62],
+      [27.52, 88.35]
+    ],
+    description: "Main Central Thrust (MCT) active glacial-fluvial erosion with high-angle debris accumulation."
+  },
+  {
+    id: "z-haflong",
+    shortName: "Haflong Pass",
+    name: "Haflong Pass (Dima Hasao)",
+    sub: "Lumding-Badarpur Railway Hill Cut",
+    state: "Assam",
+    lat: 25.1800,
+    lng: 93.0200,
+    tier: "CRITICAL",
+    tierColor: "#DC2626", // RED
+    borderColor: "#991B1B",
+    defaultSlope: 52,
+    defaultWetness: 92,
+    defaultLith: 26,
+    defaultInsar: 38.5,
+    coords: [
+      [25.28, 92.90],
+      [25.26, 93.15],
+      [25.08, 93.12],
+      [25.10, 92.88]
+    ],
+    description: "Historic debris avalanche corridor along vital hill railway and NH-54 arterial link."
+  },
+
+  // 2. HIGH (ORANGE) - FoS 1.0 - 1.25
+  {
+    id: "z-kohima",
+    shortName: "Kohima Bypass",
+    name: "Kohima District Bypass (NH-29)",
+    sub: "Pagla Pahar Subsidence Zone",
+    state: "Nagaland",
+    lat: 25.6701,
+    lng: 94.1077,
+    tier: "HIGH",
+    tierColor: "#EA580C", // ORANGE
+    borderColor: "#C2410C",
+    defaultSlope: 38,
+    defaultWetness: 76,
+    defaultLith: 45,
+    defaultInsar: 19.2,
+    coords: [
+      [25.76, 94.00],
+      [25.74, 94.22],
+      [25.58, 94.18],
+      [25.60, 93.96]
+    ],
+    description: "Active road cutting and slope subsidence with heavy vehicular vibration sensitivity."
+  },
+  {
+    id: "z-aizawl",
+    shortName: "Aizawl East",
+    name: "Aizawl East Residential Slopes",
+    sub: "Ramhlun / Chite Valley",
+    state: "Mizoram",
+    lat: 23.7307,
+    lng: 92.7173,
+    tier: "HIGH",
+    tierColor: "#EA580C", // ORANGE
+    borderColor: "#C2410C",
+    defaultSlope: 42,
+    defaultWetness: 82,
+    defaultLith: 32,
+    defaultInsar: 21.5,
+    coords: [
+      [23.82, 92.65],
+      [23.80, 92.78],
+      [23.65, 92.76],
+      [23.67, 92.64]
+    ],
+    description: "High urban slope load with overloaded drainage gullies. Saturated translational hazard."
+  },
+
+  // 3. MODERATE (YELLOW) - FoS 1.25 - 1.50
+  {
+    id: "z-sohra",
+    shortName: "Sohra Gorge",
+    name: "Sohra Escarpment (Cherrapunji)",
+    sub: "Mawkdok Dympep Gorge",
+    state: "Meghalaya",
+    lat: 25.2800,
+    lng: 91.7200,
+    tier: "MODERATE",
+    tierColor: "#EAB308", // YELLOW
+    borderColor: "#A16207",
+    defaultSlope: 46,
+    defaultWetness: 91,
+    defaultLith: 48,
+    defaultInsar: 18.4,
+    coords: [
+      [25.38, 91.60],
+      [25.36, 91.82],
+      [25.18, 91.80],
+      [25.20, 91.58]
+    ],
+    description: "Extreme monsoon precipitation funnel with deep limestone jointing and rotational slips."
+  },
+  {
+    id: "z-tawang",
+    shortName: "Tawang Pass",
+    name: "Tawang High-Altitude Pass",
+    sub: "Sela Tunnel West Approach",
+    state: "Arunachal Pradesh",
+    lat: 27.5861,
+    lng: 91.8594,
+    tier: "MODERATE",
+    tierColor: "#EAB308", // YELLOW
+    borderColor: "#A16207",
+    defaultSlope: 49,
+    defaultWetness: 85,
+    defaultLith: 58,
+    defaultInsar: 31.4,
+    coords: [
+      [27.70, 91.70],
+      [27.72, 92.00],
+      [27.46, 91.98],
+      [27.48, 91.68]
+    ],
+    description: "Permafrost degradation and freeze-thaw rock fracturing above 11,000 ft MSL."
+  },
+
+  // 4. LOW (GREEN) - FoS 1.50 - 2.00
+  {
+    id: "z-ribhoi",
+    shortName: "Ri-Bhoi Foothills",
+    name: "Ri-Bhoi Foothills Corridor",
+    sub: "Nongpoh Undulating Ridge",
+    state: "Meghalaya",
+    lat: 25.9000,
+    lng: 91.8800,
+    tier: "LOW",
+    tierColor: "#22C55E", // GREEN
+    borderColor: "#15803D",
+    defaultSlope: 24,
+    defaultWetness: 58,
+    defaultLith: 62,
+    defaultInsar: 6.2,
+    coords: [
+      [26.02, 91.72],
+      [26.00, 92.05],
+      [25.78, 92.02],
+      [25.80, 91.70]
+    ],
+    description: "Gentle dip slopes with thick vegetative canopy and low historical slip incidence."
+  },
+  {
+    id: "z-barak",
+    shortName: "Barak Terraces",
+    name: "Barak Valley Terraces (Silchar)",
+    sub: "Surma Series Terraced Slopes",
+    state: "Assam",
+    lat: 24.8200,
+    lng: 92.8000,
+    tier: "LOW",
+    tierColor: "#22C55E", // GREEN
+    borderColor: "#15803D",
+    defaultSlope: 20,
+    defaultWetness: 52,
+    defaultLith: 68,
+    defaultInsar: 4.8,
+    coords: [
+      [24.95, 92.68],
+      [24.92, 92.95],
+      [24.72, 92.92],
+      [24.75, 92.65]
+    ],
+    description: "Stable terraced tea garden slopes with low gradient bedrock bedding."
+  },
+
+  // 5. SAFE (DARK GREEN) - FoS > 2.00
+  {
+    id: "z-guwahati",
+    shortName: "Brahmaputra Basin",
+    name: "Brahmaputra Alluvial Basin (Guwahati)",
+    sub: "Flat River Plain Alluvium",
+    state: "Assam",
+    lat: 26.1800,
+    lng: 91.7500,
+    tier: "SAFE",
+    tierColor: "#14532D", // DARK GREEN
+    borderColor: "#052E16",
+    defaultSlope: 5,
+    defaultWetness: 35,
+    defaultLith: 85,
+    defaultInsar: 1.1,
+    coords: [
+      [26.30, 91.55],
+      [26.28, 91.95],
+      [26.08, 91.92],
+      [26.10, 91.52]
+    ],
+    description: "Flat stable alluvial river basin floor. Zero slope failure gradient."
+  },
+  {
+    id: "z-agartala",
+    shortName: "Agartala Basin",
+    name: "Agartala Plain Floodplain",
+    sub: "Stable Tipam Sandstone Plain",
+    state: "Tripura",
+    lat: 23.8300,
+    lng: 91.2800,
+    tier: "SAFE",
+    tierColor: "#14532D", // DARK GREEN
+    borderColor: "#052E16",
+    defaultSlope: 4,
+    defaultWetness: 32,
+    defaultLith: 88,
+    defaultInsar: 0.8,
+    coords: [
+      [23.95, 91.15],
+      [23.92, 91.42],
+      [23.72, 91.40],
+      [23.75, 91.12]
+    ],
+    description: "Flat stable river alluvium and Tertiary sandstone tableland with no failure record."
+  }
+];
 
 const WEATHER_STATIONS = [
   { id: "MET-JH-01", name: "Jaintia Hills (NH-44)", state: "Meghalaya", lat: 25.4484, lng: 92.2152, elevation: "1280m", basin: "Umngot Basin", defaultRain: 18.4, defaultTemp: 24.8, defaultHumidity: 78 },
@@ -972,46 +1222,31 @@ function MapView({ t, onBack }) {
               </>
             )}
             {ZONES.map(z => {
-              const isCrit = z.score >= 80;
-              const color = getRiskColor(z.score);
+              const color = z.tierColor || getRiskColor(z.defaultWetness);
+              const borderColor = z.borderColor || color;
               return (
-                <React.Fragment key={z.id}>
-                  <Polygon 
-                    positions={z.coords} 
-                    pathOptions={{ 
-                      color: isCrit ? "#991b1b" : color, 
-                      fillColor: color, 
-                      fillOpacity: isCrit ? 0.55 : 0.35, 
-                      weight: isCrit ? 3 : 1.5,
-                      dashArray: isCrit ? null : "3, 3"
-                    }}
-                  >
-                    <Popup>
-                      <div style={{ fontFamily: "sans-serif", padding: 2 }}>
-                        <strong style={{ fontSize: 13, color: isCrit ? "#b91c1c" : "#1e3a8a" }}>
-                          {isCrit ? "🚨 " : ""}{z.name} ({z.state})
-                        </strong>
-                        <div style={{ fontWeight: 800, color: color, margin: "2px 0" }}>
-                          Hazard Tier: {z.risk} ({z.score}%)
-                        </div>
-                        <div style={{ fontSize: 11, color: "#475569" }}>{z.desc}</div>
+                <Polygon 
+                  key={z.id} 
+                  positions={z.coords || z.polygon} 
+                  pathOptions={{ 
+                    color: borderColor, 
+                    fillColor: color, 
+                    fillOpacity: 0.52, 
+                    weight: 2.5
+                  }}
+                >
+                  <Popup>
+                    <div style={{ fontFamily: "sans-serif", padding: 2 }}>
+                      <strong style={{ fontSize: 13, color: color }}>
+                        {z.name} ({z.state})
+                      </strong>
+                      <div style={{ fontWeight: 800, color: color, margin: "2px 0" }}>
+                        HAZARD TIER: {z.tier}
                       </div>
-                    </Popup>
-                  </Polygon>
-                  {isCrit && (
-                    <CircleMarker 
-                      center={[z.lat, z.lng]} 
-                      radius={9} 
-                      pathOptions={{ color: "#ffffff", fillColor: "#dc2626", fillOpacity: 0.95, weight: 2 }}
-                    >
-                      <Popup>
-                        <strong>🚨 CRITICAL ZONE: {z.name}</strong><br/>
-                        Failure probability: {z.score}%<br/>
-                        {z.desc}
-                      </Popup>
-                    </CircleMarker>
-                  )}
-                </React.Fragment>
+                      <div style={{ fontSize: 11, color: "#475569" }}>{z.desc || z.description}</div>
+                    </div>
+                  </Popup>
+                </Polygon>
               );
             })}
           </MapContainer>

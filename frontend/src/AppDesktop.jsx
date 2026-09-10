@@ -5,6 +5,7 @@ import { dispatchBleBroadcast, silenceBleBroadcast } from "./api/client"
 
 // Geotechnical Zones in Northeast India
 const ZONES = [
+  // 1. CRITICAL (RED) - FoS < 1.0
   {
     id: "z-ejh",
     shortName: "East Jaintia",
@@ -13,16 +14,18 @@ const ZONES = [
     state: "Meghalaya",
     lat: 25.3412,
     lon: 92.3614,
+    tier: "CRITICAL",
+    tierColor: "#DC2626", // RED
+    borderColor: "#991B1B",
     defaultSlope: 51,
     defaultWetness: 94,
     defaultLith: 22,
     defaultInsar: 42.1,
-    isCriticalDefault: true,
     polygon: [
-      [25.48, 92.18],
-      [25.44, 92.52],
-      [25.22, 92.48],
-      [25.24, 92.14]
+      [25.46, 92.20],
+      [25.44, 92.50],
+      [25.24, 92.48],
+      [25.26, 92.18]
     ],
     description: "Active thrust fault shearing zone. Intense Disang shale saturation along NH-44 corridor KM 114."
   },
@@ -34,11 +37,13 @@ const ZONES = [
     state: "Sikkim",
     lat: 27.6012,
     lon: 88.5140,
+    tier: "CRITICAL",
+    tierColor: "#DC2626", // RED
+    borderColor: "#991B1B",
     defaultSlope: 56,
     defaultWetness: 88,
     defaultLith: 38,
     defaultInsar: 36.8,
-    isCriticalDefault: true,
     polygon: [
       [27.75, 88.38],
       [27.72, 88.65],
@@ -55,11 +60,13 @@ const ZONES = [
     state: "Assam",
     lat: 25.1800,
     lon: 93.0200,
+    tier: "CRITICAL",
+    tierColor: "#DC2626", // RED
+    borderColor: "#991B1B",
     defaultSlope: 52,
     defaultWetness: 92,
     defaultLith: 26,
     defaultInsar: 38.5,
-    isCriticalDefault: true,
     polygon: [
       [25.28, 92.90],
       [25.26, 93.15],
@@ -68,6 +75,8 @@ const ZONES = [
     ],
     description: "Historic debris avalanche corridor along vital hill railway and NH-54 arterial link."
   },
+
+  // 2. HIGH (ORANGE) - FoS 1.0 - 1.25
   {
     id: "z-kohima",
     shortName: "Kohima Bypass",
@@ -76,11 +85,13 @@ const ZONES = [
     state: "Nagaland",
     lat: 25.6701,
     lon: 94.1077,
+    tier: "HIGH",
+    tierColor: "#EA580C", // ORANGE
+    borderColor: "#C2410C",
     defaultSlope: 38,
     defaultWetness: 76,
     defaultLith: 45,
     defaultInsar: 19.2,
-    isCriticalDefault: false,
     polygon: [
       [25.76, 94.00],
       [25.74, 94.22],
@@ -97,19 +108,23 @@ const ZONES = [
     state: "Mizoram",
     lat: 23.7307,
     lon: 92.7173,
+    tier: "HIGH",
+    tierColor: "#EA580C", // ORANGE
+    borderColor: "#C2410C",
     defaultSlope: 42,
     defaultWetness: 82,
     defaultLith: 32,
     defaultInsar: 21.5,
-    isCriticalDefault: false,
     polygon: [
-      [23.80, 92.65],
-      [23.79, 92.78],
+      [23.82, 92.65],
+      [23.80, 92.78],
       [23.65, 92.76],
       [23.67, 92.64]
     ],
     description: "High urban slope load with overloaded drainage gullies. Saturated translational hazard."
   },
+
+  // 3. MODERATE (YELLOW) - FoS 1.25 - 1.50
   {
     id: "z-sohra",
     shortName: "Sohra Gorge",
@@ -118,16 +133,18 @@ const ZONES = [
     state: "Meghalaya",
     lat: 25.2800,
     lon: 91.7200,
+    tier: "MODERATE",
+    tierColor: "#EAB308", // YELLOW
+    borderColor: "#A16207",
     defaultSlope: 46,
     defaultWetness: 91,
     defaultLith: 48,
     defaultInsar: 18.4,
-    isCriticalDefault: false,
     polygon: [
-      [25.38, 91.58],
-      [25.35, 91.85],
-      [25.18, 91.82],
-      [25.20, 91.56]
+      [25.38, 91.60],
+      [25.36, 91.82],
+      [25.18, 91.80],
+      [25.20, 91.58]
     ],
     description: "Extreme monsoon precipitation funnel with deep limestone jointing and rotational slips."
   },
@@ -139,11 +156,13 @@ const ZONES = [
     state: "Arunachal Pradesh",
     lat: 27.5861,
     lon: 91.8594,
+    tier: "MODERATE",
+    tierColor: "#EAB308", // YELLOW
+    borderColor: "#A16207",
     defaultSlope: 49,
     defaultWetness: 85,
     defaultLith: 58,
     defaultInsar: 31.4,
-    isCriticalDefault: true,
     polygon: [
       [27.70, 91.70],
       [27.72, 92.00],
@@ -151,8 +170,104 @@ const ZONES = [
       [27.48, 91.68]
     ],
     description: "Permafrost degradation and freeze-thaw rock fracturing above 11,000 ft MSL."
+  },
+
+  // 4. LOW (GREEN) - FoS 1.50 - 2.00
+  {
+    id: "z-ribhoi",
+    shortName: "Ri-Bhoi Foothills",
+    name: "Ri-Bhoi Foothills Corridor",
+    sub: "Nongpoh Undulating Ridge",
+    state: "Meghalaya",
+    lat: 25.9000,
+    lon: 91.8800,
+    tier: "LOW",
+    tierColor: "#22C55E", // GREEN
+    borderColor: "#15803D",
+    defaultSlope: 24,
+    defaultWetness: 58,
+    defaultLith: 62,
+    defaultInsar: 6.2,
+    polygon: [
+      [26.02, 91.72],
+      [26.00, 92.05],
+      [25.78, 92.02],
+      [25.80, 91.70]
+    ],
+    description: "Gentle dip slopes with thick vegetative canopy and low historical slip incidence."
+  },
+  {
+    id: "z-barak",
+    shortName: "Barak Terraces",
+    name: "Barak Valley Terraces (Silchar)",
+    sub: "Surma Series Terraced Slopes",
+    state: "Assam",
+    lat: 24.8200,
+    lon: 92.8000,
+    tier: "LOW",
+    tierColor: "#22C55E", // GREEN
+    borderColor: "#15803D",
+    defaultSlope: 20,
+    defaultWetness: 52,
+    defaultLith: 68,
+    defaultInsar: 4.8,
+    polygon: [
+      [24.95, 92.68],
+      [24.92, 92.95],
+      [24.72, 92.92],
+      [24.75, 92.65]
+    ],
+    description: "Stable terraced tea garden slopes with low gradient bedrock bedding."
+  },
+
+  // 5. SAFE (DARK GREEN) - FoS > 2.00
+  {
+    id: "z-guwahati",
+    shortName: "Brahmaputra Basin",
+    name: "Brahmaputra Alluvial Basin (Guwahati)",
+    sub: "Flat River Plain Alluvium",
+    state: "Assam",
+    lat: 26.1800,
+    lon: 91.7500,
+    tier: "SAFE",
+    tierColor: "#14532D", // DARK GREEN
+    borderColor: "#052E16",
+    defaultSlope: 5,
+    defaultWetness: 35,
+    defaultLith: 85,
+    defaultInsar: 1.1,
+    polygon: [
+      [26.30, 91.55],
+      [26.28, 91.95],
+      [26.08, 91.92],
+      [26.10, 91.52]
+    ],
+    description: "Flat stable alluvial river basin floor. Zero slope failure gradient."
+  },
+  {
+    id: "z-agartala",
+    shortName: "Agartala Basin",
+    name: "Agartala Plain Floodplain",
+    sub: "Stable Tipam Sandstone Plain",
+    state: "Tripura",
+    lat: 23.8300,
+    lon: 91.2800,
+    tier: "SAFE",
+    tierColor: "#14532D", // DARK GREEN
+    borderColor: "#052E16",
+    defaultSlope: 4,
+    defaultWetness: 32,
+    defaultLith: 88,
+    defaultInsar: 0.8,
+    polygon: [
+      [23.95, 91.15],
+      [23.92, 91.42],
+      [23.72, 91.40],
+      [23.75, 91.12]
+    ],
+    description: "Flat stable river alluvium and Tertiary sandstone tableland with no failure record."
   }
-]
+];
 
 async function fetchRealLiveWeather(lat, lon) {
   try {
@@ -590,7 +705,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
     }
   }, [])
 
-  // Sync Geotechnical Hazard Polygons & Critical Region Highlights
+  // Sync Clean 5-Tier Geotechnical Hazard Polygons (RED, ORANGE, YELLOW, GREEN, DARK GREEN)
   useEffect(() => {
     const map = mapInstanceRef.current
     const polyGroup = polygonsGroupRef.current
@@ -602,30 +717,63 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
     ZONES.forEach((z) => {
       const isSelected = z.id === selectedZone.id
+      
+      // Calculate real geotechnical metrics
       const zRisk = isSelected 
         ? riskResult 
         : calculateGeotechnicalRisk(activeRainfall, 180, z.defaultSlope, z.defaultWetness, z.defaultLith, z.defaultInsar)
 
-      const isCritical = zRisk.fos < 1.0 || zRisk.status.includes("CRITICAL")
-      const isHigh = zRisk.status.includes("HIGH")
-      const color = isCritical ? "#DC2626" : isHigh ? "#EA580C" : zRisk.color
+      // 5-TIER STRICT COLOR STANDARD: RED, ORANGE, YELLOW, GREEN, DARK GREEN
+      let fillColor = z.tierColor
+      let strokeColor = z.borderColor
+      let fillOpacity = 0.50
+      let tierLabel = z.tier
 
-      // 1. DRAW CRITICAL HAZARD POLYGON REGION
+      // Dynamic override based on real-time FoS and risk calculation
+      if (zRisk.fos < 1.0 || zRisk.probability >= 80) {
+        fillColor = "#DC2626" // CRITICAL -> RED
+        strokeColor = "#991B1B"
+        fillOpacity = isSelected ? 0.65 : 0.55
+        tierLabel = "CRITICAL"
+      } else if (zRisk.fos < 1.25 || zRisk.probability >= 65) {
+        fillColor = "#EA580C" // HIGH -> ORANGE
+        strokeColor = "#C2410C"
+        fillOpacity = isSelected ? 0.60 : 0.50
+        tierLabel = "HIGH"
+      } else if (zRisk.fos < 1.50 || zRisk.probability >= 45) {
+        fillColor = "#EAB308" // MODERATE -> YELLOW
+        strokeColor = "#A16207"
+        fillOpacity = isSelected ? 0.55 : 0.45
+        tierLabel = "MODERATE"
+      } else if (zRisk.fos < 2.0 || zRisk.probability >= 20) {
+        fillColor = "#22C55E" // LOW -> GREEN
+        strokeColor = "#15803D"
+        fillOpacity = isSelected ? 0.50 : 0.40
+        tierLabel = "LOW"
+      } else {
+        fillColor = "#14532D" // SAFE -> DARK GREEN
+        strokeColor = "#052E16"
+        fillOpacity = isSelected ? 0.48 : 0.38
+        tierLabel = "SAFE"
+      }
+
+      // 1. DRAW CLEAN GEOGRAPHICAL HAZARD POLYGON (NO BLIMPS, NO STRANGE CIRCLES)
       if (z.polygon && z.polygon.length >= 3) {
         const poly = L.polygon(z.polygon, {
-          color: isSelected ? "#FFFFFF" : isCritical ? "#991B1B" : color,
-          weight: isSelected ? 3.5 : isCritical ? 2.5 : 1.8,
-          dashArray: isSelected ? "6, 6" : isCritical ? null : "4, 4",
-          fillColor: color,
-          fillOpacity: isSelected ? 0.48 : isCritical ? 0.38 : 0.22
+          color: isSelected ? "#FFFFFF" : strokeColor,
+          weight: isSelected ? 3.5 : 2.5,
+          fillColor: fillColor,
+          fillOpacity: fillOpacity
         })
 
         poly.bindTooltip(`
-          <div style="font-family:Segoe UI,sans-serif;font-size:12px;padding:4px 8px;border-left:4px solid ${color};">
-            <strong style="color:#0B3C68;font-size:13px;">${z.name}</strong><br/>
-            <span style="color:${color};font-weight:800;font-size:12px;">${isCritical ? '🚨 CRITICAL HAZARD ENVELOPE' : zRisk.status} (${zRisk.probability}%)</span><br/>
-            <span>FoS: <strong>${zRisk.fos}</strong> | 24h Rain: <strong>${isSelected ? activeRainfall : z.defaultWetness}mm</strong></span><br/>
-            <span style="color:#64748B;font-size:10px;">${z.sub}</span>
+          <div style="font-family:system-ui,sans-serif;font-size:12px;padding:4px 8px;border-left:4px solid ${fillColor};">
+            <div style="font-weight:800;color:#0B3C68;font-size:13px;">${z.name}</div>
+            <div style="font-weight:800;color:${fillColor};font-size:12px;margin:2px 0;">
+              ${tierLabel} HAZARD (${zRisk.probability}%) · FoS: ${zRisk.fos}
+            </div>
+            <div style="font-size:11px;color:#475569;">${z.sub} (${z.state})</div>
+            <div style="font-size:10px;color:#64748B;margin-top:2px;">Click to select &amp; view telemetry</div>
           </div>
         `, { sticky: true })
 
@@ -633,85 +781,45 @@ export default function AppDesktop({ onSwitchToMobile }) {
         poly.addTo(polyGroup)
       }
 
-      // 2. DRAW CENTER CIRCLULAR MARKER & PULSING RADAR RING
-      const radius = isSelected ? 16 : isCritical ? 13 : 9
-      const marker = L.circleMarker([z.lat, z.lon], {
-        radius,
-        fillColor: color,
-        fillOpacity: isSelected ? 0.95 : 0.85,
-        color: "#FFFFFF",
-        weight: isSelected ? 3 : 2
+      // 2. CLEAN HIGH-CONTRAST SECTOR BADGE PINNED IN CENTER (NO CIRCULAR BLIMPS)
+      const labelIcon = L.divIcon({
+        className: "custom-polygon-label",
+        html: `
+          <div style="
+            background: ${fillColor};
+            color: ${tierLabel === 'MODERATE' ? '#000000' : '#FFFFFF'};
+            font-family: system-ui, sans-serif;
+            font-size: 10.5px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+            border: 1.5px solid ${isSelected ? '#FFFFFF' : strokeColor};
+            white-space: nowrap;
+            transform: translate(-50%, -50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            letter-spacing: 0.02em;
+          ">
+            <span>${z.shortName}</span>
+            <span style="opacity:0.85;font-size:9px;">[${tierLabel}]</span>
+          </div>
+        `,
+        iconSize: [0, 0]
       })
 
-      marker.bindTooltip(`
-        <div style="font-family:Segoe UI,sans-serif;font-size:12px;padding:4px 6px;">
-          <strong style="color:#0B3C68;">${z.name}</strong><br/>
-          <span style="color:${color};font-weight:bold;">${zRisk.status} (${zRisk.probability}%)</span><br/>
-          <span>FoS: ${zRisk.fos} | Mode: ${zRisk.failureType}</span>
-        </div>
-      `, { direction: "top", offset: [0, -10] })
-
-      marker.on("click", () => handleZoneSelect(z))
-      marker.addTo(markGroup)
-
-      // 3. SPECIAL HIGHLIGHT FOR CRITICAL REGIONS: ANIMATED HALO & TEXT BADGE
-      if (isCritical) {
-        // Outer glowing danger ring
-        L.circleMarker([z.lat, z.lon], {
-          radius: isSelected ? 32 : 24,
-          fillColor: "#DC2626",
-          fillOpacity: 0.15,
-          color: "#DC2626",
-          weight: 2,
-          dashArray: "3, 3"
-        }).addTo(markGroup)
-
-        // Permanent on-map danger label badge
-        const badgeIcon = L.divIcon({
-          className: "custom-hazard-divicon",
-          html: `
-            <div style="
-              background: ${isSelected ? '#991B1B' : '#DC2626'};
-              color: white;
-              font-family: system-ui, sans-serif;
-              font-size: 10px;
-              font-weight: 800;
-              padding: 2px 6px;
-              border-radius: 4px;
-              box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-              border: 1.5px solid white;
-              white-space: nowrap;
-              pointer-events: none;
-              transform: translate(-50%, -100%);
-              display: flex;
-              align-items: center;
-              gap: 4px;
-              letter-spacing: 0.02em;
-            ">
-              <span style="width:6px;height:6px;border-radius:50%;background:#FEE2E2;display:inline-block;"></span>
-              ${z.shortName || z.name}: FoS ${zRisk.fos}
-            </div>
-          `,
-          iconSize: [0, 0]
-        })
-        L.marker([z.lat, z.lon], { icon: badgeIcon, interactive: false }).addTo(markGroup)
-      } else if (isSelected) {
-        // Selected non-critical halo
-        L.circleMarker([z.lat, z.lon], {
-          radius: 26,
-          fillColor: color,
-          fillOpacity: 0.15,
-          color: color,
-          weight: 2,
-          dashArray: "4, 4"
-        }).addTo(markGroup)
-      }
+      const centerMarker = L.marker([z.lat, z.lon], { icon: labelIcon })
+      centerMarker.on("click", () => handleZoneSelect(z))
+      centerMarker.addTo(markGroup)
     })
 
     if (selectedZone) {
       map.panTo([selectedZone.lat, selectedZone.lon], { animate: true, duration: 0.6 })
     }
   }, [selectedZone, riskResult, activeRainfall])
+
 
   // Instant Layer Switching between Topo, Satellite, and Street
   const switchBaseLayer = (type) => {
@@ -1016,20 +1124,28 @@ export default function AppDesktop({ onSwitchToMobile }) {
                 </div>
               </div>
 
-              {/* Map Legend */}
-              <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1.5 rounded shadow-xs border border-slate-200 z-10 text-[10px] flex flex-col gap-1">
-                <span className="font-bold text-slate-700">Hazard Tier</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-red-600"></span>
-                  <span>Critical (FoS &lt; 1.0)</span>
+              {/* Clean 5-Tier Hazard Legend */}
+              <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md p-2.5 rounded-lg shadow-md border border-slate-300 z-10 text-[10.5px] flex flex-col gap-1.5">
+                <span className="font-black text-slate-800 uppercase tracking-wider text-[9px]">GSI Hazard Polygons</span>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-[#DC2626] border border-[#991B1B]"></span>
+                  <span className="font-bold text-red-700">CRITICAL (Red)</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                  <span>High (FoS 1.0-1.25)</span>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-[#EA580C] border border-[#C2410C]"></span>
+                  <span className="font-bold text-orange-700">HIGH (Orange)</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span>Stable (&gt; 1.5)</span>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-[#EAB308] border border-[#A16207]"></span>
+                  <span className="font-bold text-yellow-700">MODERATE (Yellow)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-[#22C55E] border border-[#15803D]"></span>
+                  <span className="font-bold text-emerald-600">LOW (Green)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-[#14532D] border border-[#052E16]"></span>
+                  <span className="font-bold text-emerald-950">SAFE (Dark Green)</span>
                 </div>
               </div>
             </div>
