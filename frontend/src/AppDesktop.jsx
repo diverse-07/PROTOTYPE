@@ -1064,38 +1064,15 @@ export default function AppDesktop({ onSwitchToMobile }) {
   return (
     <div className="w-full min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col font-sans">
       
-      {/* 1. TOP NATIONAL GOVERNMENT OF INDIA HEADER */}
-      <header className="bg-[#0B3C68] text-white border-b-4 border-[#FF9933] shadow-sm sticky top-0 z-50">
-        
-        {/* Top Micro Strip */}
-        <div className="bg-[#082846] text-[11px] text-slate-300 border-b border-white/10 px-4 py-1">
-          <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="font-semibold text-amber-300">भारत सरकार | GOVERNMENT OF INDIA</span>
-              <span className="hidden sm:inline text-slate-400">|</span>
-              <span className="hidden sm:inline">गृह मंत्रालय • उत्तर पूर्वी क्षेत्र विकास मंत्रालय (MDoNER)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-[10px] bg-white/10 px-2 py-0.5 rounded text-amber-200">
-                EOC 24x7: 1078
-              </span>
-              <span className="text-emerald-400 flex items-center gap-1 font-semibold text-[10px]">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                RADAR: LIVE
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Branding Strip */}
-        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            {/* 1. Indian Government Emblem & Team AEGIS Logo Group */}
-            <div className="flex items-center gap-2.5 shrink-0">
+      {/* 1. TOP SOVEREIGN UTILITY BAR (MDoNER / GOVERNMENT OF INDIA) */}
+      <aside className="bg-[#003B73] text-white px-4 sm:px-6 lg:px-8 py-1.5 flex flex-wrap items-center justify-between text-xs border-b border-[#002C57]">
+        <div className="w-full max-w-[1800px] mx-auto flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <img 
                 src="./emblem_of_india.svg" 
-                alt="Government of India Emblem" 
-                className="h-10 sm:h-11 w-auto brightness-0 invert opacity-95 filter drop-shadow-sm" 
+                alt="Emblem of India" 
+                className="h-4 w-auto brightness-0 invert opacity-95" 
                 onError={(e) => { 
                   if (e.target.src.endsWith('/emblem_of_india.svg')) {
                     e.target.src = './emblem_of_india.svg';
@@ -1104,62 +1081,168 @@ export default function AppDesktop({ onSwitchToMobile }) {
                   }
                 }}
               />
-              
-              {/* Elegant Vertical Divider */}
-              <div className="h-8 sm:h-9 w-[1.5px] bg-white/20"></div>
+              <span className="font-bold text-[11px] text-white">भारत सरकार | Government of India</span>
+            </div>
+            <span className="text-white/20 hidden sm:inline">|</span>
+            <span className="text-slate-200 text-[11px] font-medium hidden md:inline">
+              उत्तर पूर्वी क्षेत्र विकास मंत्रालय | Ministry of Development of North Eastern Region (MDoNER)
+            </span>
+          </div>
 
-              {/* 2. Team AEGIS Official Logo (Transparent Circular Crest) */}
+          <div className="flex items-center gap-3 text-xs">
+            <button className="w-6 h-6 rounded bg-[#004A8F] hover:bg-[#005B9E] flex items-center justify-center text-white text-xs transition" title="Accessibility Options">
+              ♿
+            </button>
+            <button className="w-6 h-6 rounded bg-[#004A8F] hover:bg-[#005B9E] flex items-center justify-center text-white text-xs transition" title="Theme Toggle">
+              🌙
+            </button>
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#004A8F] font-mono text-[11px] text-amber-300 font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>24x7 EOC Helpline: 1078</span>
+            </div>
+            <div className="flex items-center gap-1 px-2 py-1 rounded bg-[#004A8F] hover:bg-[#005B9E] cursor-pointer text-[11px] font-semibold transition">
+              <span>English</span>
+              <span className="text-[9px]">▾</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* 2. MAIN CRISP WHITE NAVBAR (MDONER & INDIAN GOVT LOGO & AEGIS CREST) */}
+      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-2.5 sticky top-0 z-40 shadow-xs">
+        <div className="w-full max-w-[1800px] mx-auto flex items-center justify-between gap-4">
+          
+          {/* Indian Govt Logo + MDoNER + AEGIS LEWS Group */}
+          <div className="flex items-center gap-3.5 sm:gap-4">
+            
+            {/* Official State Emblem of India (Ashoka Lion Capital) */}
+            <img 
+              src="./emblem_of_india.svg" 
+              alt="State Emblem of India" 
+              className="h-11 sm:h-12 w-auto object-contain" 
+              onError={(e) => { 
+                if (e.target.src.endsWith('/emblem_of_india.svg')) {
+                  e.target.src = './emblem_of_india.svg';
+                } else {
+                  e.target.src = 'emblem_of_india.svg';
+                }
+              }}
+            />
+
+            <div className="h-10 w-[1.5px] bg-slate-200"></div>
+
+            {/* MDoNER Full Branding */}
+            <div className="flex flex-col justify-center leading-tight">
+              <div className="flex items-center gap-2">
+                <span className="text-base sm:text-lg font-black tracking-tight text-[#003B73]">MDoNER</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#005B9E] border border-blue-200 hidden sm:inline">
+                  GOVERNMENT OF INDIA
+                </span>
+              </div>
+              <span className="text-[11px] font-bold text-slate-800 tracking-tight mt-0.5">
+                Ministry of Development of North Eastern Region
+              </span>
+              <span className="text-[10px] text-slate-500 font-medium">
+                उत्तर पूर्वी क्षेत्र विकास मंत्रालय
+              </span>
+            </div>
+
+            <div className="h-10 w-[1.5px] bg-slate-200 hidden xl:block"></div>
+
+            {/* NER-LEWS & Team AEGIS Crest */}
+            <div className="hidden xl:flex items-center gap-2.5">
               <img 
                 src="./logo.png" 
-                alt="Team AEGIS Crest" 
-                className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-contain filter drop-shadow-sm ring-1 ring-amber-400/40" 
+                alt="AEGIS Logo" 
+                className="h-10 w-auto rounded-full ring-1 ring-slate-200 shadow-xs" 
                 onError={(e) => { 
                   e.target.src = './aegis_logo_transparent.png';
                 }}
               />
+              <div className="leading-tight">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-black text-slate-900 tracking-tight">NER-LEWS</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                    TEAM AEGIS
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-500 font-medium">National Early Warning System</span>
+              </div>
             </div>
 
-            {/* Portal Title & Subtitles */}
-            <div>
-              <h1 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2 flex-wrap">
-                <span>NER-LEWS</span>
-                <span className="text-[10px] sm:text-[11px] font-bold bg-amber-400/20 text-amber-300 px-1.5 py-0.2 rounded border border-amber-400/40 tracking-wider">
-                  TEAM AEGIS
-                </span>
-                <span className="hidden md:inline font-normal text-xs text-slate-200">
-                  | राष्ट्रीय भूस्खलन पूर्व चेतावनी प्रणाली
-                </span>
-              </h1>
-              <p className="text-[11px] text-slate-300">
-                National Landslide Early Warning System — Satellite Radar & Geotechnical Operations Center
-              </p>
-            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Quick Sector Selector from Header */}
+          {/* Center Navigation Tabs */}
+          <nav className="hidden lg:flex items-center gap-6 text-xs font-medium text-slate-600">
+            <button 
+              onClick={() => {
+                const el = document.getElementById("operational-workspace");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="py-1 text-[#005B9E] font-bold border-b-2 border-[#005B9E] transition cursor-pointer"
+            >
+              Operations Home
+            </button>
+            <button 
+              onClick={() => {
+                const el = document.getElementById("regional-map-container");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }} 
+              className="py-1 hover:text-[#005B9E] transition cursor-pointer"
+            >
+              Regional GIS Map
+            </button>
+            <button 
+              onClick={() => {
+                const el = document.getElementById("ai-assessment-card");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }} 
+              className="py-1 hover:text-[#005B9E] transition cursor-pointer"
+            >
+              Geotechnical AI
+            </button>
+            <button 
+              onClick={() => {
+                const el = document.getElementById("rainfall-report-section");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }} 
+              className="py-1 hover:text-[#005B9E] transition cursor-pointer"
+            >
+              Precipitation
+            </button>
+            <button 
+              onClick={() => setSectorModalOpen(true)} 
+              className="py-1 hover:text-[#005B9E] transition flex items-center gap-1 cursor-pointer"
+            >
+              <span>18 Sectors</span>
+              <span className="text-[9px]">▾</span>
+            </button>
+          </nav>
+
+          {/* Right Action Controls: Quick Sector Picker + Print Report */}
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => setSectorModalOpen(true)}
-              className="bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded text-xs font-bold border border-white/30 flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="bg-slate-100 hover:bg-slate-200 text-[#003B73] px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1.5 transition cursor-pointer"
               title="Select one of 18 Regional Monitoring Sectors"
             >
-              <span className="material-symbols-outlined text-amber-400 text-sm">pin_drop</span>
-              <span className="hidden sm:inline">Monitoring Zone:</span>
-              <span className="text-amber-200 font-extrabold">{selectedZone.name.split("(")[0]}</span>
+              <span className="material-symbols-outlined text-amber-600 text-sm">pin_drop</span>
+              <span className="hidden sm:inline">Sector:</span>
+              <span className="text-[#003B73] font-extrabold">{selectedZone.shortName || selectedZone.name.split("(")[0]}</span>
               <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
             </button>
 
             <button
               onClick={handleExportReport}
-              className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded text-xs font-semibold border border-white/25 flex items-center gap-1.5 transition-colors"
+              className="bg-[#005B9E] hover:bg-[#004A8F] text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs flex items-center gap-1.5 transition cursor-pointer"
               title="Generate printable EOC Geotechnical & Rainfall Report"
             >
               <span className="material-symbols-outlined text-sm">print</span>
-              <span>Report</span>
+              <span className="hidden sm:inline">Report</span>
             </button>
           </div>
-        </div>
 
+        </div>
       </header>
 
       {/* 2. OFFICIAL EOC EMERGENCY ALERT & BLE COMMAND STRIP */}
@@ -1249,7 +1332,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
       </section>
 
       {/* 3. MAIN DASHBOARD CONTENT */}
-      <main className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col gap-4">
+      <main id="operational-workspace" className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col gap-4">
 
         {/* 5 KEY MONITORED KPI CARDS */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -1321,7 +1404,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
           
           {/* LEFT: GEOTECHNICAL GIS MAP (7 Cols) */}
-          <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
+          <div id="regional-map-container" className="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
             
             {/* Map Toolbar */}
             <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
@@ -1443,7 +1526,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
           </div>
 
           {/* RIGHT: WORKING AI PREDICTION SYSTEM (5 Cols) */}
-          <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-xs p-4 flex flex-col gap-3.5">
+          <div id="ai-assessment-card" className="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-xs p-4 flex flex-col gap-3.5">
             
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
@@ -1633,7 +1716,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
         </div>
 
         {/* 4. REAL IMD / OPEN-METEO RADAR RAINFALL TELEMETRY & REPORT */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-4">
+        <div id="rainfall-report-section" className="bg-white rounded-xl border border-slate-200 shadow-xs p-4">
           
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-3">
             <div>
