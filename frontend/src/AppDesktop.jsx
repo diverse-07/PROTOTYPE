@@ -1677,12 +1677,6 @@ export default function AppDesktop({ onSwitchToMobile }) {
         tile.height = size.y
         const ctx = tile.getContext('2d')
 
-        // Do not render coarse/chunky polygons when zoomed way out (zoom < 8)
-        // This keeps national/sub-continental views pristine without blocky overlays
-        if (coords.z < 8) {
-          return tile
-        }
-
         const bounds = this._tileCoordsToBounds(coords)
         const nw = bounds.getNorthWest()
         const se = bounds.getSouthEast()
@@ -1696,19 +1690,20 @@ export default function AppDesktop({ onSwitchToMobile }) {
         const stateFilter = selectedStateFilterRef.current || "ALL"
         const rain = activeRainfallRef.current || 28
 
-        // Adaptive high-density small polygons:
-        // Zoom 8: 32x32 fine terrain grid (no chunky boxes!)
-        // Zoom 9-11: 24x24 crisp micro-polygons
-        // Zoom 12+: 18x18 detailed 1-KM roadbed & hillslope parcels
-        const gridSize = coords.z <= 8 ? 32 : (coords.z <= 11 ? 24 : 18)
+        // High-density minute grain across all zoom levels:
+        // Zoom <= 7: 64x64 minute micro-grain (4px tiny cells, 4,096 cells/tile)
+        // Zoom 8-10: 40x40 fine micro-cells (6.4px)
+        // Zoom 11+: 24x24 crisp 1-KM micro-polygons with 1.2px borders
+        const gridSize = coords.z <= 7 ? 64 : (coords.z <= 10 ? 40 : 24)
         const cellW = size.x / gridSize
         const cellH = size.y / gridSize
 
         const latStep = (nw.lat - se.lat) / gridSize
         const lonStep = (se.lng - nw.lng) / gridSize
 
-        const pad = coords.z <= 8 ? 0.4 : (coords.z <= 11 ? 0.8 : 1.0)
-        const strokeWidth = coords.z <= 8 ? 0.5 : (coords.z <= 11 ? 0.9 : 1.2)
+        const isMinuteGrain = coords.z <= 7
+        const pad = isMinuteGrain ? 0.2 : (coords.z <= 10 ? 0.5 : 1.0)
+        const strokeWidth = isMinuteGrain ? 0.3 : (coords.z <= 10 ? 0.6 : 1.2)
 
         for (let gy = 0; gy < gridSize; gy++) {
           const cellLat = nw.lat - (gy + 0.5) * latStep
@@ -1721,14 +1716,16 @@ export default function AppDesktop({ onSwitchToMobile }) {
             const px = gx * cellW
             const py = gy * cellH
 
-            // 1. Semi-transparent polygon fill (translucent so streets, rivers & topography are visible beneath)
+            // 1. Semi-transparent polygon fill
             ctx.fillStyle = cellRisk.fillColor
             ctx.fillRect(px + pad, py + pad, cellW - pad * 2, cellH - pad * 2)
 
             // 2. Distinct colored border around EVERY small polygon
-            ctx.strokeStyle = cellRisk.borderColor
-            ctx.lineWidth = strokeWidth
-            ctx.strokeRect(px + pad, py + pad, cellW - pad * 2, cellH - pad * 2)
+            if (!isMinuteGrain || coords.z >= 6) {
+              ctx.strokeStyle = cellRisk.borderColor
+              ctx.lineWidth = strokeWidth
+              ctx.strokeRect(px + pad, py + pad, cellW - pad * 2, cellH - pad * 2)
+            }
           }
         }
 
@@ -2444,30 +2441,16 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
                   {/* Semantic Zoom / Micro-Polygons Status Badge */}
                   <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 z-10 text-xs flex items-center gap-2 pointer-events-auto">
-                    <span className={`w-2.5 h-2.5 rounded-full ${currentZoom >= 8 ? "bg-emerald-600 animate-pulse" : "bg-blue-600"}`}></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
                     <span className="font-mono font-bold text-slate-800">
-                      {currentZoom >= 8 
-                        ? `MICRO-POLYGON CONTINUOUS RISK · ${selectedStateFilter === "ALL" ? "WHOLE NER (8 STATES)" : selectedStateFilter.toUpperCase()} (Lakhs of Contiguous Cells)`
-                        : `REGIONAL OVERVIEW (Zoom in to Level 8+ for 30m Micro-Polygons)`
-                      }
+                      MINUTE-GRAIN CONTINUOUS RISK · {selectedStateFilter === "ALL" ? "ALL 8 NER STATES (INDIA)" : selectedStateFilter.toUpperCase()} (Lakhs of Minute Cells · Clipped to India)
                     </span>
-                    {currentZoom < 8 ? (
-                      <button
-                        onClick={() => {
-                          if (mapInstanceRef.current) mapInstanceRef.current.flyTo([27.58, 92.15], 10, { duration: 1 })
-                        }}
-                        className="text-[10.5px] bg-[#005B9E] text-white font-bold px-2 py-0.5 rounded hover:bg-[#003B73] ml-1 cursor-pointer"
-                      >
-                        Focus Arunachal (Zoom 10) ↗
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleStateFilterChange("ALL")}
-                        className="text-[10px] text-[#005B9E] font-bold underline hover:text-[#003B73] ml-1 cursor-pointer"
-                      >
-                        Reset All NER ↺
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleStateFilterChange("ALL")}
+                      className="text-[10px] text-[#005B9E] font-bold underline hover:text-[#003B73] ml-1 cursor-pointer"
+                    >
+                      Reset All NER ↺
+                    </button>
                   </div>
 
                   <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md p-3 rounded-lg shadow-sm border border-slate-200 z-10 max-w-xs text-xs pointer-events-auto">
