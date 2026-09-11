@@ -422,6 +422,199 @@ const ZONES = [
     ],
     description: "Flat lacustrine and alluvial valley floor surrounding Loktak Lake. Zero slope hazard."
   },
+  // --- ALL-INDIA PRIORITY GEOTECHNICAL HAZARD ZONES (Himalayas & Western Ghats) ---
+  {
+    id: "z-joshimath",
+    shortName: "Joshimath MCT",
+    name: "Joshimath & Alaknanda Basin (MCT Axis)",
+    sub: "Main Central Thrust / Sinking Slope",
+    state: "Uttarakhand",
+    lat: 30.5564,
+    lon: 79.5630,
+    tier: "CRITICAL",
+    tierColor: "#DC2626",
+    borderColor: "#991B1B",
+    fillOpacity: 0.50,
+    defaultSlope: 54,
+    defaultWetness: 92,
+    defaultLith: 24,
+    defaultInsar: 38.5,
+    polygon: [
+      [30.70, 79.40],
+      [30.68, 79.75],
+      [30.40, 79.70],
+      [30.42, 79.38]
+    ],
+    description: "Deep-seated tectonic subsidence along Main Central Thrust (MCT) with heavy debris moraine overload."
+  },
+  {
+    id: "z-kedarnath",
+    shortName: "Kedarnath Gorge",
+    name: "Mandakini Valley (Kedarnath Axis)",
+    sub: "Chorabari Fluvial & Moraine Debris Corridor",
+    state: "Uttarakhand",
+    lat: 30.7346,
+    lon: 79.0669,
+    tier: "CRITICAL",
+    tierColor: "#DC2626",
+    borderColor: "#991B1B",
+    fillOpacity: 0.50,
+    defaultSlope: 58,
+    defaultWetness: 95,
+    defaultLith: 20,
+    defaultInsar: 44.2,
+    polygon: [
+      [30.85, 78.95],
+      [30.82, 79.20],
+      [30.60, 79.18],
+      [30.62, 78.92]
+    ],
+    description: "Glacial moraine breach and ultra-steep debris chutes with severe flash flood vulnerability."
+  },
+  {
+    id: "z-kinnaur",
+    shortName: "Kinnaur Sutlej",
+    name: "Kinnaur Sutlej River Gorge (NH-05)",
+    sub: "Nigulsari & Wangtoo Rockfall Escarpment",
+    state: "Himachal Pradesh",
+    lat: 31.5400,
+    lon: 78.2100,
+    tier: "CRITICAL",
+    tierColor: "#DC2626",
+    borderColor: "#991B1B",
+    fillOpacity: 0.50,
+    defaultSlope: 55,
+    defaultWetness: 89,
+    defaultLith: 26,
+    defaultInsar: 36.4,
+    polygon: [
+      [31.75, 78.00],
+      [31.70, 78.45],
+      [31.35, 78.40],
+      [31.38, 77.95]
+    ],
+    description: "High-angle jointed gneiss sheer canyon with frequent shooting stone avalanches on NH-05."
+  },
+  {
+    id: "z-shimla",
+    shortName: "Shimla Bypass",
+    name: "Shimla Ridge & Shoghi Bypass (NH-05)",
+    sub: "Jutogh Fragile Phyllite Cut Slopes",
+    state: "Himachal Pradesh",
+    lat: 31.1048,
+    lon: 77.1734,
+    tier: "HIGH",
+    tierColor: "#EA580C",
+    borderColor: "#C2410C",
+    fillOpacity: 0.45,
+    defaultSlope: 42,
+    defaultWetness: 82,
+    defaultLith: 36,
+    defaultInsar: 24.8,
+    polygon: [
+      [31.22, 77.05],
+      [31.20, 77.30],
+      [30.98, 77.28],
+      [31.00, 77.02]
+    ],
+    description: "Urban overloaded multi-story slopes on fragile Jutogh phyllites along NH-05 artery."
+  },
+  {
+    id: "z-wayanad",
+    shortName: "Wayanad Meppadi",
+    name: "Wayanad Escarpment (Meppadi-Chooralmala)",
+    sub: "Vellarimala Debris Flow Chute",
+    state: "Kerala",
+    lat: 11.5520,
+    lon: 76.1240,
+    tier: "CRITICAL",
+    tierColor: "#DC2626",
+    borderColor: "#991B1B",
+    fillOpacity: 0.50,
+    defaultSlope: 48,
+    defaultWetness: 96,
+    defaultLith: 18,
+    defaultInsar: 46.0,
+    polygon: [
+      [11.68, 76.00],
+      [11.65, 76.25],
+      [11.42, 76.22],
+      [11.45, 75.98]
+    ],
+    description: "Catastrophic deep regolith debris flow corridor triggered by extreme orographic monsoons."
+  },
+  {
+    id: "z-munnar",
+    shortName: "Munnar Gap",
+    name: "Munnar Gap Road & High Ranges (NH-85)",
+    sub: "Devikulam Colluvial Slip Axis",
+    state: "Kerala",
+    lat: 10.0889,
+    lon: 77.0595,
+    tier: "HIGH",
+    tierColor: "#EA580C",
+    borderColor: "#C2410C",
+    fillOpacity: 0.45,
+    defaultSlope: 44,
+    defaultWetness: 88,
+    defaultLith: 32,
+    defaultInsar: 26.5,
+    polygon: [
+      [10.22, 76.92],
+      [10.20, 77.18],
+      [9.95, 77.15],
+      [9.98, 76.90]
+    ],
+    description: "Steep road cuts on weathered charnockite saprolite subject to continuous monsoon creep."
+  },
+  {
+    id: "z-mahabaleshwar",
+    shortName: "Varandha Ghat",
+    name: "Varandha & Mahabaleshwar Scarp",
+    sub: "Western Ghats Sahyadri Escarpment",
+    state: "Maharashtra",
+    lat: 17.9240,
+    lon: 73.6580,
+    tier: "HIGH",
+    tierColor: "#EA580C",
+    borderColor: "#C2410C",
+    fillOpacity: 0.45,
+    defaultSlope: 46,
+    defaultWetness: 86,
+    defaultLith: 34,
+    defaultInsar: 23.2,
+    polygon: [
+      [18.15, 73.45],
+      [18.12, 73.80],
+      [17.75, 73.78],
+      [17.78, 73.42]
+    ],
+    description: "Vertical basalt flow traprock steps with heavy lateritic capping and intense torrential runoffs."
+  },
+  {
+    id: "z-agumbe",
+    shortName: "Agumbe Ghat",
+    name: "Agumbe Rainforest Crest (Someshwara)",
+    sub: "South Western Ghats High Rainfall Corridor",
+    state: "Karnataka",
+    lat: 13.5020,
+    lon: 75.0920,
+    tier: "HIGH",
+    tierColor: "#EA580C",
+    borderColor: "#C2410C",
+    fillOpacity: 0.45,
+    defaultSlope: 41,
+    defaultWetness: 90,
+    defaultLith: 35,
+    defaultInsar: 21.0,
+    polygon: [
+      [13.65, 74.95],
+      [13.62, 75.25],
+      [13.35, 75.22],
+      [13.38, 74.92]
+    ],
+    description: "High precipitation lateritic regolith slope with intense saturation and frequent road blockages."
+  },
   {
     id: "z-tripura-plains",
     shortName: "Tripura Basin",
@@ -890,173 +1083,351 @@ function getCorridorChainages(zone, riskResult, activeRainfall = 28) {
   return { segments, microPolygons: allMicroPolygons }
 }
 
-// High-Resolution 30m x 30m Continuous Geotechnical Terrain Risk Engine
-// Computes pixel-level slope, lithology, InSAR shear, and Factor of Safety (FoS) across Arunachal Pradesh & all NER states
-function get30mTerrainRisk(lat, lon, activeRainfall = 28, stateFilter = "ALL") {
-  // 1. Strict International & Regional Boundary Guard
-  // Points outside Northeast India (NER) are immediately rejected (100% transparent, null)
-  if (lat < 21.90 || lat > 29.50 || lon < 88.00 || lon > 97.45) return null
+// Deterministic hash for coordinate jitter in stippled dot density cartography
+function hashCoord(lat, lon, seed = 1) {
+  const v = Math.sin(lat * 1234.567 + lon * 7654.321 + seed * 99.13) * 43758.5453
+  return v - Math.floor(v)
+}
 
-  // Explicit country exclusions:
-  // Bangladesh (Dhaka, Chittagong, Mymensingh, Sylhet basin, etc.)
-  if (lat < 25.12 && lon < 91.15) return null
-  if (lat < 22.95 && lon < 92.25) return null
-  if (lat < 25.08 && lon >= 91.15 && lon < 92.25 && !(lat >= 22.95 && lat <= 24.52 && lon >= 91.15 && lon <= 92.35)) return null
-  // Bhutan (Thimphu, Paro, Punakha)
+// Continuous color interpolation from Green (Low) -> Yellow (Moderate) -> Orange (High) -> Red (Critical)
+function getRiskColor(riskScore, alpha = 0.85) {
+  const score = Math.max(0.0, Math.min(1.0, riskScore))
+  let r, g, b
+  if (score < 0.33) {
+    // Green (22, 163, 74) to Yellow (234, 179, 8)
+    const t = score / 0.33
+    r = Math.round(22 + t * (234 - 22))
+    g = Math.round(163 + t * (179 - 163))
+    b = Math.round(74 + t * (8 - 74))
+  } else if (score < 0.66) {
+    // Yellow (234, 179, 8) to Orange (234, 88, 12)
+    const t = (score - 0.33) / 0.33
+    r = Math.round(234)
+    g = Math.round(179 + t * (88 - 179))
+    b = Math.round(8 + t * (12 - 8))
+  } else {
+    // Orange (234, 88, 12) to Red (220, 38, 38)
+    const t = (score - 0.66) / 0.34
+    r = Math.round(234 + t * (220 - 234))
+    g = Math.round(88 + t * (38 - 88))
+    b = Math.round(12 + t * (38 - 12))
+  }
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+// High-Resolution Continuous Geotechnical Terrain Risk Engine for India
+// Computes pixel-level slope, lithology, InSAR shear, and Factor of Safety (FoS)
+// Covers India's landslide & geotechnical hazard belts (Himalayas, Northeast India, Western Ghats)
+function get30mTerrainRisk(lat, lon, activeRainfall = 28, stateFilter = "ALL") {
+  // 1. Strict International & Territorial Boundary Exclusions (Zero bleeding outside India)
+  // Nepal (between Uttarakhand and Sikkim)
+  if (lat >= 26.35 && lat <= 30.50 && lon >= 80.05 && lon <= 88.15) return null
+  // Bhutan (between Sikkim and Arunachal)
   if (lat >= 26.75 && lat <= 28.25 && lon >= 88.95 && lon <= 91.60) return null
-  // Myanmar (Burma)
+  // Bangladesh (strictly within its bounding box)
+  if (lat >= 20.60 && lat <= 26.50 && lon >= 88.00 && lon <= 92.70) {
+    const isMeghalaya = (lat >= 25.10 && lat <= 26.08 && lon >= 89.85 && lon <= 92.85)
+    const isTripura = (lat >= 22.95 && lat <= 24.52 && lon >= 91.15 && lon <= 92.35)
+    const isBarak = (lat >= 24.25 && lat <= 25.10 && lon >= 92.35 && lon <= 93.20)
+    if (!isMeghalaya && !isTripura && !isBarak) return null
+  }
+  // Myanmar (east of NER)
   if (lon > 95.25 && lat < 27.0) return null
   if (lon > 94.70 && lat < 25.7) return null
   if (lon > 93.45 && lat < 24.5) return null
-  // Tibet / China
-  if (lon < 92.0 && lat > 28.10) return null
+  // Pakistan / PoK border (only in northern latitudes)
+  if (lat >= 30.0 && lon < 74.00) return null
+  if (lat >= 32.2 && lon < 74.20) return null
+  if (lat >= 33.5 && lon < 73.80) return null
+  // Tibet / China north borders
+  if (lat > 35.5) return null
+  if (lat > 33.25 && lon > 78.8) return null
+  if (lat > 31.45 && lon > 79.6) return null
+  if (lon >= 91.6 && lon < 92.0 && lat > 28.10) return null
   if (lon >= 92.0 && lon < 93.0 && lat > 28.05) return null
   if (lon >= 93.0 && lon < 94.5 && lat > 28.85) return null
   if (lon >= 94.5 && lat > 29.45) return null
 
-  // 2. Identify the specific NER State
+  // 2. Identify the Hazard Region in India
+  let region = null
   let stateName = null
   let isArunachal = false
-  let isAssamPlain = false
   let isMeghalaya = false
   let isSikkim = false
   let isNagaland = false
   let isManipur = false
   let isMizoram = false
   let isTripura = false
+  let isAssam = false
+  let isUttarakhand = false
+  let isHimachal = false
+  let isJK = false
+  let isWesternGhats = false
+  let isKerala = false
+  let isMaharashtraGhats = false
+  let isKarnatakaGhats = false
 
-  if (lat >= 27.05 && lat <= 28.10 && lon >= 88.05 && lon <= 88.95) {
-    isSikkim = true
-    stateName = "Sikkim"
-  } else if (lat >= 25.10 && lat <= 26.08 && lon >= 89.85 && lon <= 92.85) {
-    isMeghalaya = true
-    stateName = "Meghalaya"
-  } else if (lat >= 22.95 && lat <= 24.52 && lon >= 91.15 && lon <= 92.35) {
-    isTripura = true
-    stateName = "Tripura"
-  } else if (lat >= 21.95 && lat <= 24.50 && lon >= 92.25 && lon <= 93.45) {
-    isMizoram = true
-    stateName = "Mizoram"
-  } else if (lat >= 23.85 && lat <= 25.60 && lon >= 93.00 && lon <= 94.70) {
-    isManipur = true
-    stateName = "Manipur"
-  } else if (lat >= 25.15 && lat <= 27.02 && lon >= 93.30 && lon <= 95.25) {
-    isNagaland = true
-    stateName = "Nagaland"
-  } else if (lat >= 26.70 && lon >= 91.60 && lon <= 97.40 && (lat >= 27.00 || (lat >= 26.85 && lon < 93.5) || (lat >= 26.70 && lon >= 95.2 && lon <= 96.2))) {
-    isArunachal = true
-    stateName = "Arunachal Pradesh"
-  } else if (lat >= 24.25 && lat <= 27.50 && lon >= 89.80 && lon <= 95.90) {
-    if (lat > 25.95 && lat < 27.20 && lon > 90.50 && lon < 95.20) {
-      isAssamPlain = true
-      stateName = "Assam (Brahmaputra Plain)"
-    } else {
-      stateName = "Assam"
+  // Regional Check A: Eastern Himalayas & Northeast India (NER)
+  if (lat >= 21.90 && lat <= 29.50 && lon >= 88.00 && lon <= 97.45) {
+    if (lat >= 27.05 && lat <= 28.10 && lon >= 88.05 && lon <= 88.95) {
+      isSikkim = true
+      stateName = "Sikkim"
+      region = "Eastern Himalayas"
+    } else if (lat >= 25.10 && lat <= 26.08 && lon >= 89.85 && lon <= 92.85) {
+      isMeghalaya = true
+      stateName = "Meghalaya"
+      region = "Shillong Plateau"
+    } else if (lat >= 22.95 && lat <= 24.52 && lon >= 91.15 && lon <= 92.35) {
+      isTripura = true
+      stateName = "Tripura"
+      region = "Tripura Hills"
+    } else if (lat >= 21.95 && lat <= 24.50 && lon >= 92.25 && lon <= 93.45) {
+      isMizoram = true
+      stateName = "Mizoram"
+      region = "Mizo Hills"
+    } else if (lat >= 23.85 && lat <= 25.60 && lon >= 93.00 && lon <= 94.70) {
+      isManipur = true
+      stateName = "Manipur"
+      region = "Manipur Hills"
+    } else if (lat >= 25.15 && lat <= 27.02 && lon >= 93.30 && lon <= 95.25) {
+      isNagaland = true
+      stateName = "Nagaland"
+      region = "Naga Hills"
+    } else if (lat >= 26.70 && lon >= 91.60 && lon <= 97.40 && (lat >= 27.00 || (lat >= 26.85 && lon < 93.5) || (lat >= 26.70 && lon >= 95.2 && lon <= 96.2))) {
+      isArunachal = true
+      stateName = "Arunachal Pradesh"
+      region = "Eastern Himalayas"
+    } else if (lat >= 24.25 && lat <= 27.50 && lon >= 89.80 && lon <= 95.90) {
+      // Assam hill tracts (Dima Hasao & Karbi Anglong)
+      const isAssamHills = (lat >= 24.8 && lat <= 26.2 && lon >= 92.5 && lon <= 93.8)
+      if (isAssamHills) {
+        isAssam = true
+        stateName = "Assam (Hill Districts)"
+        region = "Barail & Karbi Hills"
+      }
     }
   }
 
-  // Strictly return null if coordinate does not fall into one of the 8 states
+  // Regional Check B: Northwest & Western Himalayas
+  if (!stateName && lat >= 28.70 && lat <= 35.50 && lon >= 74.00 && lon <= 81.10) {
+    // Exclude flat Indo-Gangetic plains of Punjab/Haryana/UP
+    if (lat < 30.15 && lon < 77.40) return null
+    if (lat < 29.15 && lon < 78.80) return null
+
+    if (lat >= 28.70 && lat <= 31.45 && lon >= 77.60 && lon <= 81.10) {
+      isUttarakhand = true
+      stateName = "Uttarakhand"
+      region = "Garhwal & Kumaon Himalayas"
+    } else if (lat >= 30.30 && lat <= 33.30 && lon >= 75.50 && lon <= 79.00) {
+      isHimachal = true
+      stateName = "Himachal Pradesh"
+      region = "Himachal Himalayas"
+    } else if (lat >= 32.25 && lat <= 35.50 && lon >= 74.00 && lon <= 79.50) {
+      isJK = true
+      stateName = "Jammu & Kashmir"
+      region = "Pir Panjal & Chenab Valley"
+    }
+  }
+
+  // Regional Check C: Western Ghats & Nilgiris
+  if (!stateName && lat >= 8.20 && lat <= 20.80 && lon >= 72.90 && lon <= 77.35) {
+    // Exclude open Arabian Sea
+    if (lon < 72.95) return null
+    // Maharashtra Sahyadri Escarpment
+    if (lat >= 15.80 && lat <= 20.80) {
+      if (lon >= 73.10 && lon <= 74.45) {
+        isMaharashtraGhats = true
+        isWesternGhats = true
+        stateName = "Maharashtra (Western Ghats)"
+        region = "Sahyadri Escarpment"
+      }
+    }
+    // Karnataka Western Ghats
+    else if (lat >= 11.80 && lat < 15.80) {
+      if (lon >= 74.10 && lon <= 76.15) {
+        isKarnatakaGhats = true
+        isWesternGhats = true
+        stateName = "Karnataka (Western Ghats)"
+        region = "Malnad Ghats"
+      }
+    }
+    // Kerala & Nilgiris
+    else if (lat >= 8.20 && lat < 11.80) {
+      // Exclude flat coastal backwaters
+      if (lon >= 75.15 && lon <= 77.30 && !(lat < 11.2 && lon < 75.60)) {
+        isKerala = true
+        isWesternGhats = true
+        stateName = "Kerala (Western Ghats)"
+        region = "Wayanad & High Ranges"
+      }
+    }
+  }
+
+  // Strictly reject if not in monitored hazard belts of India
   if (!stateName) return null
 
-  // If a specific state is filtered (e.g. Arunachal Pradesh), reject all other states
-  const isTargetState = stateFilter === "ALL" || 
-    (stateFilter.toLowerCase().includes("arunachal") && isArunachal) ||
-    (stateFilter.toLowerCase().includes("meghalaya") && isMeghalaya) ||
-    (stateFilter.toLowerCase().includes("sikkim") && isSikkim) ||
-    (stateFilter.toLowerCase().includes("assam") && (isAssamPlain || stateName.includes("Assam"))) ||
-    (stateFilter.toLowerCase().includes("nagaland") && isNagaland) ||
-    (stateFilter.toLowerCase().includes("manipur") && isManipur) ||
-    (stateFilter.toLowerCase().includes("mizoram") && isMizoram) ||
-    (stateFilter.toLowerCase().includes("tripura") && isTripura)
+  // 3. State & Region Filter Evaluation
+  const sf = (stateFilter || "ALL").toLowerCase()
+  const isTarget = sf === "all" || sf === "all india" || sf === "all_india" ||
+    (sf.includes("arunachal") && isArunachal) ||
+    (sf.includes("uttarakhand") && isUttarakhand) ||
+    (sf.includes("himachal") && isHimachal) ||
+    (sf.includes("kerala") && isKerala) ||
+    (sf.includes("western ghats") && isWesternGhats) ||
+    (sf.includes("sikkim") && isSikkim) ||
+    (sf.includes("meghalaya") && isMeghalaya) ||
+    (sf.includes("nagaland") && isNagaland) ||
+    (sf.includes("manipur") && isManipur) ||
+    (sf.includes("mizoram") && isMizoram) ||
+    (sf.includes("assam") && isAssam) ||
+    (sf.includes("tripura") && isTripura) ||
+    (sf.includes("himalaya") && (isUttarakhand || isHimachal || isJK || isArunachal || isSikkim))
 
-  if (!isTargetState) return null
+  if (!isTarget) return null
 
-  // 2. Continuous 30m Digital Elevation Model (DEM) & Slope
-  let elevation = 300
-  let slope = 12
-  let lithology = "Metasedimentary Rock"
-  let cohesion = 22 // kPa
-  let phi = 32 // friction angle degrees
-
-  // Regional orographic harmonics
+  // 4. Physical Geotechnical Terrain Model
   const h1 = Math.sin(lat * 52.0) * Math.cos(lon * 58.0)
   const h2 = Math.sin((lat + lon) * 88.0) * 0.5
   const h3 = Math.cos((lat - lon) * 110.0) * 0.25
 
-  if (isAssamPlain) {
-    elevation = 45 + Math.abs(h1) * 60
-    slope = 2 + Math.abs(h1) * 4
-    lithology = "Alluvial Silt & Sand"
-    cohesion = 35
-    phi = 34
+  let elevation = 800
+  let slope = 28
+  let lithology = "Fractured Metasedimentary Complex"
+  let cohesion = 22
+  let phi = 30
+  let hotspotRisk = 0.0
+
+  if (isUttarakhand) {
+    elevation = 1200 + Math.abs(h1) * 3600
+    slope = 34 + Math.abs(h1) * 20 + h2 * 6
+    slope = Math.max(16, Math.min(62, slope))
+    const isJoshimathAxis = Math.abs(lat - 30.55) < 0.22 && Math.abs(lon - 79.56) < 0.22
+    const isKedarnathAxis = Math.abs(lat - 30.73) < 0.20 && Math.abs(lon - 79.06) < 0.20
+    if (isJoshimathAxis || isKedarnathAxis) {
+      hotspotRisk = 0.40
+      slope = Math.max(slope, 46)
+      lithology = "Main Central Thrust (MCT) Sheared Gneiss & Colluvium"
+      cohesion = 10
+      phi = 22
+    } else {
+      lithology = "Garhwal Nappe Quartzite & Phyllite"
+      cohesion = 20
+      phi = 32
+    }
+  } else if (isHimachal) {
+    elevation = 1100 + Math.abs(h1) * 3200
+    slope = 32 + Math.abs(h1) * 18 + h2 * 6
+    slope = Math.max(14, Math.min(58, slope))
+    const isKinnaur = Math.abs(lat - 31.55) < 0.25 && Math.abs(lon - 78.20) < 0.25
+    if (isKinnaur) {
+      hotspotRisk = 0.35
+      slope = Math.max(slope, 48)
+      lithology = "Jutogh Fragile Mica Schist & Shooting Rockfall Chute"
+      cohesion = 12
+      phi = 24
+    } else {
+      lithology = "Kullu-Shimla Weathered Phyllite & Gneiss"
+      cohesion = 22
+      phi = 30
+    }
+  } else if (isJK) {
+    elevation = 1400 + Math.abs(h1) * 3000
+    slope = 30 + Math.abs(h1) * 18
+    slope = Math.max(14, Math.min(56, slope))
+    const isRamban = Math.abs(lat - 33.24) < 0.20 && Math.abs(lon - 75.24) < 0.20
+    if (isRamban) {
+      hotspotRisk = 0.38
+      slope = Math.max(slope, 45)
+      lithology = "Murree Siltstone & Active Landslide Fault"
+      cohesion = 12
+      phi = 23
+    } else {
+      lithology = "Panjal Volcanic Traps & Limestones"
+      cohesion = 24
+      phi = 32
+    }
+  } else if (isKerala) {
+    elevation = 350 + Math.abs(h1) * 1600
+    slope = 26 + Math.abs(h1) * 20 + h2 * 6
+    slope = Math.max(12, Math.min(54, slope))
+    const isWayanad = Math.abs(lat - 11.55) < 0.20 && Math.abs(lon - 76.12) < 0.20
+    const isMunnar = Math.abs(lat - 10.08) < 0.20 && Math.abs(lon - 77.06) < 0.20
+    if (isWayanad || isMunnar) {
+      hotspotRisk = 0.42
+      slope = Math.max(slope, 44)
+      lithology = "Wayanad Saturated Regolith & Charnockite Saprolite"
+      cohesion = 11
+      phi = 22
+    } else {
+      lithology = "Western Ghats Weathered Charnockite"
+      cohesion = 24
+      phi = 30
+    }
+  } else if (isMaharashtraGhats || isKarnatakaGhats) {
+    elevation = 400 + Math.abs(h1) * 950
+    slope = 26 + Math.abs(h1) * 18
+    slope = Math.max(10, Math.min(50, slope))
+    const isMahabaleshwar = Math.abs(lat - 17.92) < 0.22 && Math.abs(lon - 73.66) < 0.22
+    if (isMahabaleshwar) {
+      hotspotRisk = 0.32
+      slope = Math.max(slope, 42)
+      lithology = "Deccan Basalt Step Escarpment & Laterite Cap"
+      cohesion = 14
+      phi = 25
+    } else {
+      lithology = "Sahyadri Basalt Traps & Dharwar Schist"
+      cohesion = 26
+      phi = 32
+    }
   } else if (isArunachal) {
-    // Eastern Himalayas: 400m to 6,000m+ across all 83,740 km²
-    const northDist = (lat - 26.65) / 2.85 // 0 to 1
+    const northDist = (lat - 26.65) / 2.85
     elevation = 450 + northDist * 3800 + (h1 * 800) + (h2 * 350)
     elevation = Math.max(350, Math.min(6400, elevation))
-
-    // Himalayan Deep River Gorges (Kameng, Subansiri, Siang, Dibang, Lohit)
-    const isKamengGorge = Math.abs(lon - 92.70) < 0.22 && lat > 27.05
-    const isSubansiriGorge = Math.abs(lon - 94.15) < 0.25 && lat > 27.25
-    const isSiangCanyon = Math.abs(lon - 95.10) < 0.30 && lat > 27.50
-    const isDibangValley = Math.abs(lon - 95.85) < 0.28 && lat > 27.80
-    const isLohitGorge = Math.abs(lon - 96.50) < 0.30 && lat > 27.60
-    const isGorge = isKamengGorge || isSubansiriGorge || isSiangCanyon || isDibangValley || isLohitGorge
-
-    // Main Central Thrust (MCT) active shear line trending ENE across Arunachal
+    const isGorge = (Math.abs(lon - 92.70) < 0.22 && lat > 27.05) || (Math.abs(lon - 95.10) < 0.30 && lat > 27.50)
     const mctLat = 27.45 + (lon - 91.50) * 0.14
     const isMctThrust = Math.abs(lat - mctLat) < 0.18
-
-    // Slope calculation
     let baseSlope = 34 + (h1 * 16) + (h2 * 8)
     if (isGorge) baseSlope += 16
     if (isMctThrust) baseSlope += 12
-    slope = Math.max(8, Math.min(64, baseSlope))
-
-    if (isMctThrust) {
-      lithology = "MCT Fractured Mica Schist & Gneiss"
-      cohesion = 10
-      phi = 22
-    } else if (isGorge) {
-      lithology = "Gondwana Weak Colluvium & Shale"
-      cohesion = 14
-      phi = 25
-    } else if (elevation > 3500) {
-      lithology = "Permafrost Jointed Granite Gneiss"
-      cohesion = 18
-      phi = 30
+    slope = Math.max(12, Math.min(64, baseSlope))
+    if (isMctThrust || isGorge) {
+      hotspotRisk = 0.38
+      lithology = isMctThrust ? "MCT Fractured Mica Schist" : "Gondwana Weak Colluvium"
+      cohesion = 11
+      phi = 23
     } else {
-      lithology = "Siwalik Hard Sandstone"
+      lithology = "Siwalik Sandstone & Crystalline"
       cohesion = 26
       phi = 34
     }
   } else if (isMeghalaya) {
-    // Southern Escarpment facing Bangladesh (Cherrapunji, Dawki, Jaintia)
     const isSouthScarp = (lat < 25.38 && lat > 25.05)
     elevation = isSouthScarp ? (200 + (lat - 25.05) * 4200) : (1400 + h1 * 300)
     slope = isSouthScarp ? (42 + Math.abs(h1) * 16) : (14 + Math.abs(h1) * 12)
-    slope = Math.max(6, Math.min(58, slope))
-
+    slope = Math.max(8, Math.min(58, slope))
     if (isSouthScarp) {
-      lithology = "Disang Weak Shale & Sandstone"
+      hotspotRisk = 0.36
+      lithology = "Disang Weak Shale & Sandstone Scarp"
       cohesion = 12
       phi = 24
     } else {
-      lithology = "Shillong Quartzite & Granite Gneiss"
+      lithology = "Shillong Quartzite & Granite"
       cohesion = 30
       phi = 36
     }
   } else if (isSikkim) {
     elevation = 1200 + (lat - 27.0) * 3500 + h1 * 600
     slope = 38 + h1 * 18
-    slope = Math.max(12, Math.min(62, slope))
-    lithology = "Daling Phyllite & Schist"
+    slope = Math.max(14, Math.min(62, slope))
+    hotspotRisk = 0.30
+    lithology = "Daling Phyllite & MCT Schist"
     cohesion = 14
     phi = 26
   } else if (isNagaland || isManipur) {
     elevation = 800 + Math.abs(h1) * 1600
     slope = 34 + h1 * 14
-    slope = Math.max(10, Math.min(54, slope))
+    slope = Math.max(12, Math.min(54, slope))
+    hotspotRisk = 0.25
     lithology = "Disang-Barail Thrust Shale"
     cohesion = 15
     phi = 26
@@ -1064,24 +1435,23 @@ function get30mTerrainRisk(lat, lon, activeRainfall = 28, stateFilter = "ALL") {
     // Mizoram, Tripura, Assam hills
     elevation = 400 + Math.abs(h1) * 900
     slope = 24 + h1 * 12
-    slope = Math.max(6, Math.min(48, slope))
+    slope = Math.max(8, Math.min(48, slope))
     lithology = "Surma Weathered Siltstone"
     cohesion = 20
     phi = 28
   }
 
-  // 3. Hydrological Saturation (m) & Rainfall Dynamic
+  // 5. Hydrology & Infinite Slope Equation
   const rainEffect = (activeRainfall || 28)
   const isCloudburst = rainEffect >= 80
-  let saturation = isAssamPlain ? 35 : (42 + rainEffect * 0.42 + h2 * 10)
+  let saturation = (40 + rainEffect * 0.44 + h2 * 10)
   if (isCloudburst) saturation = Math.min(96, saturation + 20)
   saturation = Math.max(15, Math.min(96, saturation))
   const m = saturation / 100
 
-  // 4. Infinite Slope Factor of Safety (FoS)
-  const gamma = 20 // kN/m3
-  const gammaW = 9.81 // kN/m3
-  const zDepth = 2.5 // m
+  const gamma = 20
+  const gammaW = 9.81
+  const zDepth = 2.5
   const betaRad = (slope * Math.PI) / 180
   const phiRad = (phi * Math.PI) / 180
 
@@ -1090,7 +1460,7 @@ function get30mTerrainRisk(lat, lon, activeRainfall = 28, stateFilter = "ALL") {
   let fos = denominator > 0.001 ? (numerator / denominator) : 3.0
   fos = Number(fos.toFixed(2))
 
-  // InSAR velocity (mm/d)
+  // InSAR velocity
   let insar = 1.2
   if (fos < 1.0) {
     insar = Number((28.0 + (1.0 - fos) * 24.0 + Math.abs(h1) * 8.0).toFixed(1))
@@ -1102,57 +1472,62 @@ function get30mTerrainRisk(lat, lon, activeRainfall = 28, stateFilter = "ALL") {
     insar = Number((0.8 + Math.abs(h3) * 1.5).toFixed(1))
   }
 
-  // 5. Hazard Classification (5 Tiers: CRITICAL, HIGH, MODERATE, SAFE_HAVEN, SAFE)
-  let tier = "SAFE"
-  let colorHex = "#16A34A"
-  let fillColor = isTargetState ? "rgba(22, 163, 74, 0.44)" : "rgba(22, 163, 74, 0.20)"
-  let borderColor = isTargetState ? "rgba(21, 128, 61, 0.90)" : "rgba(21, 128, 61, 0.45)"
-  let directive = `OPEN — Normal Speed Permitted (Stable ${lithology.split(' ')[0]} bedrock).`
-  let type = "Alluvial Valley Floor"
-
+  // 6. Continuous Risk Score (0.0 to 1.0) mapped along Green -> Yellow -> Orange -> Red
+  let baseScore = 0.0
   if (fos < 1.0 || slope > 46) {
-    tier = "CRITICAL"
-    colorHex = "#DC2626"
-    fillColor = isTargetState ? "rgba(220, 38, 38, 0.48)" : "rgba(220, 38, 38, 0.22)"
-    borderColor = isTargetState ? "rgba(185, 28, 28, 0.92)" : "rgba(185, 28, 28, 0.45)"
-    directive = "CRITICAL CHOKEPOINT — Active fault creep. Hold convoys at nearest Safe Haven."
-    type = "Mountain Headwall Scarp"
+    // Critical (0.75 - 1.00) -> Red
+    baseScore = 0.75 + Math.min(0.25, (1.0 - Math.min(1.0, fos)) * 0.4 + (slope - 46) * 0.012)
   } else if (fos < 1.25 || slope > 35) {
-    tier = "HIGH"
-    colorHex = "#EA580C"
-    fillColor = isTargetState ? "rgba(234, 88, 12, 0.46)" : "rgba(234, 88, 12, 0.22)"
-    borderColor = isTargetState ? "rgba(194, 65, 12, 0.90)" : "rgba(194, 65, 12, 0.45)"
-    directive = "HIGH RISK — Debris Flow Influx Zone (20 km/h Limit, Convoy Escort)."
-    type = "Colluvial Hillslope"
+    // High (0.50 - 0.75) -> Orange
+    baseScore = 0.50 + ((1.25 - fos) / 0.25) * 0.25
   } else if (fos < 1.55 || slope > 22) {
+    // Moderate (0.25 - 0.50) -> Yellow
+    baseScore = 0.25 + ((1.55 - fos) / 0.30) * 0.25
+  } else {
+    // Low / Safe (0.05 - 0.25) -> Green
+    baseScore = Math.max(0.05, 0.25 - (fos - 1.55) * 0.12)
+  }
+
+  const riskScore = Math.max(0.05, Math.min(0.98, baseScore + hotspotRisk * 0.25))
+
+  // Classification Tiers
+  let tier = "SAFE"
+  let colorHex = "#16A34A" // Green
+  let directive = `OPEN — Normal Speed Permitted (Stable ${lithology.split(' ')[0]} bedrock).`
+  let type = "Stable Valley & Low Hill"
+
+  if (riskScore >= 0.75) {
+    tier = "CRITICAL"
+    colorHex = "#DC2626" // Red
+    directive = "CRITICAL HAZARD — Active shearing / fault slip. Restrict non-essential traffic."
+    type = "High-Angle Headwall / Fault Chute"
+  } else if (riskScore >= 0.50) {
+    tier = "HIGH"
+    colorHex = "#EA580C" // Orange
+    directive = "HIGH RISK — Debris Influx Zone (20 km/h Limit, Continuous Radar Watch)."
+    type = "Colluvial Hillslope"
+  } else if (riskScore >= 0.25) {
     tier = "MODERATE"
-    colorHex = "#EAB308"
-    fillColor = isTargetState ? "rgba(234, 179, 8, 0.44)" : "rgba(234, 179, 8, 0.20)"
-    borderColor = isTargetState ? "rgba(161, 98, 7, 0.88)" : "rgba(161, 98, 7, 0.42)"
-    directive = "ADVISORY — Wet Subgrade Slump (Proceed with Caution, Watch for Stones)."
-    type = "Valley Flank / Terrace"
-  } else if (slope <= 16 && fos >= 1.75 && !isAssamPlain) {
-    tier = "SAFE_HAVEN"
-    colorHex = "#0284C7"
-    fillColor = isTargetState ? "rgba(2, 132, 199, 0.48)" : "rgba(2, 132, 199, 0.22)"
-    borderColor = isTargetState ? "rgba(3, 105, 161, 0.92)" : "rgba(3, 105, 161, 0.45)"
-    directive = "SAFE HOLDING BAY (Stable Bedrock Layby with Driver Welfare Shelter)"
-    type = "Safe Holding Bay / Layby"
+    colorHex = "#EAB308" // Yellow
+    directive = "ADVISORY — Subgrade Slump Watch (Proceed with Caution, Watch for Stones)."
+    type = "Valley Flank / Hill Terrace"
   } else {
     tier = "SAFE"
-    colorHex = "#16A34A"
-    fillColor = isTargetState ? "rgba(22, 163, 74, 0.42)" : "rgba(22, 163, 74, 0.18)"
-    borderColor = isTargetState ? "rgba(21, 128, 61, 0.88)" : "rgba(21, 128, 61, 0.40)"
-    directive = `OPEN — Normal Speed Permitted (Stable ${lithology.split(' ')[0]}).`
-    type = "Alluvial Valley Floor"
+    colorHex = "#16A34A" // Green
+    directive = `OPEN — Stable conditions (${lithology.split(' ')[0]}).`
+    type = "Stable Valley Floor"
   }
+
+  const dotColor = getRiskColor(riskScore, 0.85)
 
   return {
     tier,
-    color: fillColor,
-    fillColor,
+    riskScore: Number(riskScore.toFixed(3)),
     colorHex,
-    borderColor,
+    dotColor,
+    color: dotColor,
+    fillColor: dotColor,
+    borderColor: colorHex,
     slope: Number(slope.toFixed(1)),
     elevation: Math.round(elevation),
     fos,
@@ -1160,13 +1535,13 @@ function get30mTerrainRisk(lat, lon, activeRainfall = 28, stateFilter = "ALL") {
     saturation: Math.round(saturation),
     lithology,
     stateName,
+    region,
     directive,
     type,
-    isTargetState
+    isTargetState: true
   }
 }
 
-// Backward-compatibility alias
 const getMicroCellGeotechnicalRisk = get30mTerrainRisk;
 
 export default function AppDesktop({ onSwitchToMobile }) {
@@ -1296,7 +1671,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
         return st
       }
     } catch (e) {}
-    return "Arunachal Pradesh"
+    return "ALL"
   }
   const [selectedStateFilter, setSelectedStateFilter] = useState(getInitialState)
   const [selectedRiskFilter, setSelectedRiskFilter] = useState("ALL")
@@ -1338,7 +1713,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
   }, [sectorSearchQuery, selectedStateFilter, selectedRiskFilter])
 
   // Map Basemap Layer
-  const [baseLayer, setBaseLayer] = useState("topo")
+  const [baseLayer, setBaseLayer] = useState("light")
 
   // BLE Emergency Broadcast State
   const [bleBroadcasting, setBleBroadcasting] = useState(false)
@@ -1367,12 +1742,17 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
   // State geographic centers and boundary zooms for whole-state display
   const STATE_VIEWPORTS = {
-    "ALL": { center: [26.00, 93.00], zoom: 6.8, name: "All Northeast Region (NER - 8 States)" },
-    "Arunachal Pradesh": { center: [28.20, 94.40], zoom: 7.6, name: "Arunachal Pradesh (All 83,743 km²)" },
-    "Arunachal": { center: [28.20, 94.40], zoom: 7.6, name: "Arunachal Pradesh (All 83,743 km²)" },
-    "Assam": { center: [26.20, 92.90], zoom: 7.5, name: "Assam (Brahmaputra & Hill Districts)" },
-    "Meghalaya": { center: [25.50, 91.35], zoom: 8.5, name: "Meghalaya (Shillong Plateau & South Scarp)" },
+    "ALL": { center: [23.5, 82.5], zoom: 5.0, name: "Geographic Map of India (All Landslide Belts)" },
+    "All India": { center: [23.5, 82.5], zoom: 5.0, name: "Geographic Map of India (All Landslide Belts)" },
+    "Arunachal Pradesh": { center: [28.20, 94.40], zoom: 7.5, name: "Arunachal Pradesh (All 83,743 km²)" },
+    "Arunachal": { center: [28.20, 94.40], zoom: 7.5, name: "Arunachal Pradesh (All 83,743 km²)" },
+    "Uttarakhand": { center: [30.15, 79.25], zoom: 7.8, name: "Uttarakhand (Garhwal & Kumaon Himalayas)" },
+    "Himachal": { center: [31.85, 77.10], zoom: 7.8, name: "Himachal Pradesh (Kinnaur, Kullu & Shimla)" },
+    "Kerala": { center: [10.35, 76.50], zoom: 8.0, name: "Kerala & Nilgiris (Wayanad & High Ranges)" },
+    "Western Ghats": { center: [14.20, 75.20], zoom: 6.8, name: "Western Ghats & Nilgiri Escarpment" },
     "Sikkim": { center: [27.55, 88.50], zoom: 9.0, name: "Sikkim (Teesta Valley & High Range)" },
+    "Meghalaya": { center: [25.50, 91.35], zoom: 8.5, name: "Meghalaya (Shillong Plateau & South Scarp)" },
+    "Assam": { center: [26.20, 92.90], zoom: 7.5, name: "Assam (Barail & Karbi Hill Districts)" },
     "Nagaland": { center: [26.15, 94.55], zoom: 8.5, name: "Nagaland (Patkai Hill Ranges)" },
     "Manipur": { center: [24.80, 93.95], zoom: 8.5, name: "Manipur (Imphal Basin & Surrounding Hills)" },
     "Mizoram": { center: [23.15, 92.85], zoom: 8.2, name: "Mizoram (Longitudinal Ridge Corridors)" },
@@ -1636,8 +2016,8 @@ export default function AppDesktop({ onSwitchToMobile }) {
     if (!mapContainerRef.current) return
     if (mapInstanceRef.current) return
 
-    let initCenter = [28.20, 94.40]
-    let initZoom = 7.6
+    let initCenter = [23.50, 82.50]
+    let initZoom = 5.0
     try {
       const p = new URLSearchParams(window.location.search)
       if (p.get("lat") && p.get("lng")) {
@@ -1651,24 +2031,34 @@ export default function AppDesktop({ onSwitchToMobile }) {
     const map = L.map(mapContainerRef.current, {
       center: initCenter,
       zoom: initZoom,
-      minZoom: 5,
+      minZoom: 4,
       maxZoom: 18,
       scrollWheelZoom: true,
       zoomControl: true
     })
     mapInstanceRef.current = map
 
-    // High-Definition Topographic Elevation Relief Map (OpenTopoMap with hillshading & contours)
-    const topoLayer = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+    // Light Cartographic Base Map with Indian State Boundaries (Esri Light Gray Canvas Base + State Boundaries Reference)
+    const lightBase = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
       maxZoom: 18,
-      subdomains: ['a', 'b', 'c'],
-      attribution: 'Map: © OpenTopoMap, OpenStreetMap contributors, SRTM',
+      attribution: 'Tiles &copy; Esri, MapmyIndia, OpenStreetMap contributors',
+      zIndex: 1,
       keepBuffer: 12
     })
-    topoLayer.addTo(map)
+    lightBase.addTo(map)
+
+    const lightRef = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 18,
+      zIndex: 500,
+      keepBuffer: 12
+    })
+    lightRef.addTo(map)
 
     // Continuous Micro-Polygon Geotechnical Hazard Canvas Layer (L.GridLayer)
     // Covers the ENTIRE MAP (Arunachal Pradesh & ALL 8 NER STATES) with lakhs of small contiguous bordered polygons
+    // Granular Dot-Density / Pixelated Raster Geotechnical Hazard Overlay (L.GridLayer)
+    // Renders scattered, stippled dots across India's hazard regions (NO solid polygon fills)
+    // Seamlessly integrates with the Light cartographic base map and Indian state boundaries
     const RasterGridLayerClass = L.GridLayer.extend({
       createTile: function(coords) {
         const tile = document.createElement('canvas')
@@ -1681,29 +2071,34 @@ export default function AppDesktop({ onSwitchToMobile }) {
         const nw = bounds.getNorthWest()
         const se = bounds.getSouthEast()
 
-        // Boundary check for Northeast India (NER) 21.8°N - 29.5°N, 88.0°E - 97.5°E
-        // If tile does not intersect NER at all, return empty transparent tile
-        if (se.lat > 29.5 || nw.lat < 21.8 || se.lng < 88.0 || nw.lng > 97.5) {
+        // Rapid bounding box check: Does tile intersect any of India's monitored hazard zones?
+        // 1. Eastern Himalayas & Northeast: lat 21.8 - 29.5, lon 88.0 - 97.5
+        // 2. Northwest Himalayas: lat 28.5 - 35.6, lon 73.8 - 81.2
+        // 3. Western Ghats & Nilgiris: lat 8.2 - 20.8, lon 72.8 - 77.4
+        const inNER = (nw.lat >= 21.8 && se.lat <= 29.5 && se.lng >= 88.0 && nw.lng <= 97.5)
+        const inNWHim = (nw.lat >= 28.5 && se.lat <= 35.6 && se.lng >= 73.8 && nw.lng <= 81.2)
+        const inWG = (nw.lat >= 8.2 && se.lat <= 20.8 && se.lng >= 72.8 && nw.lng <= 77.4)
+
+        if (!inNER && !inNWHim && !inWG) {
           return tile
         }
 
         const stateFilter = selectedStateFilterRef.current || "ALL"
         const rain = activeRainfallRef.current || 28
 
-        // High-density minute grain across all zoom levels:
-        // Zoom <= 7: 64x64 minute micro-grain (4px tiny cells, 4,096 cells/tile)
-        // Zoom 8-10: 40x40 fine micro-cells (6.4px)
-        // Zoom 11+: 24x24 crisp 1-KM micro-polygons with 1.2px borders
-        const gridSize = coords.z <= 7 ? 64 : (coords.z <= 10 ? 40 : 24)
+        // Fine granular sampling grid per 256x256 tile:
+        // Zoom <= 6 (All India view): 48x48 sampling grid (granular point density)
+        // Zoom 7-9 (Regional view): 36x36 sampling grid
+        // Zoom 10+ (District/Local view): 24x24 sampling grid
+        const gridSize = coords.z <= 6 ? 48 : (coords.z <= 9 ? 36 : 24)
         const cellW = size.x / gridSize
         const cellH = size.y / gridSize
 
         const latStep = (nw.lat - se.lat) / gridSize
         const lonStep = (se.lng - nw.lng) / gridSize
 
-        const isMinuteGrain = coords.z <= 7
-        const pad = isMinuteGrain ? 0.2 : (coords.z <= 10 ? 0.5 : 1.0)
-        const strokeWidth = isMinuteGrain ? 0.3 : (coords.z <= 10 ? 0.6 : 1.2)
+        // Base stipple dot radius (crisp, delicate scattered dots)
+        const baseRadius = coords.z <= 5 ? 1.3 : (coords.z <= 7 ? 1.6 : (coords.z <= 10 ? 2.2 : 2.8))
 
         for (let gy = 0; gy < gridSize; gy++) {
           const cellLat = nw.lat - (gy + 0.5) * latStep
@@ -1716,15 +2111,38 @@ export default function AppDesktop({ onSwitchToMobile }) {
             const px = gx * cellW
             const py = gy * cellH
 
-            // 1. Semi-transparent polygon fill
-            ctx.fillStyle = cellRisk.fillColor
-            ctx.fillRect(px + pad, py + pad, cellW - pad * 2, cellH - pad * 2)
+            // Deterministic spatial jitter for authentic scattered stippling (dot density)
+            const jx = (hashCoord(cellLat, cellLon, 1) - 0.5) * (cellW * 0.72)
+            const jy = (hashCoord(cellLat, cellLon, 2) - 0.5) * (cellH * 0.72)
+            const dotX = px + cellW * 0.5 + jx
+            const dotY = py + cellH * 0.5 + jy
 
-            // 2. Distinct colored border around EVERY small polygon
-            if (!isMinuteGrain || coords.z >= 6) {
-              ctx.strokeStyle = cellRisk.borderColor
-              ctx.lineWidth = strokeWidth
-              ctx.strokeRect(px + pad, py + pad, cellW - pad * 2, cellH - pad * 2)
+            // Dot radius scales with hazard score: Safe = small, Critical = slightly larger
+            const r = Math.max(1.0, baseRadius * (0.85 + cellRisk.riskScore * 0.45))
+
+            // Render primary stippled circular dot (NO solid polygon fills!)
+            ctx.beginPath()
+            ctx.arc(dotX, dotY, r, 0, Math.PI * 2)
+            ctx.fillStyle = cellRisk.dotColor
+            ctx.fill()
+
+            // Density Enhancement: Higher risk areas produce extra scattered micro-stipples
+            if (cellRisk.riskScore > 0.48 && hashCoord(cellLat, cellLon, 3) > 0.42) {
+              const jx2 = (hashCoord(cellLat, cellLon, 4) - 0.5) * (cellW * 0.65)
+              const jy2 = (hashCoord(cellLat, cellLon, 5) - 0.5) * (cellH * 0.65)
+              ctx.beginPath()
+              ctx.arc(px + cellW * 0.5 + jx2, py + cellH * 0.5 + jy2, r * 0.75, 0, Math.PI * 2)
+              ctx.fillStyle = cellRisk.dotColor
+              ctx.fill()
+            }
+
+            if (cellRisk.riskScore > 0.78 && hashCoord(cellLat, cellLon, 6) > 0.45) {
+              const jx3 = (hashCoord(cellLat, cellLon, 7) - 0.5) * (cellW * 0.65)
+              const jy3 = (hashCoord(cellLat, cellLon, 8) - 0.5) * (cellH * 0.65)
+              ctx.beginPath()
+              ctx.arc(px + cellW * 0.5 + jx3, py + cellH * 0.5 + jy3, r * 0.65, 0, Math.PI * 2)
+              ctx.fillStyle = cellRisk.dotColor
+              ctx.fill()
             }
           }
         }
@@ -1921,12 +2339,23 @@ export default function AppDesktop({ onSwitchToMobile }) {
       }
     })
 
-    if (type === "satellite") {
+    if (type === "light") {
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 18,
+        attribution: 'Tiles &copy; Esri, MapmyIndia, OpenStreetMap contributors',
+        zIndex: 1,
+        keepBuffer: 12
+      }).addTo(map)
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 18,
+        zIndex: 500,
+        keepBuffer: 12
+      }).addTo(map)
+    } else if (type === "satellite") {
       L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
         maxZoom: 18,
         attribution: 'Tiles: © Esri, USGS'
       }).addTo(map)
-      // Overlay place names & borders on top of satellite imagery
       L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
         maxZoom: 18
       }).addTo(map)
@@ -2279,7 +2708,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-[#003B73] uppercase tracking-tight">
-                    Northeast Regional GIS Command Canvas (30m × 30m Continuous DEM Raster)
+                    Geographic Hazard Map of India (Granular Dot-Density Raster)
                   </h3>
                   <p className="text-[11px] text-slate-500">
                     Continuous 30m Geotechnical Risk across Whole States (Arunachal Pradesh &amp; all 8 NER States) · Click anywhere on map to inspect
@@ -2290,7 +2719,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
               {/* State quick filter pills */}
               <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
                 <span className="text-[10px] font-bold text-slate-500 uppercase">State:</span>
-                {["ALL", "Arunachal", "Assam", "Meghalaya", "Manipur", "Mizoram", "Nagaland", "Sikkim", "Tripura"].map(st => (
+                {["ALL", "Arunachal", "Uttarakhand", "Himachal", "Kerala", "Sikkim", "Meghalaya", "Western Ghats"].map(st => (
                   <button
                     key={st}
                     onClick={() => handleStateFilterChange(st)}
@@ -2300,7 +2729,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
                         : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                     }`}
                   >
-                    {st === "ALL" ? "All NER (8 States)" : st}
+                    {st === "ALL" ? "All India" : st}
                   </button>
                 ))}
               </div>
@@ -2381,13 +2810,13 @@ export default function AppDesktop({ onSwitchToMobile }) {
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-[#005B9E] text-lg">public</span>
                     <span className="font-bold text-xs uppercase tracking-wide text-slate-800">
-                      Northeast Regional GIS Canvas · 30m Continuous DEM Raster
+                      Geographic Hazard Map of India · Granular Stippled Dot-Density Overlay
                     </span>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     {/* State quick filter pills in map toolbar */}
                     <div className="flex items-center gap-1 bg-slate-200/90 p-0.5 rounded-md text-xs">
-                      {["ALL", "Arunachal", "Assam", "Meghalaya", "Manipur", "Mizoram", "Nagaland", "Sikkim", "Tripura"].map(st => {
+                      {["ALL", "Arunachal", "Uttarakhand", "Himachal", "Kerala", "Sikkim", "Meghalaya", "Western Ghats"].map(st => {
                         const isAct = (st === "ALL" && selectedStateFilter === "ALL") || (st !== "ALL" && selectedStateFilter.toLowerCase().includes(st.toLowerCase()));
                         return (
                           <button
@@ -2397,7 +2826,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
                               isAct ? "bg-[#003B73] text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
                             }`}
                           >
-                            {st === "ALL" ? "All NER" : st}
+                            {st === "ALL" ? "All India" : st}
                           </button>
                         );
                       })}
@@ -2413,6 +2842,13 @@ export default function AppDesktop({ onSwitchToMobile }) {
                       <span className="material-symbols-outlined text-xs text-slate-500">arrow_drop_down</span>
                     </button>
                     <div className="flex items-center bg-slate-200/80 p-0.5 rounded-md text-xs">
+                      <button
+                        onClick={() => switchBaseLayer("light")}
+                        className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "light" ? "bg-white text-[#003B73] shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                        title="Light Base Map with Indian State Boundaries"
+                      >
+                        Light
+                      </button>
                       <button
                         onClick={() => switchBaseLayer("topo")}
                         className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-all ${baseLayer === "topo" ? "bg-white text-[#003B73] shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
@@ -2443,13 +2879,13 @@ export default function AppDesktop({ onSwitchToMobile }) {
                   <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 z-10 text-xs flex items-center gap-2 pointer-events-auto">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
                     <span className="font-mono font-bold text-slate-800">
-                      MINUTE-GRAIN CONTINUOUS RISK · {selectedStateFilter === "ALL" ? "ALL 8 NER STATES (INDIA)" : selectedStateFilter.toUpperCase()} (Lakhs of Minute Cells · Clipped to India)
+                      DOT-DENSITY HAZARD OVERLAY · {selectedStateFilter === "ALL" ? "GEOGRAPHIC MAP OF INDIA (ALL HAZARD BELTS)" : selectedStateFilter.toUpperCase()} (Granular Stipples · Green to Red)
                     </span>
                     <button
                       onClick={() => handleStateFilterChange("ALL")}
                       className="text-[10px] text-[#005B9E] font-bold underline hover:text-[#003B73] ml-1 cursor-pointer"
                     >
-                      Reset All NER ↺
+                      Reset All India ↺
                     </button>
                   </div>
 
@@ -2468,30 +2904,26 @@ export default function AppDesktop({ onSwitchToMobile }) {
                   {/* 5-Tier Micro-Polygon Legend (Identical to User Reference) */}
                   <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md p-2.5 rounded-lg shadow-md border border-slate-300 z-10 text-[10.5px] flex flex-col gap-1.5 pointer-events-auto">
                     <span className="font-black text-slate-800 uppercase tracking-wider text-[9px]">
-                      Micro-Polygon Risk Zonation
+                      Dot-Density Risk Zonation
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3 rounded-sm bg-[#DC2626] border border-[#B91C1C]"></span>
-                      <span className="font-bold text-red-700">CRITICAL</span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#DC2626] shadow-xs flex items-center justify-center text-[8px] text-white">●</span>
+                      <span className="font-bold text-red-700">CRITICAL (High Density)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3 rounded-sm bg-[#EA580C] border border-[#C2410C]"></span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#EA580C] shadow-xs flex items-center justify-center text-[8px] text-white">●</span>
                       <span className="font-bold text-orange-700">HIGH</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3 rounded-sm bg-[#EAB308] border border-[#A16207]"></span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#EAB308] shadow-xs flex items-center justify-center text-[8px] text-white">●</span>
                       <span className="font-bold text-amber-700">MODERATE</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3 rounded-sm bg-[#0284C7] border border-[#0369A1]"></span>
-                      <span className="font-bold text-sky-700">SAFE HAVEN</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3 rounded-sm bg-[#16A34A] border border-[#15803D]"></span>
-                      <span className="font-bold text-emerald-700">SAFE</span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#16A34A] shadow-xs flex items-center justify-center text-[8px] text-white">●</span>
+                      <span className="font-bold text-emerald-700">LOW / SAFE (Sparser)</span>
                     </div>
                     <div className="pt-1 border-t border-slate-200 text-[9px] text-slate-500 font-mono flex items-center justify-between gap-2">
-                      <span>Lakhs of Micro-Polygons</span>
+                      <span>Stippled Dot-Density</span>
                       <span className="text-blue-600 font-bold">Click to inspect</span>
                     </div>
                   </div>
@@ -2543,10 +2975,10 @@ export default function AppDesktop({ onSwitchToMobile }) {
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-sm">terrain</span>
-                        <span>{selectedStateFilter === "ALL" ? "All NER 8-State Risk Model:" : `${selectedStateFilter.toUpperCase()} Micro-Polygon Model:`}</span>
+                        <span>{selectedStateFilter === "ALL" ? "All-India Geotechnical Hazard Model:" : `${selectedStateFilter.toUpperCase()} Hazard Model:`}</span>
                       </span>
                       <span className="text-xs font-mono font-bold text-slate-300">
-                        {selectedStateFilter === "ALL" ? "Northeast India (8 States · Lakhs of Micro-Polygons)" : `${selectedStateFilter} (Contiguous Micro-Polygons · Eastern Himalayas)`}
+                        {selectedStateFilter === "ALL" ? "Northeast India (8 States · Stippled Dot-Density)" : `${selectedStateFilter} (Contiguous Micro-Polygons · Eastern Himalayas)`}
                       </span>
                     </div>
 
