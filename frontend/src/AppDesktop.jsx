@@ -893,13 +893,29 @@ function getCorridorChainages(zone, riskResult, activeRainfall = 28) {
 // High-Resolution 30m x 30m Continuous Geotechnical Terrain Risk Engine
 // Computes pixel-level slope, lithology, InSAR shear, and Factor of Safety (FoS) across Arunachal Pradesh & all NER states
 function get30mTerrainRisk(lat, lon, activeRainfall = 28, stateFilter = "ALL") {
-  // Boundary check for Northeast India (NER)
-  if (lat < 21.6 || lat > 29.6 || lon < 88.0 || lon > 97.6) {
-    return null
-  }
+  // 1. Strict International & Regional Boundary Guard
+  // Points outside Northeast India (NER) are immediately rejected (100% transparent, null)
+  if (lat < 21.90 || lat > 29.50 || lon < 88.00 || lon > 97.45) return null
 
-  // 1. Determine State / Territory
-  let stateName = "Northeast Region (NER)"
+  // Explicit country exclusions:
+  // Bangladesh (Dhaka, Chittagong, Mymensingh, Sylhet basin, etc.)
+  if (lat < 25.12 && lon < 91.15) return null
+  if (lat < 22.95 && lon < 92.25) return null
+  if (lat < 25.08 && lon >= 91.15 && lon < 92.25 && !(lat >= 22.95 && lat <= 24.52 && lon >= 91.15 && lon <= 92.35)) return null
+  // Bhutan (Thimphu, Paro, Punakha)
+  if (lat >= 26.75 && lat <= 28.25 && lon >= 88.95 && lon <= 91.60) return null
+  // Myanmar (Burma)
+  if (lon > 95.25 && lat < 27.0) return null
+  if (lon > 94.70 && lat < 25.7) return null
+  if (lon > 93.45 && lat < 24.5) return null
+  // Tibet / China
+  if (lon < 92.0 && lat > 28.10) return null
+  if (lon >= 92.0 && lon < 93.0 && lat > 28.05) return null
+  if (lon >= 93.0 && lon < 94.5 && lat > 28.85) return null
+  if (lon >= 94.5 && lat > 29.45) return null
+
+  // 2. Identify the specific NER State
+  let stateName = null
   let isArunachal = false
   let isAssamPlain = false
   let isMeghalaya = false
@@ -909,36 +925,40 @@ function get30mTerrainRisk(lat, lon, activeRainfall = 28, stateFilter = "ALL") {
   let isMizoram = false
   let isTripura = false
 
-  // Alluvial Brahmaputra Plain (Assam valley is flat and geotechnically stable against landslides)
-  if (lat > 25.95 && lat < 27.20 && lon > 90.50 && lon < 95.20) {
-    isAssamPlain = true
-    stateName = "Assam (Brahmaputra Plain)"
-  } else if (lat >= 26.65 && lon >= 91.50 && lon <= 97.45 && !(lat < 27.10 && lon < 95.50 && lon > 92.50)) {
-    isArunachal = true
-    stateName = "Arunachal Pradesh"
-  } else if (lat >= 25.00 && lat <= 26.15 && lon >= 89.80 && lon <= 92.85) {
-    isMeghalaya = true
-    stateName = "Meghalaya"
-  } else if (lat >= 27.05 && lat <= 28.15 && lon >= 88.00 && lon <= 88.95) {
+  if (lat >= 27.05 && lat <= 28.10 && lon >= 88.05 && lon <= 88.95) {
     isSikkim = true
     stateName = "Sikkim"
-  } else if (lat >= 25.20 && lat <= 27.00 && lon >= 93.30 && lon <= 95.30) {
-    isNagaland = true
-    stateName = "Nagaland"
-  } else if (lat >= 23.80 && lat <= 25.70 && lon >= 93.00 && lon <= 94.80) {
-    isManipur = true
-    stateName = "Manipur"
-  } else if (lat >= 21.90 && lat <= 24.50 && lon >= 92.20 && lon <= 93.50) {
-    isMizoram = true
-    stateName = "Mizoram"
-  } else if (lat >= 22.90 && lat <= 24.50 && lon >= 91.10 && lon <= 92.40) {
+  } else if (lat >= 25.10 && lat <= 26.08 && lon >= 89.85 && lon <= 92.85) {
+    isMeghalaya = true
+    stateName = "Meghalaya"
+  } else if (lat >= 22.95 && lat <= 24.52 && lon >= 91.15 && lon <= 92.35) {
     isTripura = true
     stateName = "Tripura"
-  } else {
-    stateName = "Assam Foothills"
+  } else if (lat >= 21.95 && lat <= 24.50 && lon >= 92.25 && lon <= 93.45) {
+    isMizoram = true
+    stateName = "Mizoram"
+  } else if (lat >= 23.85 && lat <= 25.60 && lon >= 93.00 && lon <= 94.70) {
+    isManipur = true
+    stateName = "Manipur"
+  } else if (lat >= 25.15 && lat <= 27.02 && lon >= 93.30 && lon <= 95.25) {
+    isNagaland = true
+    stateName = "Nagaland"
+  } else if (lat >= 26.70 && lon >= 91.60 && lon <= 97.40 && (lat >= 27.00 || (lat >= 26.85 && lon < 93.5) || (lat >= 26.70 && lon >= 95.2 && lon <= 96.2))) {
+    isArunachal = true
+    stateName = "Arunachal Pradesh"
+  } else if (lat >= 24.25 && lat <= 27.50 && lon >= 89.80 && lon <= 95.90) {
+    if (lat > 25.95 && lat < 27.20 && lon > 90.50 && lon < 95.20) {
+      isAssamPlain = true
+      stateName = "Assam (Brahmaputra Plain)"
+    } else {
+      stateName = "Assam"
+    }
   }
 
-  // If a specific state is filtered (e.g. Arunachal Pradesh), emphasize that state
+  // Strictly return null if coordinate does not fall into one of the 8 states
+  if (!stateName) return null
+
+  // If a specific state is filtered (e.g. Arunachal Pradesh), reject all other states
   const isTargetState = stateFilter === "ALL" || 
     (stateFilter.toLowerCase().includes("arunachal") && isArunachal) ||
     (stateFilter.toLowerCase().includes("meghalaya") && isMeghalaya) ||
@@ -948,6 +968,8 @@ function get30mTerrainRisk(lat, lon, activeRainfall = 28, stateFilter = "ALL") {
     (stateFilter.toLowerCase().includes("manipur") && isManipur) ||
     (stateFilter.toLowerCase().includes("mizoram") && isMizoram) ||
     (stateFilter.toLowerCase().includes("tripura") && isTripura)
+
+  if (!isTargetState) return null
 
   // 2. Continuous 30m Digital Elevation Model (DEM) & Slope
   let elevation = 300
@@ -1154,8 +1176,14 @@ export default function AppDesktop({ onSwitchToMobile }) {
     return arunachalZone || ZONES[0]
   })
 
-  // Current Leaflet Map Zoom level (determines semantic zoom: < 10 = Regional Macro, >= 10 = 1-KM Chainages)
-  const [currentZoom, setCurrentZoom] = useState(7.0)
+  const getInitialZoom = () => {
+    try {
+      const p = new URLSearchParams(window.location.search)
+      if (p.get("zoom")) return parseFloat(p.get("zoom"))
+    } catch(e) {}
+    return 8.5
+  }
+  const [currentZoom, setCurrentZoom] = useState(getInitialZoom)
   const [selectedChainage, setSelectedChainage] = useState(null)
   const chainagesGroupRef = useRef(null)
   const prevZoneIdRef = useRef(null)
@@ -1649,28 +1677,38 @@ export default function AppDesktop({ onSwitchToMobile }) {
         tile.height = size.y
         const ctx = tile.getContext('2d')
 
+        // Do not render coarse/chunky polygons when zoomed way out (zoom < 8)
+        // This keeps national/sub-continental views pristine without blocky overlays
+        if (coords.z < 8) {
+          return tile
+        }
+
         const bounds = this._tileCoordsToBounds(coords)
         const nw = bounds.getNorthWest()
         const se = bounds.getSouthEast()
 
-        // Boundary check for Northeast India (NER) 21.5°N - 29.8°N, 88.0°E - 97.8°E
-        if (nw.lat < 21.5 || se.lat > 29.8 || nw.lng > 97.8 || se.lng < 88.0) {
+        // Boundary check for Northeast India (NER) 21.8°N - 29.5°N, 88.0°E - 97.5°E
+        // If tile does not intersect NER at all, return empty transparent tile
+        if (se.lat > 29.5 || nw.lat < 21.8 || se.lng < 88.0 || nw.lng > 97.5) {
           return tile
         }
 
         const stateFilter = selectedStateFilterRef.current || "ALL"
         const rain = activeRainfallRef.current || 28
 
-        // Adaptive small polygon grid: 16x16 (overview) to 20x20 / 24x24 (detailed zoom)
-        const gridSize = coords.z <= 8 ? 16 : (coords.z <= 11 ? 20 : 24)
+        // Adaptive high-density small polygons:
+        // Zoom 8: 32x32 fine terrain grid (no chunky boxes!)
+        // Zoom 9-11: 24x24 crisp micro-polygons
+        // Zoom 12+: 18x18 detailed 1-KM roadbed & hillslope parcels
+        const gridSize = coords.z <= 8 ? 32 : (coords.z <= 11 ? 24 : 18)
         const cellW = size.x / gridSize
         const cellH = size.y / gridSize
 
         const latStep = (nw.lat - se.lat) / gridSize
         const lonStep = (se.lng - nw.lng) / gridSize
 
-        const pad = coords.z <= 8 ? 0.7 : 1.0
-        const strokeWidth = coords.z <= 8 ? 0.9 : 1.2
+        const pad = coords.z <= 8 ? 0.4 : (coords.z <= 11 ? 0.8 : 1.0)
+        const strokeWidth = coords.z <= 8 ? 0.5 : (coords.z <= 11 ? 0.9 : 1.2)
 
         for (let gy = 0; gy < gridSize; gy++) {
           const cellLat = nw.lat - (gy + 0.5) * latStep
@@ -1679,13 +1717,6 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
             const cellRisk = get30mTerrainRisk(cellLat, cellLon, rain, stateFilter)
             if (!cellRisk) continue
-
-            if (stateFilter !== "ALL" && !cellRisk.isTargetState) {
-              // Dim background for neighboring states when a specific state like Arunachal is focused
-              ctx.fillStyle = "rgba(148, 163, 184, 0.04)"
-              ctx.fillRect(gx * cellW, gy * cellH, cellW, cellH)
-              continue
-            }
 
             const px = gx * cellW
             const py = gy * cellH
@@ -2413,16 +2444,30 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
                   {/* Semantic Zoom / Micro-Polygons Status Badge */}
                   <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 z-10 text-xs flex items-center gap-2 pointer-events-auto">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                    <span className={`w-2.5 h-2.5 rounded-full ${currentZoom >= 8 ? "bg-emerald-600 animate-pulse" : "bg-blue-600"}`}></span>
                     <span className="font-mono font-bold text-slate-800">
-                      MICRO-POLYGON CONTINUOUS RISK · {selectedStateFilter === "ALL" ? "WHOLE NER (8 STATES)" : selectedStateFilter.toUpperCase()} (Lakhs of Contiguous Cells)
+                      {currentZoom >= 8 
+                        ? `MICRO-POLYGON CONTINUOUS RISK · ${selectedStateFilter === "ALL" ? "WHOLE NER (8 STATES)" : selectedStateFilter.toUpperCase()} (Lakhs of Contiguous Cells)`
+                        : `REGIONAL OVERVIEW (Zoom in to Level 8+ for 30m Micro-Polygons)`
+                      }
                     </span>
-                    <button
-                      onClick={() => handleStateFilterChange("ALL")}
-                      className="text-[10px] text-[#005B9E] font-bold underline hover:text-[#003B73] ml-1 cursor-pointer"
-                    >
-                      Reset All NER ↺
-                    </button>
+                    {currentZoom < 8 ? (
+                      <button
+                        onClick={() => {
+                          if (mapInstanceRef.current) mapInstanceRef.current.flyTo([27.58, 92.15], 10, { duration: 1 })
+                        }}
+                        className="text-[10.5px] bg-[#005B9E] text-white font-bold px-2 py-0.5 rounded hover:bg-[#003B73] ml-1 cursor-pointer"
+                      >
+                        Focus Arunachal (Zoom 10) ↗
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleStateFilterChange("ALL")}
+                        className="text-[10px] text-[#005B9E] font-bold underline hover:text-[#003B73] ml-1 cursor-pointer"
+                      >
+                        Reset All NER ↺
+                      </button>
+                    )}
                   </div>
 
                   <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md p-3 rounded-lg shadow-sm border border-slate-200 z-10 max-w-xs text-xs pointer-events-auto">
