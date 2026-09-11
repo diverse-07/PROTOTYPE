@@ -1741,13 +1741,13 @@ export default function AppDesktop({ onSwitchToMobile }) {
   const markersGroupRef = useRef(null)
   const polygonsGroupRef = useRef(null)
 
-  // Initialize Map with 100% Reliable High-Speed Topo & Continuous 30m DEM Geotechnical Raster
+  // Initialize Map with High-Definition Topographic Base & Pure Geological GIS Hazard Polygons
   useEffect(() => {
     if (!mapContainerRef.current) return
     if (mapInstanceRef.current) return
 
-    let initCenter = [27.00, 93.50]
-    let initZoom = 7.5
+    let initCenter = [26.20, 93.00]
+    let initZoom = 7.0
     try {
       const p = new URLSearchParams(window.location.search)
       if (p.get("lat") && p.get("lng")) {
@@ -1777,133 +1777,13 @@ export default function AppDesktop({ onSwitchToMobile }) {
     })
     topoLayer.addTo(map)
 
-    // Continuous Micro-Polygon Geotechnical Hazard Canvas Layer (L.GridLayer)
-    // Covers the ENTIRE MAP (Arunachal Pradesh & ALL 8 NER STATES) with lakhs of small contiguous bordered polygons
-    // Continuous Geomorphic Terrain Slope Hazard Raster (L.GridLayer)
-    // Renders exact slope susceptibility zonation matching user reference image:
-    // - Red (#E4322E): Steep ridge spines and headwalls
-    // - Yellow (#ECF12E): Mid-slope colluvial flanks
-    // - Green (#65B531): Gentle lower valley slopes
-    // - Transparent: Valley floors, roads, towns, and river channels (OpenTopoMap shows through!)
-    const RasterGridLayerClass = L.GridLayer.extend({
-      createTile: function(coords) {
-        const tile = document.createElement('canvas')
-        const size = this.getTileSize()
-        tile.width = size.x
-        tile.height = size.y
-        const ctx = tile.getContext('2d')
-
-        const bounds = this._tileCoordsToBounds(coords)
-        const nw = bounds.getNorthWest()
-        const se = bounds.getSouthEast()
-
-        // Bounding box check for Northeast India (NER) 21.8°N - 29.5°N, 88.0°E - 97.5°E
-        if (nw.lat < 21.8 || se.lat > 29.5 || se.lng < 88.0 || nw.lng > 97.5) {
-          return tile
-        }
-
-        const stateFilter = selectedStateFilterRef.current || "ALL"
-        const rain = activeRainfallRef.current || 28
-
-        // Resolution: 64x64 micro-cells per tile (4px crisp raster cells)
-        const GRID = coords.z <= 7 ? 48 : (coords.z <= 10 ? 64 : 80)
-        const cellW = size.x / GRID
-        const cellH = size.y / GRID
-
-        const latStep = (nw.lat - se.lat) / GRID
-        const lonStep = (se.lng - nw.lng) / GRID
-
-        for (let gy = 0; gy < GRID; gy++) {
-          const cellLat = nw.lat - (gy + 0.5) * latStep
-          for (let gx = 0; gx < GRID; gx++) {
-            const cellLon = nw.lng + (gx + 0.5) * lonStep
-
-            const cellRisk = get30mTerrainRisk(cellLat, cellLon, rain, stateFilter)
-            if (!cellRisk) continue
-
-            const px = gx * cellW
-            const py = gy * cellH
-
-            // Crisp geomorphic raster cell (exact QGIS/ArcGIS slope classification style)
-            ctx.fillStyle = cellRisk.fillColor
-            ctx.fillRect(px, py, cellW + 0.5, cellH + 0.5)
-          }
-        }
-
-        return tile
-      }
-    })
-
-    const rasterGrid = new RasterGridLayerClass({
-      tileSize: 256,
-      opacity: 0.88,
-      zIndex: 400
-    })
-    rasterGrid.addTo(map)
-    rasterGridLayerRef.current = rasterGrid
-
-    // Layer groups for Polygons (Critical Envelopes), Markers, and 1-KM Chainages
+    // Layer groups for Big Geological Hazard Polygons, Markers, and 1-KM Chainages
     const polygonsGroup = L.layerGroup().addTo(map)
     const markersGroup = L.layerGroup().addTo(map)
     const chainagesGroup = L.layerGroup().addTo(map)
     polygonsGroupRef.current = polygonsGroup
     markersGroupRef.current = markersGroup
     chainagesGroupRef.current = chainagesGroup
-
-    // Interactive click anywhere on map to inspect small polygon parcel
-    const onMapClick = (e) => {
-      const lat = e.latlng.lat
-      const lon = e.latlng.lng
-      const stateFilter = selectedStateFilterRef.current || "ALL"
-      const rain = activeRainfallRef.current || 28
-
-      const cell = get30mTerrainRisk(lat, lon, rain, stateFilter)
-      if (!cell) return
-
-      const parcelNum = Math.abs(Math.round((lat * 1000) ^ (lon * 1000))) % 9000 + 1000
-
-      setInspectedCell({
-        lat: Number(lat.toFixed(4)),
-        lon: Number(lon.toFixed(4)),
-        parcelNum,
-        ...cell
-      })
-
-      const tierBadgeColor = cell.tier === "SAFE_HAVEN" ? "#0284C7" : cell.colorHex
-      const tierName = cell.tier === "SAFE_HAVEN" ? "SAFE HAVEN" : cell.tier
-
-      const popupHtml = `
-        <div style="font-family:system-ui,-apple-system,sans-serif;font-size:12px;line-height:1.45;padding:8px 10px;min-width:280px;background:#FFFFFF;border-radius:8px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid ${tierBadgeColor};padding-bottom:5px;margin-bottom:6px;">
-            <span style="font-weight:900;font-size:13px;color:#0F172A;">Parcel #${parcelNum} · ${cell.type}</span>
-            <span style="font-weight:900;font-size:11px;background:${tierBadgeColor};color:#FFFFFF;padding:2px 7px;border-radius:4px;">● ${tierName}</span>
-          </div>
-          <div style="font-size:11px;color:${tierBadgeColor};font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
-            <span>● ${tierName}</span>
-            <span style="color:#94A3B8;">·</span>
-            <span>FoS: ${cell.fos}</span>
-            <span style="color:#94A3B8;">·</span>
-            <span>${cell.insar} mm/d</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;background:#F8FAFC;padding:7px 9px;border-radius:6px;font-size:11px;border:1px solid #E2E8F0;margin-bottom:6px;">
-            <div><span style="color:#64748B;">Slope:</span> <b style="color:#0F172A;">${cell.slope}°</b></div>
-            <div><span style="color:#64748B;">Area:</span> <b style="color:#0F172A;">${cell.type}</b></div>
-            <div><span style="color:#64748B;">Elevation:</span> <b style="color:#0F172A;">${cell.elevation}m</b></div>
-            <div><span style="color:#64748B;">State:</span> <b style="color:#0F172A;">${cell.stateName.split(' ')[0]}</b></div>
-          </div>
-          <div style="font-size:11px;font-weight:700;color:#334155;background:#F8FAFC;padding:6px 9px;border-radius:4px;border-left:3.5px solid ${tierBadgeColor};line-height:1.35;">
-            ${cell.tier === 'SAFE_HAVEN' ? '🅿️ ' : (cell.tier === 'CRITICAL' ? '⛔ ' : (cell.tier === 'HIGH' ? '⚠️ ' : (cell.tier === 'MODERATE' ? '⚡ ' : '✅ ')))} ${cell.directive}
-          </div>
-        </div>
-      `
-
-      L.popup({ maxWidth: 320, offset: [0, -8] })
-        .setLatLng(e.latlng)
-        .setContent(popupHtml)
-        .openOn(map)
-    }
-
-    map.on("click", onMapClick)
 
     const onZoom = () => {
       if (mapInstanceRef.current) {
@@ -1925,7 +1805,6 @@ export default function AppDesktop({ onSwitchToMobile }) {
     return () => {
       window.removeEventListener("resize", handleResize)
       map.off("zoomend", onZoom)
-      map.off("click", onMapClick)
       clearTimeout(t1)
       clearTimeout(t2)
       try { map.remove() } catch(e) {}
@@ -1935,7 +1814,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
   }, [])
 
 
-  // Pure Geological GIS Hazard Polygons & 1-KM Highway Micro-Zonation
+  // Pure Geological GIS Hazard Polygons (Big Polygons) & Highway Micro-Zonation
   useEffect(() => {
     const map = mapInstanceRef.current
     const polyGroup = polygonsGroupRef.current
@@ -1947,7 +1826,90 @@ export default function AppDesktop({ onSwitchToMobile }) {
     markGroup.clearLayers()
     chainGroup.clearLayers()
 
-    // 1. All macro polygons are removed completely: The entire map is tiled exclusively with lakhs of small continuous bordered micro-polygons via RasterGridLayerClass
+    // 1. Render Big Geological GIS Hazard Polygons across Northeast India
+    ZONES.forEach((z) => {
+      const isSelected = selectedZone && z.id === selectedZone.id
+
+      const zRisk = isSelected 
+        ? riskResult 
+        : calculateGeotechnicalRisk(activeRainfall, 180, z.defaultSlope, z.defaultWetness, z.defaultLith, z.defaultInsar)
+
+      let strokeColor = z.borderColor
+      let fillColor = z.tierColor
+      let fillOpacity = isSelected ? 0.60 : 0.40
+      let tierLabel = z.tier
+
+      if (zRisk.fos < 1.0 || zRisk.probability >= 80) {
+        fillColor = "#DC2626" // CRITICAL -> RED
+        strokeColor = "#991B1B"
+        fillOpacity = isSelected ? 0.65 : 0.45
+        tierLabel = "CRITICAL"
+      } else if (zRisk.fos < 1.25 || zRisk.probability >= 65) {
+        fillColor = "#EA580C" // HIGH -> ORANGE
+        strokeColor = "#C2410C"
+        fillOpacity = isSelected ? 0.60 : 0.42
+        tierLabel = "HIGH"
+      } else if (zRisk.fos < 1.50 || zRisk.probability >= 45) {
+        fillColor = "#EAB308" // MODERATE -> YELLOW
+        strokeColor = "#CA8A04"
+        fillOpacity = isSelected ? 0.55 : 0.38
+        tierLabel = "MODERATE"
+      } else if (zRisk.fos < 2.0 || zRisk.probability >= 20) {
+        fillColor = "#22C55E" // LOW -> GREEN
+        strokeColor = "#16A34A"
+        fillOpacity = isSelected ? 0.48 : 0.32
+        tierLabel = "LOW"
+      } else {
+        fillColor = "#14532D" // SAFE -> DARK GREEN
+        strokeColor = "#052E16"
+        fillOpacity = isSelected ? 0.42 : 0.26
+        tierLabel = "SAFE"
+      }
+
+      // Filter check by State
+      const sf = (selectedStateFilter || "ALL").toLowerCase()
+      const isAll = sf === "all" || sf === "all ner"
+      const matchesState = isAll || z.state.toLowerCase().includes(sf.replace(" pradesh", "").replace(" (hill districts)", ""))
+      if (!matchesState) return
+
+      if (z.polygon && z.polygon.length >= 3) {
+        const poly = L.polygon(z.polygon, {
+          color: isSelected ? "#FFFFFF" : strokeColor,
+          weight: isSelected ? 3.5 : 2.0,
+          dashArray: isSelected ? "6, 6" : null,
+          fillColor: fillColor,
+          fillOpacity: fillOpacity
+        })
+
+        // Rich hover tooltip directly attached to polygon
+        poly.bindTooltip(`
+          <div style="font-family:system-ui,-apple-system,sans-serif;font-size:12px;line-height:1.4;padding:6px 10px;border-left:4px solid ${fillColor};background:#FFFFFF;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+            <div style="font-weight:900;color:#0F172A;font-size:13px;">${z.name}</div>
+            <div style="font-weight:800;color:${fillColor};font-size:11.5px;margin:3px 0;">
+              ● ${tierLabel} TIER (${zRisk.probability}%) · FoS: ${zRisk.fos}
+            </div>
+            <div style="font-size:11px;color:#475569;">${z.sub} (${z.state})</div>
+            <div style="font-size:10px;color:#0284C7;margin-top:4px;font-weight:700;">Click to select & view geotechnical telemetry</div>
+          </div>
+        `, { sticky: true, opacity: 0.98 })
+
+        poly.on("click", () => handleZoneSelect(z))
+        poly.addTo(polyGroup)
+
+        // Center marker for selected zone
+        if (isSelected) {
+          const center = poly.getBounds().getCenter()
+          const centerMarker = L.circleMarker(center, {
+            radius: 8,
+            color: "#FFFFFF",
+            weight: 3,
+            fillColor: fillColor,
+            fillOpacity: 1.0
+          })
+          centerMarker.addTo(polyGroup)
+        }
+      }
+    })
 
     // 2. Highway Milestone Pins & Corridor (Shown when showMilestonePins is true and currentZoom >= 11)
     if (showMilestonePins && currentZoom >= 11 && selectedZone) {
@@ -2007,7 +1969,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
       prevZoneIdRef.current = selectedZone.id
       map.panTo([selectedZone.lat, selectedZone.lon], { animate: true, duration: 0.6 })
     }
-  }, [selectedZone, riskResult, activeRainfall, currentZoom, showMilestonePins, corridorSegments, selectedChainage])
+  }, [selectedZone, riskResult, activeRainfall, selectedStateFilter, currentZoom, showMilestonePins, corridorSegments, selectedChainage])
 
 
   // Instant Layer Switching between Topo, Satellite, and Street
@@ -2391,10 +2353,10 @@ export default function AppDesktop({ onSwitchToMobile }) {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-[#003B73] uppercase tracking-tight">
-                    Northeast Regional GIS Command Canvas (30m Slope & Geotechnical Hazard Raster)
+                    Northeast Regional GIS Command Canvas (Geological Hazard Polygons)
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    Continuous 30m Geotechnical Risk across Whole States (Arunachal Pradesh &amp; all 8 NER States) · Click anywhere on map to inspect
+                    Official 5-Tier GSI Hazard Zonation across All 8 Northeast States · Click any polygon to inspect telemetry
                   </p>
                 </div>
               </div>
@@ -2493,7 +2455,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-[#005B9E] text-lg">public</span>
                     <span className="font-bold text-xs uppercase tracking-wide text-slate-800">
-                      Northeast Regional GIS Canvas · 30m Geomorphic Terrain Hazard Raster
+                      Northeast Regional GIS Canvas · 5-Tier GSI Geological Hazard Polygons
                     </span>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -2562,7 +2524,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
                   <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 z-10 text-xs flex items-center gap-2 pointer-events-auto">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
                     <span className="font-mono font-bold text-slate-800">
-                      30m GEOMORPHIC HAZARD RASTER · {selectedStateFilter === "ALL" ? "ALL 8 NER STATES (NORTHEAST INDIA)" : selectedStateFilter.toUpperCase()} (Ridge-to-Valley Zonation)
+                      GEOLOGICAL HAZARD POLYGONS · {selectedStateFilter === "ALL" ? "ALL 8 NER STATES (NORTHEAST INDIA)" : selectedStateFilter.toUpperCase()}
                     </span>
                     <button
                       onClick={() => handleStateFilterChange("ALL")}
@@ -2584,30 +2546,30 @@ export default function AppDesktop({ onSwitchToMobile }) {
                     </div>
                   </div>
 
-                  {/* 5-Tier Micro-Polygon Legend (Identical to User Reference) */}
+                  {/* 5-Tier GSI Geological Hazard Polygons Legend */}
                   <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md p-2.5 rounded-lg shadow-md border border-slate-300 z-10 text-[10.5px] flex flex-col gap-1.5 pointer-events-auto">
                     <span className="font-black text-slate-800 uppercase tracking-wider text-[9px]">
-                      Slope Hazard Zonation
+                      GSI Hazard Polygons
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3 rounded-xs bg-[#E4322E] border border-[#B91C1C]"></span>
-                      <span className="font-bold text-red-700">CRITICAL (&gt;36° Ridge Spines)</span>
+                      <span className="w-3.5 h-3 rounded-xs bg-[#DC2626] border border-[#991B1B]"></span>
+                      <span className="font-bold text-red-700">CRITICAL (Red) · FoS &lt; 1.0</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3 rounded-xs bg-[#ECF12E] border border-[#CA8A04]"></span>
-                      <span className="font-bold text-amber-600">HIGH (22°-36° Mid-Slopes)</span>
+                      <span className="w-3.5 h-3 rounded-xs bg-[#EA580C] border border-[#C2410C]"></span>
+                      <span className="font-bold text-orange-700">HIGH (Orange) · FoS 1.0–1.25</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3 rounded-xs bg-[#65B531] border border-[#15803D]"></span>
-                      <span className="font-bold text-emerald-700">MODERATE (12°-22° Lower Slopes)</span>
+                      <span className="w-3.5 h-3 rounded-xs bg-[#EAB308] border border-[#A16207]"></span>
+                      <span className="font-bold text-yellow-700">MODERATE (Yellow) · FoS 1.25–1.5</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3 rounded-xs bg-white border border-slate-400"></span>
-                      <span className="font-bold text-slate-600">VALLEY FLOOR (Clear / Roadbed)</span>
+                      <span className="w-3.5 h-3 rounded-xs bg-[#22C55E] border border-[#15803D]"></span>
+                      <span className="font-bold text-emerald-600">LOW (Green) · FoS 1.5–2.0</span>
                     </div>
-                    <div className="pt-1 border-t border-slate-200 text-[9px] text-slate-500 font-mono flex items-center justify-between gap-2">
-                      <span>Geomorphic Slope Raster</span>
-                      <span className="text-blue-600 font-bold">Click to inspect</span>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3.5 h-3 rounded-xs bg-[#14532D] border border-[#052E16]"></span>
+                      <span className="font-bold text-emerald-950">SAFE (Dark Green) · FoS &gt; 2.0</span>
                     </div>
                   </div>
 
@@ -2661,7 +2623,7 @@ export default function AppDesktop({ onSwitchToMobile }) {
                         <span>{selectedStateFilter === "ALL" ? "All 8 NER States Hazard Model:" : `${selectedStateFilter.toUpperCase()} Hazard Model:`}</span>
                       </span>
                       <span className="text-xs font-mono font-bold text-slate-300">
-                        {selectedStateFilter === "ALL" ? "Northeast India (8 States · Geomorphic Slope Raster)" : `${selectedStateFilter} (Contiguous Micro-Polygons · Eastern Himalayas)`}
+                        {selectedStateFilter === "ALL" ? "Northeast India (8 States · 5-Tier GSI Geological Hazard Polygons)" : `${selectedStateFilter} (Geological Hazard Polygons · 5-Tier Zonation)`}
                       </span>
                     </div>
 
