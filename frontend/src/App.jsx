@@ -1,56 +1,55 @@
-import React, { useState } from "react"
-import ErrorBoundary from "./ErrorBoundary"
-import AppDesktop from "./AppDesktop"
-import AppMobile from "./AppMobile"
+import React from 'react'
+import AppMobile from './AppMobile'
 
 export default function App() {
-  // Determine mode: check URL query param first, then window width / Capacitor
-  const [mode, setMode] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const m = params.get("mode") || params.get("view");
-        if (m === "mobile" || m === "app" || m === "citizen") return "mobile";
-        if (m === "desktop" || m === "portal" || m === "authority") return "desktop";
-        const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-        if (isNative || window.innerWidth <= 768) return "mobile";
-      } catch (e) {}
-    }
-    return "desktop";
-  });
+  // Check if running inside the native Android APK container:
+  const isNativeApp = typeof window !== 'undefined' && (
+    (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
+    window.location.protocol === 'capacitor:' ||
+    window.location.protocol === 'file:' ||
+    window.location.search.includes('mode=native_app')
+  );
 
-  const handleSwitchToMobile = () => {
-    setMode("mobile");
-    if (typeof window !== "undefined" && window.history.pushState) {
-      try {
-        const url = new URL(window.location);
-        url.searchParams.set("mode", "mobile");
-        window.history.pushState({}, "", url);
-      } catch (e) {}
-    }
-  };
+  // Check if citizen mobile app view is explicitly requested via URL params
+  const isCitizenMode = typeof window !== 'undefined' && (
+    window.location.search.includes('mode=citizen') ||
+    window.location.search.includes('mode=app') ||
+    window.location.search.includes('mode=mobile') ||
+    window.location.hash.includes('#citizen')
+  );
 
-  const handleSwitchToDesktop = () => {
-    setMode("desktop");
-    if (typeof window !== "undefined" && window.history.pushState) {
-      try {
-        const url = new URL(window.location);
-        url.searchParams.set("mode", "desktop");
-        window.history.pushState({}, "", url);
-      } catch (e) {}
-    }
-  };
+  // 1. If inside native Android APK or citizen mode explicitly requested -> render Citizen Mobile App
+  if (isNativeApp || isCitizenMode) {
+    return <AppMobile />;
+  }
 
+  // 2. On standard web (laptop, tablet, OR mobile phone), ALWAYS show the Authority Command Center!
+  if (typeof window !== 'undefined') {
+    if (!window.location.pathname.includes('desktop.html')) {
+      const search = window.location.search || '';
+      const hash = window.location.hash || '';
+      window.location.replace('./desktop.html' + search + hash);
+      return null;
+    }
+  }
+
+  // 3. Fallback: If at /desktop.html and rendered via React/Vite, display the Authority Portal in full screen
   return (
-    <ErrorBoundary>
-      <div className="aegis-app-root">
-        {mode === "mobile" ? (
-          <AppMobile onSwitchToDesktop={handleSwitchToDesktop} />
-        ) : (
-          <AppDesktop onSwitchToMobile={handleSwitchToMobile} />
-        )}
-      </div>
-    </ErrorBoundary>
+    <iframe
+      src="./desktop.html"
+      title="NER-LEWS Authority Command Center"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        border: 'none',
+        margin: 0,
+        padding: 0,
+        overflow: 'hidden',
+        zIndex: 999999
+      }}
+    />
   );
 }
-

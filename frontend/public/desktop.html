@@ -69,6 +69,130 @@
 </head>
 <body class="bg-[#f4f6f9] text-[#1e293b] font-sans antialiased min-h-screen flex flex-col selection:bg-blue-100 selection:text-blue-900">
 
+<!-- ================================================================= -->
+<!-- OFFICIAL GOVERNMENT AUTHORITY PROTOTYPE LOGIN OVERLAY -->
+<!-- ================================================================= -->
+<div id="authority-login-overlay" class="fixed inset-0 z-[999999] bg-[#0b2545] flex items-center justify-center p-4 overflow-y-auto" style="display: flex;">
+  <!-- Background subtle national emblem / watermark -->
+  <div class="absolute inset-0 opacity-5 pointer-events-none bg-center bg-no-repeat bg-contain" style="background-image: url('/govt_emblem_watermark.png');"></div>
+
+  <!-- Central Card -->
+  <div class="relative w-full max-w-md bg-white rounded-xl shadow-2xl border-2 border-[#c59b27] overflow-hidden my-auto">
+    <!-- Card Top Tricolor Bar -->
+    <div class="tricolor-strip w-full"></div>
+
+    <div class="p-6 sm:p-8">
+      <!-- Govt Emblem & Header -->
+      <div class="flex items-center space-x-3 pb-4 border-b border-gray-200">
+        <svg aria-label="State Emblem of India" class="w-9 h-12 text-[#991b1b] shrink-0" fill="currentColor" viewBox="0 0 100 140">
+          <g fill="#7f1d1d">
+            <path d="M50 8 C46 8 43 11 43 15 C43 18 45 20 48 21 L48 24 C44 25 40 28 40 33 L40 45 C38 46 36 48 36 52 C36 56 39 58 41 59 L41 72 L36 76 L36 82 L42 84 L42 90 L34 94 L34 98 L50 98 L66 98 L66 94 L58 90 L58 84 L64 82 L64 76 L59 72 L59 59 C61 58 64 56 64 52 C64 48 62 46 60 45 L60 33 C60 28 56 25 52 24 L52 21 C55 20 57 18 57 15 C57 11 54 8 50 8 Z"/>
+            <circle cx="50" cy="94" fill="#ffffff" r="3.5"/>
+            <rect height="7" rx="1.5" width="50" x="25" y="102"/>
+            <rect height="4" rx="1" width="60" x="20" y="112"/>
+          </g>
+        </svg>
+        <div class="border-l-2 border-[#c59b27] pl-3">
+          <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">भारत सरकार • GOVT OF INDIA</div>
+          <div class="text-xs font-bold text-[#0b2545] leading-tight">Ministry of Development of North Eastern Region</div>
+          <div class="text-[11px] font-bold text-[#b91c1c] tracking-tight">National Disaster Management Authority (NDMA)</div>
+        </div>
+      </div>
+
+      <!-- Title & Clearance Badge -->
+      <div class="my-4 text-center">
+        <h2 class="text-lg font-bold text-[#0b2545] tracking-tight">NER-LEWS 2.0 • EOC Authority Login</h2>
+        <p class="text-[11px] text-gray-500 mt-0.5 font-medium">Landslide Early Warning & Emergency Dispatch Terminal</p>
+        <div class="mt-2 inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-300">
+          <span class="material-symbols-outlined text-xs text-amber-700">security</span>
+          <span>RESTRICTED • OFFICIAL DEMO PROTOTYPE</span>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form id="eoc-login-form" onsubmit="submitAuthorityLogin(event)" class="space-y-3.5">
+        <!-- User ID -->
+        <div>
+          <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">Official ID / NIC Email</label>
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined absolute left-3 text-gray-400 text-base">badge</span>
+            <input id="login-username" type="text" required class="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 rounded-md focus:border-[#113f67] focus:ring-1 focus:ring-[#113f67] font-medium text-gray-800 bg-gray-50/50" value="admin@ndma.gov.in" placeholder="admin@ndma.gov.in" />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">Security Passkey</label>
+            <span class="text-[9px] text-amber-700 font-bold bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">Demo Passkey: sih2026</span>
+          </div>
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined absolute left-3 text-gray-400 text-base">key</span>
+            <input id="login-password" type="password" required class="w-full pl-9 pr-9 py-2 text-xs border border-gray-300 rounded-md focus:border-[#113f67] focus:ring-1 focus:ring-[#113f67] font-medium text-gray-800 bg-gray-50/50" value="sih2026" placeholder="Enter passkey" />
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-2.5 text-gray-400 hover:text-gray-600 focus:outline-none">
+              <span class="material-symbols-outlined text-base" id="pwd-vis-icon">visibility</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Station Selector -->
+        <div>
+          <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">Operational EOC Station</label>
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined absolute left-3 text-gray-400 text-base">location_city</span>
+            <select id="login-station" class="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 rounded-md text-gray-800 focus:border-[#113f67] font-medium bg-gray-50/50">
+              <option value="Meghalaya State EOC (Shillong — NH-44 HQ)">Meghalaya State EOC (Shillong — NH-44 HQ)</option>
+              <option value="NDRF 1st Bn HQ (Patgaon, Guwahati Command)">NDRF 1st Bn HQ (Patgaon, Guwahati Command)</option>
+              <option value="Assam State Disaster Management (Dispur)">Assam State Disaster Management (Dispur)</option>
+              <option value="Nagaland SDMA Operations Command (Kohima)">Nagaland SDMA Operations Command (Kohima)</option>
+              <option value="Sikkim State Disaster Authority (Gangtok EOC)">Sikkim State Disaster Authority (Gangtok EOC)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Keep logged in & NIC active indicator -->
+        <div class="flex items-center justify-between text-xs text-gray-600 pt-1">
+          <label class="flex items-center space-x-1.5 cursor-pointer text-[11px]">
+            <input id="login-remember" type="checkbox" checked class="rounded text-[#113f67] focus:ring-0" />
+            <span>Keep signed in for this session</span>
+          </label>
+          <span class="text-emerald-700 font-bold flex items-center space-x-1 text-[10px]">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+            <span>EOC Node Online</span>
+          </span>
+        </div>
+
+        <!-- Login Buttons -->
+        <div class="pt-2 space-y-2">
+          <button id="btn-login-submit" type="submit" class="w-full bg-[#113f67] hover:bg-[#0b2545] text-white text-xs font-bold py-2.5 px-4 rounded-md shadow-sm flex items-center justify-center space-x-2 transition-all active:scale-[0.98]">
+            <span class="material-symbols-outlined text-base">lock_open</span>
+            <span id="btn-login-label">Sign In to EOC Command Center</span>
+          </button>
+
+          <button type="button" onclick="quickDemoLogin()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-[#0b2545] text-xs font-extrabold py-2 px-4 rounded-md border border-amber-400 shadow-sm flex items-center justify-center space-x-2 transition-all active:scale-[0.98]">
+            <span class="material-symbols-outlined text-base text-[#0b2545]">bolt</span>
+            <span>⚡ 1-Click Prototype Demo Access (Judges / Viva)</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Switch to Citizen App from Login Screen -->
+      <div class="mt-4 pt-3 border-t border-gray-200 text-center">
+        <a href="./index.html?mode=citizen" class="text-[11px] font-semibold text-[#113f67] hover:underline flex items-center justify-center space-x-1">
+          <span class="material-symbols-outlined text-sm">smartphone</span>
+          <span>Open Citizen Mobile App View</span>
+        </a>
+      </div>
+
+      <!-- Legal & Security Disclaimer -->
+      <div class="mt-3 text-center text-[9px] text-gray-400 leading-tight">
+        Protected under the Disaster Management Act 2005 &bull; Level-4 High Security Terminal
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- 1. NATIONAL TRICOLOR TOP STRIP -->
 <div class="tricolor-strip w-full"></div>
 
@@ -99,6 +223,17 @@
         <span class="text-gray-400">/</span>
         <a class="hover:underline text-gray-600" href="javascript:void(0)">हिन्दी</a>
       </div>
+      <!-- Officer Session Pill & Logout -->
+      <div id="officer-session-pill" style="display: none;" class="items-center space-x-1.5 bg-emerald-50 border border-emerald-300 text-emerald-900 text-[10px] font-bold px-2 py-0.5 rounded">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span id="officer-name-display">ADMIN • MEGHALAYA EOC</span>
+        <button onclick="handleAuthorityLogout()" title="Logout of Authority Terminal" class="text-red-600 hover:text-red-800 ml-1 font-bold">✕ Logout</button>
+      </div>
+      <!-- Citizen App Quick Switcher -->
+      <a href="./index.html?mode=citizen" class="bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px] flex items-center space-x-1 transition-colors">
+        <span class="material-symbols-outlined text-xs">smartphone</span>
+        <span>Citizen App</span>
+      </a>
     </div>
   </div>
 </div>
@@ -2135,6 +2270,106 @@
   } else {
     initMap();
   }
+
+  // =========================================================================
+  // EOC AUTHORITY LOGIN & SESSION CONTROLLER (PROTOTYPE SECURITY GATEWAY)
+  // =========================================================================
+  function checkEocAuth() {
+    const isAuth = sessionStorage.getItem('aegis_eoc_auth');
+    const overlay = document.getElementById('authority-login-overlay');
+    if (isAuth === 'true') {
+      if (overlay) overlay.style.display = 'none';
+      updateOfficerDisplay();
+    } else {
+      if (overlay) overlay.style.display = 'flex';
+    }
+  }
+
+  function updateOfficerDisplay() {
+    const user = sessionStorage.getItem('aegis_eoc_user') || 'admin@ndma.gov.in';
+    const station = sessionStorage.getItem('aegis_eoc_station') || 'Meghalaya State EOC';
+    const nameEl = document.getElementById('officer-name-display');
+    const pill = document.getElementById('officer-session-pill');
+    const userShort = user.includes('@') ? user.split('@')[0].toUpperCase() : user.toUpperCase();
+    const stationShort = station.split('(')[0].trim();
+    if (nameEl) nameEl.innerText = `${userShort} • ${stationShort}`;
+    if (pill) pill.style.display = 'flex';
+  }
+
+  function togglePasswordVisibility() {
+    const pwd = document.getElementById('login-password');
+    const icon = document.getElementById('pwd-vis-icon');
+    if (pwd.type === 'password') {
+      pwd.type = 'text';
+      icon.innerText = 'visibility_off';
+    } else {
+      pwd.type = 'password';
+      icon.innerText = 'visibility';
+    }
+  }
+
+  function submitAuthorityLogin(e) {
+    if (e) e.preventDefault();
+    const u = document.getElementById('login-username').value.trim() || 'admin@ndma.gov.in';
+    const station = document.getElementById('login-station').value;
+    const btn = document.getElementById('btn-login-submit');
+    const label = document.getElementById('btn-login-label');
+
+    if (btn && label) {
+      btn.disabled = true;
+      btn.classList.add('opacity-80');
+      label.innerText = 'Authenticating with National EOC Gateway...';
+    }
+
+    if (typeof playDispatchPing === 'function') {
+      try { playDispatchPing(); } catch(err) {}
+    }
+
+    setTimeout(() => {
+      sessionStorage.setItem('aegis_eoc_auth', 'true');
+      sessionStorage.setItem('aegis_eoc_user', u);
+      sessionStorage.setItem('aegis_eoc_station', station);
+
+      updateOfficerDisplay();
+
+      const overlay = document.getElementById('authority-login-overlay');
+      if (overlay) {
+        overlay.style.transition = 'opacity 0.25s ease-out';
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+          overlay.style.display = 'none';
+          overlay.style.opacity = '1';
+          if (btn && label) {
+            btn.disabled = false;
+            btn.classList.remove('opacity-80');
+            label.innerText = 'Sign In to EOC Command Center';
+          }
+          if (typeof map !== 'undefined' && map) map.invalidateSize();
+          if (typeof mapFull !== 'undefined' && mapFull) mapFull.invalidateSize();
+        }, 260);
+      }
+    }, 450);
+  }
+
+  function quickDemoLogin() {
+    document.getElementById('login-username').value = 'admin@ndma.gov.in';
+    document.getElementById('login-password').value = 'sih2026';
+    submitAuthorityLogin();
+  }
+
+  function handleAuthorityLogout() {
+    sessionStorage.removeItem('aegis_eoc_auth');
+    const overlay = document.getElementById('authority-login-overlay');
+    const pill = document.getElementById('officer-session-pill');
+    if (pill) pill.style.display = 'none';
+    if (overlay) {
+      overlay.style.display = 'flex';
+      overlay.style.opacity = '1';
+    }
+  }
+
+  // Auto check on script load
+  checkEocAuth();
 </script>
 </body>
 </html>

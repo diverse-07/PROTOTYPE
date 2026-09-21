@@ -3411,29 +3411,29 @@ export default function AppMobile({ onSwitchToDesktop }) {
           </div>
 
           {/* Top Right: Authority Switcher + Settings Antenna + 3-Dot More Menu */}
-          <div className="mobile-header-actions">
-            {onSwitchToDesktop && (
-              <button 
-                onClick={onSwitchToDesktop}
-                title="Switch to Authority Command Center"
-                style={{
-                  background: "#1e3a8a",
-                  color: "#ffffff",
-                  fontSize: "10px",
-                  fontWeight: 800,
-                  padding: "4px 8px",
-                  borderRadius: "6px",
-                  border: "1px solid rgba(255,255,255,0.25)",
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  marginRight: "6px"
-                }}
-              >
-                💻 Authority Portal
-              </button>
-            )}
+            <a 
+              href="./desktop.html" 
+              className="mobile-auth-switch-btn"
+              title="Open Government Authority Command Center"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                background: "linear-gradient(135deg, #0f2744 0%, #1a3c6e 100%)",
+                color: "#f8fafc",
+                border: "1px solid #38bdf8",
+                borderRadius: "20px",
+                padding: "4px 10px",
+                fontSize: "11px",
+                fontWeight: "700",
+                textDecoration: "none",
+                boxShadow: "0 2px 6px rgba(15,39,68,0.25)",
+                marginRight: "6px"
+              }}
+            >
+              <span>🏛️</span>
+              <span style={{ whiteSpace: "nowrap" }}>EOC Portal</span>
+            </a>
             <button 
               className="mobile-more-btn" 
               onClick={() => setShowBackendModal(true)} 
@@ -3985,18 +3985,21 @@ export default function AppMobile({ onSwitchToDesktop }) {
                 <span style={{ fontSize: "11px", fontWeight: "800", color: "#b91c1c", background: "#fee2e2", padding: "3px 8px", borderRadius: "6px" }}>TEST NOW</span>
               </button>
 
-              {onSwitchToDesktop && (
-                <button className="menu-option-item" onClick={() => { setShowMenuModal(false); onSwitchToDesktop(); }}>
-                  <div className="menu-item-icon" style={{ background: "#1e3a8a", color: "#ffffff" }}>
-                    💻
-                  </div>
-                  <div className="menu-item-text">
-                    <div className="menu-item-title">Authority Command Center</div>
-                    <div className="menu-item-sub">Switch to multi-sector GIS map, what-if simulator &amp; dispatch controls</div>
-                  </div>
-                  <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>›</span>
-                </button>
-              )}
+              {/* Direct Link to Government Authority Command Center */}
+              <a 
+                href="./desktop.html" 
+                className="menu-option-item"
+                style={{ background: "#f0fdf4", borderLeft: "4px solid #16a34a", textDecoration: "none" }}
+              >
+                <div className="menu-item-icon" style={{ background: "#15803d", color: "#ffffff", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  🏛️
+                </div>
+                <div className="menu-item-text">
+                  <div className="menu-item-title" style={{ color: "#15803d", fontWeight: "800" }}>Authority Command Center</div>
+                  <div className="menu-item-sub">Switch to NDMA / MDoNER State EOC Portal</div>
+                </div>
+                <span style={{ fontSize: "11px", fontWeight: "800", color: "#15803d", background: "#dcfce7", padding: "3px 8px", borderRadius: "6px" }}>OPEN</span>
+              </a>
               <button className="menu-option-item" onClick={() => { setShowMenuModal(false); setShowWhatsNewModal(true); }}>
                 <div className="menu-item-icon" style={{ background: "#eff6ff", color: "#1e40af" }}>
                   <Icons.Sparkles size={18} />
