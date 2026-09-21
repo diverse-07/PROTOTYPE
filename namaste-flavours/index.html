@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Namaste Flavours | Pure Vegetarian Fine Dining · Shahdara, Delhi</title>
+<meta name="description" content="Namaste Flavours — a pure vegetarian fine-dining house in Panchsheel Garden, Shahdara, Delhi. Mughlai heritage, clay-oven tandoor and pan-Asian craft. Open daily 11:30 AM – 1:00 AM. Reservations recommended."/>
+<meta name="theme-color" content="#0B2447"/>
+<script>document.documentElement.classList.add('js');</script>
+<meta property="og:title" content="Namaste Flavours | Pure Vegetarian Fine Dining · Shahdara, Delhi"/>
+<meta property="og:description" content="Royal Mughlai heritage, clay-oven tandoor and pan-Asian craft — served in Shahdara's most gracious pure vegetarian dining room."/>
+<meta property="og:type" content="restaurant"/>
+
+<!-- Typography: Cinzel for inscriptions and regal labels, Playfair Display for editorial headings, Plus Jakarta Sans for the rational interface -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          /* ---- Royal house palette ---- */
+          royal:      { 950:"#050F21", 900:"#071A33", 800:"#0B2447", 700:"#12325F", 600:"#1B4278", 500:"#2C5B99" },
+          gold:       { 100:"#F7F0DE", 200:"#EFE2C0", 300:"#E0CB97", 400:"#D2B573", 500:"#C2A05A", 600:"#A6843F", 700:"#856729" },
+          wine:       { 800:"#4E1526", 700:"#6A1E33" },
+          emeraldink: { 900:"#123127" },
+          ivory:      "#FBF8F2",
+          parchment:  "#F4EEE3",
+          sand:       "#E7DDC8"
+        },
+        fontFamily: {
+          cinzel:  ["Cinzel", "serif"],
+          display: ["Playfair Display", "serif"],
+          body:    ["Plus Jakarta Sans", "Manrope", "sans-serif"]
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  /* ---------- Royal house utilities ---------- */
+  .hd-rule { height: 1px; background: linear-gradient(90deg, transparent, rgba(194,160,90,.75), transparent); }
+  .hd-rule-solid { height: 1px; background: rgba(194,160,90,.45); }
+
+  /* Mughal arch framing for key portraits */
+  .arch     { border-radius: 999px 999px 6px 6px; }
+  .arch-sm  { border-radius: 999px 999px 4px 4px; }
+
+  .card-royal {
+    background: #FFFFFF;
+    border: 1px solid rgba(194,160,90,.40);
+    box-shadow: 0 1px 2px rgba(11,36,71,.05);
+    transition: border-color .35s ease, box-shadow .35s ease, transform .35s ease;
+  }
+  .card-royal:hover {
+    border-color: rgba(166,132,63,.85);
+    box-shadow: 0 18px 40px -20px rgba(11,36,71,.30);
+    transform: translateY(-2px);
+  }
+
+  .inset-panel {
+    background: linear-gradient(180deg, #FFFFFF 0%, #FBF8F2 100%);
+    border: 1px solid rgba(194,160,90,.35);
+  }
+
+  .kicker { letter-spacing: .30em; }
+  .numeral { font-variant-numeric: tabular-nums; }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Media veil — keeps photography rich but formal */
+  .veil::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(7,26,51,.10) 0%, rgba(7,26,51,0) 40%, rgba(7,26,51,.34) 100%);
+    pointer-events: none;
+  }
+
+  /* Restrained entrance — opt-in only (html.js), so nothing is ever hidden
+     without JavaScript, and nothing can get stuck hidden if the observer never fires. */
+  .js .reveal { opacity: 0; transform: translateY(14px); transition: opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1); }
+  .js .reveal.is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .js .reveal { opacity: 1; transform: none; transition: none; }
+  }
+
+  .toast-in { animation: toastIn .35s cubic-bezier(.22,.61,.36,1) both; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  /* ================= INTERACTION LAYER =================
+     Everything below is restrained by design: slow easings, hairline gold,
+     no bounce and no parallax theatre. All of it degrades to visible content. */
+
+  /* ---- Anchored scrolling clears the sticky header ---- */
+  section[id] { scroll-margin-top: 5.5rem; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+  /* ---- Reading-progress rule ---- */
+  #progress-rule {
+    position: fixed; top: 0; left: 0; height: 2px; width: 0;
+    background: linear-gradient(90deg, #856729, #C2A05A 45%, #E0CB97);
+    z-index: 70; transition: width .1s linear;
+  }
+
+  /* ---- Header condensation ---- */
+  #site-header { transition: box-shadow .4s ease; }
+  #site-header.is-scrolled { box-shadow: 0 12px 38px -24px rgba(11,36,71,.6); }
+  .brand-mark { transition: width .4s ease, height .4s ease; }
+  #site-header.is-scrolled .brand-mark { width: 2.4rem; height: 2.4rem; }
+  #site-header.is-scrolled .brand-mark .material-symbols-outlined { font-size: 19px; }
+
+  /* ---- Scroll-spy navigation ---- */
+  .nav-link { position: relative; transition: color .3s ease; }
+  .nav-link::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -5px; height: 1px;
+    background: #C2A05A; transform: scaleX(0); transform-origin: left;
+    transition: transform .45s cubic-bezier(.22,.61,.36,1);
+  }
+  .nav-link:hover::after, .nav-link.is-active::after { transform: scaleX(1); }
+  .nav-link.is-active { color: #0B2447; }
+
+  /* ---- Hero: slow ceremonial drift ---- */
+  .kenburns { animation: kenburns 30s ease-in-out infinite alternate; transform-origin: 50% 42%; }
+  @keyframes kenburns { from { transform: scale(1.01); } to { transform: scale(1.09); } }
+  [data-parallax] { will-change: transform; }
+
+  /* ---- Gallery tiles ---- */
+  .tile img { transition: transform 1s cubic-bezier(.22,.61,.36,1), filter .6s ease; }
+  .tile:hover img, .tile:focus-visible img { transform: scale(1.06); filter: saturate(1.06) brightness(1.04); }
+  .tile-overlay { opacity: 0; transform: translateY(8px); transition: opacity .45s ease, transform .45s cubic-bezier(.22,.61,.36,1); }
+  .tile:hover .tile-overlay, .tile:focus-visible .tile-overlay { opacity: 1; transform: none; }
+
+  /* ---- Lightbox ---- */
+  #lightbox { opacity: 0; pointer-events: none; transition: opacity .35s ease; }
+  #lightbox.is-open { opacity: 1; pointer-events: auto; }
+  #lightbox figure { transform: scale(.975); transition: transform .5s cubic-bezier(.22,.61,.36,1); }
+  #lightbox.is-open figure { transform: scale(1); }
+  .lb-btn { transition: background-color .3s ease, border-color .3s ease, color .3s ease; }
+
+  /* ---- Menu filtering ---- */
+  .menu-item-card { transition: opacity .35s ease, transform .35s ease, border-color .35s ease, box-shadow .35s ease; }
+  .menu-item-card.is-filtering { opacity: 0; transform: translateY(8px) scale(.99); }
+  .menu-item-card.is-hidden { display: none !important; }
+  /* ---- Filter rail: one sliding royal pill behind the active label ---- */
+  #filter-container { position: relative; }
+  #tab-pill {
+    position: absolute; top: 0; bottom: 0; border-radius: 2px;
+    background: #0B2447; border: 1px solid rgba(194,160,90,.7);
+    box-shadow: 0 2px 8px -3px rgba(11,36,71,.45);
+    transition: left .5s cubic-bezier(.22,.61,.36,1), width .5s cubic-bezier(.22,.61,.36,1);
+    pointer-events: none;
+  }
+  .menu-tab { position: relative; z-index: 1; color: #12325F; transition: color .35s ease; white-space: nowrap; }
+  .menu-tab:hover { color: #856729; }
+  .menu-tab.is-active { color: #FBF8F2; }
+
+  /* ---- Selection pill ---- */
+  #selection-pill { transition: opacity .4s ease, transform .4s cubic-bezier(.22,.61,.36,1); }
+  #selection-pill.is-hidden { opacity: 0; transform: translateY(-6px); pointer-events: none; }
+
+  /* ---- Back to top ---- */
+  #to-top { transition: opacity .4s ease, transform .4s ease; }
+  #to-top.is-hidden { opacity: 0; transform: translateY(10px); pointer-events: none; }
+
+  /* ---- Form feedback ---- */
+  .field-invalid { border-color: #4E1526 !important; }
+  #form-notice { transition: opacity .4s ease; }
+
+  /* ---- Keyboard focus ---- */
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid #A6843F; outline-offset: 3px; border-radius: 2px;
+  }
+
+  /* ---- Hero headline: masked line rise.
+     The hidden state is opt-in (html.js + .hero-pending) and is always released
+     by script, so the headline can never be stranded invisible. ---- */
+  .line-mask { display: block; overflow: hidden; }
+  html.js .line-mask > span { display: block;
+    transition: transform 1.05s cubic-bezier(.22,.61,.36,1), opacity .9s ease; }
+  html.js .line-mask:nth-of-type(2) > span { transition-delay: .10s; }
+  html.js .line-mask:nth-of-type(3) > span { transition-delay: .20s; }
+  html.js .hero-pending .line-mask > span { transform: translateY(108%); opacity: 0; }
+
+  /* ---- Gold sheen sweeping across primary actions ---- */
+  .sheen { position: relative; overflow: hidden; }
+  .sheen::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 42%; left: -55%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,.5), transparent);
+    transform: skewX(-18deg); transition: left .8s cubic-bezier(.22,.61,.36,1); pointer-events: none;
+  }
+  .sheen:hover::after, .sheen:focus-visible::after { left: 125%; }
+
+  /* ---- Soft arrow nudge on inline actions ---- */
+  .nudge .material-symbols-outlined { transition: transform .35s cubic-bezier(.22,.61,.36,1); }
+  .nudge:hover .material-symbols-outlined { transform: translateX(4px); }
+
+  /* ---- Gallery tiles settle in ---- */
+  .js .reveal.tile { transform: translateY(16px) scale(.985); }
+  .js .reveal.tile.is-in { transform: none; }
+
+  /* ---- Mobile reservation bar ---- */
+  #reserve-bar { transform: translateY(112%); transition: transform .5s cubic-bezier(.22,.61,.36,1); }
+  #reserve-bar.is-shown { transform: none; }
+
+  /* ================= EXTENDED INTERACTION LAYER =================
+     Additive by design: these use clip-path, transition-delay and decorative
+     pseudo-elements only, so they never fight the existing transforms and
+     can never leave content stranded in a hidden state. */
+
+  /* ---- Staggered group entrances ---- */
+  .js .reveal { transition-delay: var(--d, 0s); }
+
+  /* ---- Cursor spotlight across the menu cards (fine pointers only) ---- */
+  @media (hover: hover) and (pointer: fine) {
+    .spot { position: relative; }
+    .spot::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      border-radius: inherit; opacity: 0; transition: opacity .5s ease;
+      background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%),
+                  rgba(194,160,90,.17), rgba(194,160,90,0) 70%);
+    }
+    .spot:hover::before { opacity: 1; }
+    .spot > * { position: relative; z-index: 1; }
+  }
+
+  /* ---- Scroll-linked wipe that reveals the wide house imagery ---- */
+  .js figure.wipe img {
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 1.2s cubic-bezier(.22,.61,.36,1) .12s;
+  }
+  .js figure.wipe.is-in img,
+  .js .reveal.is-in figure.wipe img { clip-path: inset(0 0 0 0); }
+
+  /* ---- Gold underline that draws under inline links ---- */
+  .ul-gold {
+    background-image: linear-gradient(#C2A05A, #C2A05A);
+    background-size: 0% 1px; background-position: 0 100%; background-repeat: no-repeat;
+    transition: background-size .45s cubic-bezier(.22,.61,.36,1);
+  }
+  .ul-gold:hover, .ul-gold:focus-visible { background-size: 100% 1px; }
+
+  /* ---- Section rules draw themselves in ---- */
+  .js .reveal .hd-rule {
+    transform: scaleX(.28); opacity: .45;
+    transition: transform .95s cubic-bezier(.22,.61,.36,1), opacity .95s ease;
+  }
+  .js .reveal.is-in .hd-rule { transform: none; opacity: 1; }
+
+  /* ---- Gold keyboard focus ring ---- */
+  a:focus-visible, button:focus-visible, input:focus-visible,
+  select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #C2A05A; outline-offset: 3px;
+  }
+
+  /* ---- Honour reduced-motion for every effect above ---- */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .kenburns { animation: none; transform: none; }
+    [data-parallax] { transform: none !important; }
+    html.js .line-mask > span { transition: none; }
+    html.js .hero-pending .line-mask > span { transform: none; opacity: 1; }
+    .sheen::after { display: none; }
+    #tab-pill, #reserve-bar { transition: none; }
+    .tile img, .tile-overlay, #lightbox, #lightbox figure, #selection-pill, #to-top, #form-notice { transition: none; }
+    .spot::before { display: none; }
+    .js figure.wipe img { clip-path: none; transition: none; }
+    .ul-gold { background-size: 100% 1px; transition: none; }
+    .js .reveal .hd-rule { transform: none; opacity: 1; transition: none; }
+  }
+</style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  "name": "Namaste Flavours",
+  "alternateName": "नमस्ते फ्लेवर्स",
+  "servesCuisine": ["North Indian", "Mughlai", "Pan-Asian", "Street Food"],
+  "priceRange": "₹200–₹1,000",
+  "telephone": "+91-98765-43210",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "1/11955, Panchsheel Garden, Navin Shahdara",
+    "addressLocality": "Delhi",
+    "postalCode": "110032",
+    "addressCountry": "IN"
+  },
+  "openingHours": "Mo-Su 11:30-01:00",
+  "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.6", "reviewCount": "101" }
+}
+</script>
+</head>
+
+<body class="bg-ivory text-royal-900 font-body text-[14px] leading-relaxed antialiased selection:bg-gold-500/25 selection:text-royal-900 min-h-screen flex flex-col">
+
+<!-- ============================= UTILITY BAR ============================= -->
+<div class="bg-royal-900 text-gold-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 h-9 flex items-center justify-between text-[10px] font-medium tracking-[0.14em] uppercase">
+    <span class="hidden sm:inline">Pure Vegetarian · Fine Dining · Est. Shahdara, Delhi</span>
+    <span class="sm:hidden">Pure Vegetarian Fine Dining</span>
+    <span class="flex items-center gap-5">
+      <a class="hover:text-gold-400 transition-colors" href="tel:+919876543210">+91 98765 43210</a>
+      <span class="hidden md:inline text-gold-500/60">|</span>
+      <span class="hidden md:inline">Open Daily · 11:30 AM – 1:00 AM</span>
+    </span>
+  </div>
+</div>
+
+<!-- ============================= PRIMARY NAVIGATION ============================= -->
+<div id="progress-rule" aria-hidden="true"></div>
+<header id="site-header" class="sticky top-0 z-50 bg-ivory/95 backdrop-blur-lg border-b border-gold-500/35 shadow-[0_6px_30px_-18px_rgba(11,36,71,.35)]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-3 flex items-center justify-between gap-3 sm:gap-6">
+
+    <a href="#top" class="flex items-center gap-2.5 sm:gap-3.5 group min-w-0">
+      <span class="brand-mark w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded-sm bg-royal-800 flex items-center justify-center border border-gold-500/60 shadow-sm group-hover:border-gold-500 transition-colors">
+        <span class="material-symbols-outlined text-[20px] sm:text-[22px] text-gold-400" data-icon="restaurant">restaurant</span>
+      </span>
+      <span class="flex flex-col leading-none min-w-0">
+        <span class="font-cinzel text-[15px] sm:text-[19px] md:text-[21px] font-semibold tracking-[0.06em] sm:tracking-[0.10em] text-royal-800 whitespace-nowrap">NAMASTE FLAVOURS</span>
+        <span class="font-display text-[11px] sm:text-[12px] text-gold-600 italic mt-1">नमस्ते फ्लेवर्स</span>
+      </span>
+    </a>
+
+    <nav class="hidden lg:flex items-center gap-9">
+      <a class="nav-link font-cinzel text-[11px] tracking-[0.18em] uppercase text-royal-600" href="#house">The House</a>
+      <a class="nav-link font-cinzel text-[11px] tracking-[0.18em] uppercase text-royal-600" href="#menu">Menu</a>
+      <a class="nav-link font-cinzel text-[11px] tracking-[0.18em] uppercase text-royal-600" href="#reviews">Reviews</a>
+      <a class="nav-link font-cinzel text-[11px] tracking-[0.18em] uppercase text-royal-600" href="#heritage">Heritage</a>
+      <a class="nav-link font-cinzel text-[11px] tracking-[0.18em] uppercase text-royal-600" href="#location">Location</a>
+    </nav>
+
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <a class="hidden xl:flex flex-col items-end mr-1 group" href="tel:+919876543210">
+        <span class="text-[9px] font-semibold tracking-[0.22em] uppercase text-royal-600">Reservations</span>
+        <span class="font-display text-[15px] font-semibold text-royal-800 group-hover:text-gold-600 transition-colors">+91 98765 43210</span>
+      </a>
+      <a id="selection-pill" class="is-hidden hidden md:inline-flex items-center gap-2 px-3.5 py-2.5 rounded-sm border border-gold-500/50 text-royal-800 hover:bg-gold-500/10 font-cinzel text-[10px] tracking-[0.14em] uppercase whitespace-nowrap" href="#menu" title="Your tasting selection">
+        <span class="material-symbols-outlined text-[15px] text-gold-600" data-icon="room_service">room_service</span>
+        <span class="numeral" id="pill-count">0</span> selected
+      </a>
+
+      <!-- Compact action on the narrowest screens -->
+      <a class="sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-sm bg-royal-800 border border-gold-500/70 text-gold-400 shadow-sm" href="#reservation" title="Reserve a Table">
+        <span class="material-symbols-outlined text-[18px]" data-icon="table_restaurant">table_restaurant</span>
+      </a>
+      <a class="hidden sm:inline-flex items-center gap-2 px-4 lg:px-5 py-2.5 rounded-sm bg-royal-800 hover:bg-royal-700 text-ivory font-cinzel text-[10.5px] tracking-[0.16em] uppercase shadow-sm border border-gold-500/70 transition-all duration-300 whitespace-nowrap" href="#reservation">
+        <span class="material-symbols-outlined text-[16px] text-gold-400" data-icon="table_restaurant">table_restaurant</span>
+        <span>Reserve a Table</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main id="top" class="grow">
+
+<!-- ============================= HERO ============================= -->
+<section class="relative bg-royal-900 overflow-hidden">
+  <!-- engraved backdrop -->
+  <div class="absolute inset-0 opacity-[0.06] pointer-events-none" style="background-image: radial-gradient(#D2B573 1px, transparent 1px); background-size: 26px 26px;"></div>
+  <div class="absolute -top-32 -right-24 w-[520px] h-[520px] rounded-full bg-gold-500/10 blur-[120px] pointer-events-none" data-parallax="0.07" data-parallax-max="70"></div>
+
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16 lg:py-24">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-14 lg:gap-16 items-center">
+
+      <!-- Editorial column -->
+      <div class="lg:col-span-5 reveal">
+        <span class="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase kicker text-gold-400">
+          <span class="w-8 h-px bg-gold-500"></span> Panchsheel Garden · Shahdara
+        </span>
+
+        <h1 class="hero-pending font-cinzel text-4xl md:text-5xl xl:text-[56px] leading-[1.12] text-ivory mt-6 tracking-[0.03em]">
+          <span class="line-mask"><span>A House of</span></span>
+          <span class="line-mask"><span>Pure Vegetarian</span></span>
+          <span class="line-mask"><span class="text-gold-400">Royalty</span></span>
+        </h1>
+
+        <p class="font-display text-xl md:text-2xl text-gold-300 italic mt-4">नमस्ते फ्लेवर्स</p>
+
+        <div class="hd-rule my-7 max-w-xs"></div>
+
+        <p class="text-[15px] leading-[1.85] text-gold-100/75 max-w-lg">
+          A confluence of Old Delhi culinary heritage, slow-simmered Mughlai craft and pan-Asian artistry —
+          served beneath brass chandeliers in royal blue velvet. Every dish prepared under strict
+          pure vegetarian protocols, in honour of <em class="text-gold-300 not-italic font-medium">Atithi Devo Bhava</em>.
+        </p>
+
+        <!-- Credentials -->
+        <dl class="grid grid-cols-3 gap-6 mt-9 pt-7 border-t border-gold-500/25">
+          <div>
+            <dt class="font-cinzel text-[10px] tracking-[0.18em] uppercase text-gold-500">Rating</dt>
+            <dd class="font-display text-2xl text-ivory mt-1.5 numeral"><span data-count="4.6" data-decimals="1">4.6</span><span class="text-gold-400 text-base"> ★</span></dd>
+            <p class="text-[11px] text-gold-100/50 mt-0.5">101 Google reviews</p>
+          </div>
+          <div class="border-l border-gold-500/25 pl-6">
+            <dt class="font-cinzel text-[10px] tracking-[0.18em] uppercase text-gold-500">Kitchen</dt>
+            <dd class="font-display text-2xl text-ivory mt-1.5 numeral"><span data-count="100">100</span>%</dd>
+            <p class="text-[11px] text-gold-100/50 mt-0.5">Pure vegetarian</p>
+          </div>
+          <div class="border-l border-gold-500/25 pl-6">
+            <dt class="font-cinzel text-[10px] tracking-[0.18em] uppercase text-gold-500">Hours</dt>
+            <dd class="font-display text-2xl text-ivory mt-1.5 numeral">1 AM</dd>
+            <p class="text-[11px] text-gold-100/50 mt-0.5">Midnight dining</p>
+          </div>
+        </dl>
+
+        <div class="flex flex-wrap items-center gap-3.5 mt-9">
+          <a class="sheen inline-flex items-center gap-2.5 px-7 py-3.5 rounded-sm bg-gold-500 hover:bg-gold-400 text-royal-900 font-cinzel text-[10.5px] tracking-[0.18em] uppercase shadow-lg transition-all duration-300" href="#reservation">
+            <span class="material-symbols-outlined text-[17px]" data-icon="book_online">book_online</span>
+            <span>Reserve a Table</span>
+          </a>
+          <a class="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-sm border border-gold-500/60 text-gold-200 hover:bg-gold-500/10 hover:border-gold-400 font-cinzel text-[10.5px] tracking-[0.18em] uppercase transition-all duration-300" href="#menu">
+            <span class="material-symbols-outlined text-[17px]" data-icon="restaurant_menu">restaurant_menu</span>
+            <span>The Menu</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Photography column -->
+      <div class="lg:col-span-7 reveal">
+        <div class="relative" data-parallax="0.035" data-parallax-max="44">
+          <figure class="relative arch overflow-hidden border border-gold-500/40 shadow-2xl bg-royal-800">
+            <img alt="The royal dining hall at Namaste Flavours, Shahdara" loading="eager" fetchpriority="high" decoding="async"
+                 class="kenburns w-full h-[430px] md:h-[560px] object-cover"
+                 src="img/01-1800x1670.jpg"/>
+            <figcaption class="absolute bottom-0 inset-x-0 px-7 pb-6 pt-16 bg-gradient-to-t from-royal-900/92 to-transparent">
+              <span class="font-cinzel text-[10px] tracking-[0.24em] uppercase text-gold-400">The Dining Hall</span>
+              <p class="font-display text-lg text-ivory mt-1">Carved archways &amp; royal blue velvet</p>
+            </figcaption>
+          </figure>
+
+          <!-- Inset portrait -->
+          <figure class="hidden lg:block absolute -bottom-8 -left-8 w-40 lg:w-44 arch-sm overflow-hidden border border-gold-500/50 shadow-2xl ring-4 ring-royal-900">
+            <img alt="Interior detail at Namaste Flavours" loading="lazy"
+                 class="w-full h-56 object-cover"
+                 src="img/02-700x900.jpg"/>
+          </figure>
+
+          <!-- Seal -->
+          <div class="hidden lg:flex absolute top-8 -left-6 flex-col items-center justify-center w-24 h-24 rounded-full bg-royal-800/95 border border-gold-500/60 shadow-xl backdrop-blur">
+            <span class="material-symbols-outlined text-gold-400 text-[22px]" data-icon="verified" style="font-variation-settings:'FILL' 1;">verified</span>
+            <span class="font-cinzel text-[8.5px] tracking-[0.14em] uppercase text-gold-200 mt-1.5 text-center leading-tight px-2">Pure Veg<br/>Certified</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three-panel detail strip -->
+  <div class="relative border-t border-gold-500/25 grid grid-cols-3">
+    <figure class="relative veil h-28 sm:h-40 lg:h-52 overflow-hidden border-r border-gold-500/25 group">
+      <img alt="Table settings at Namaste Flavours" loading="lazy" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-[1.04] transition-all duration-700"
+           src="img/03-1300x730.jpg"/>
+      <figcaption class="absolute z-10 bottom-3 left-4 font-cinzel text-[9px] tracking-[0.2em] uppercase text-ivory/90">From the Kitchen</figcaption>
+    </figure>
+    <figure class="relative veil h-28 sm:h-40 lg:h-52 overflow-hidden border-r border-gold-500/25 group">
+      <img alt="Signature plates at Namaste Flavours" loading="lazy" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-[1.04] transition-all duration-700"
+           src="img/04-1300x730.jpg"/>
+      <figcaption class="absolute z-10 bottom-3 left-4 font-cinzel text-[9px] tracking-[0.2em] uppercase text-ivory/90">Signature Plates</figcaption>
+    </figure>
+    <figure class="relative veil h-28 sm:h-40 lg:h-52 overflow-hidden group">
+      <img alt="The royal blue interior at Namaste Flavours" loading="lazy" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-[1.04] transition-all duration-700"
+           src="img/05-1300x730.jpg"/>
+      <figcaption class="absolute z-10 bottom-3 left-4 font-cinzel text-[9px] tracking-[0.2em] uppercase text-ivory/90">The Blue Room</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= THE HOUSE (GALLERY) ============================= -->
+<section id="house" class="py-20 lg:py-24 bg-ivory border-b border-gold-500/25">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+
+    <header class="max-w-3xl reveal">
+      <span class="font-cinzel text-[10px] tracking-[0.30em] uppercase text-gold-600">The House in Frame</span>
+      <h2 class="font-display text-3xl lg:text-[40px] leading-tight text-royal-800 mt-3">A Dining Room Built for Occasions</h2>
+      <div class="hd-rule-solid w-20 my-6"></div>
+      <p class="text-[14.5px] leading-[1.85] text-royal-600/85">
+        Carved archways, chandelier light and generous banquettes — photographed in the house.
+        Reserved for family dinners, anniversaries and quiet weeknight tables alike.
+      </p>
+    </header>
+
+    <!-- Numbered editorial grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4 mt-12">
+      <figure class="reveal relative col-span-2 md:col-span-2 row-span-2 overflow-hidden rounded-sm border border-gold-500/40 group">
+        <img alt="Namaste Flavours interior" loading="lazy" class="w-full h-[300px] md:h-[540px] object-cover group-hover:scale-[1.03] transition-transform duration-700"
+             src="img/06-1500x1500.jpg" data-full="img/view-06.jpg"/>
+        <figcaption class="absolute top-4 left-4 font-cinzel text-[10px] tracking-[0.22em] text-gold-200/95 bg-royal-900/55 backdrop-blur px-2.5 py-1 rounded-sm border border-gold-500/30">01</figcaption>
+      </figure>
+
+      <figure class="reveal relative overflow-hidden rounded-sm border border-gold-500/40 group">
+        <img alt="Namaste Flavours kitchen craft" loading="lazy" class="w-full h-[150px] md:h-[262px] object-cover group-hover:scale-[1.04] transition-transform duration-700"
+             src="img/07-900x900.jpg" data-full="img/view-07.jpg"/>
+        <figcaption class="absolute top-3 left-3 font-cinzel text-[9px] tracking-[0.22em] text-gold-200/95 bg-royal-900/55 backdrop-blur px-2 py-0.5 rounded-sm border border-gold-500/30">02</figcaption>
+      </figure>
+
+      <figure class="reveal relative overflow-hidden rounded-sm border border-gold-500/40 group">
+        <img alt="Namaste Flavours tandoor" loading="lazy" class="w-full h-[150px] md:h-[262px] object-cover group-hover:scale-[1.04] transition-transform duration-700"
+             src="img/08-900x900.jpg" data-full="img/view-08.jpg"/>
+        <figcaption class="absolute top-3 left-3 font-cinzel text-[9px] tracking-[0.22em] text-gold-200/95 bg-royal-900/55 backdrop-blur px-2 py-0.5 rounded-sm border border-gold-500/30">03</figcaption>
+      </figure>
+
+      <figure class="reveal relative overflow-hidden rounded-sm border border-gold-500/40 group">
+        <img alt="Namaste Flavours signature dish" loading="lazy" class="w-full h-[150px] md:h-[262px] object-cover group-hover:scale-[1.04] transition-transform duration-700"
+             src="img/09-900x900.jpg" data-full="img/view-09.jpg"/>
+        <figcaption class="absolute top-3 left-3 font-cinzel text-[9px] tracking-[0.22em] text-gold-200/95 bg-royal-900/55 backdrop-blur px-2 py-0.5 rounded-sm border border-gold-500/30">04</figcaption>
+      </figure>
+
+      <figure class="reveal relative overflow-hidden rounded-sm border border-gold-500/40 group">
+        <img alt="Namaste Flavours plated course" loading="lazy" class="w-full h-[150px] md:h-[262px] object-cover group-hover:scale-[1.04] transition-transform duration-700"
+             src="img/10-900x900.jpg" data-full="img/view-10.jpg"/>
+        <figcaption class="absolute top-3 left-3 font-cinzel text-[9px] tracking-[0.22em] text-gold-200/95 bg-royal-900/55 backdrop-blur px-2 py-0.5 rounded-sm border border-gold-500/30">05</figcaption>
+      </figure>
+
+      <figure class="reveal relative overflow-hidden rounded-sm border border-gold-500/40 group">
+        <img alt="Namaste Flavours course detail" loading="lazy" class="w-full h-[150px] md:h-[262px] object-cover group-hover:scale-[1.04] transition-transform duration-700"
+             src="img/11-900x900.jpg" data-full="img/view-11.jpg"/>
+        <figcaption class="absolute top-3 left-3 font-cinzel text-[9px] tracking-[0.22em] text-gold-200/95 bg-royal-900/55 backdrop-blur px-2 py-0.5 rounded-sm border border-gold-500/30">06</figcaption>
+      </figure>
+
+      <figure class="reveal relative overflow-hidden rounded-sm border border-gold-500/40 group">
+        <img alt="Namaste Flavours house preparation" loading="lazy" class="w-full h-[150px] md:h-[262px] object-cover group-hover:scale-[1.04] transition-transform duration-700"
+             src="img/12-900x900.jpg" data-full="img/view-12.jpg"/>
+        <figcaption class="absolute top-3 left-3 font-cinzel text-[9px] tracking-[0.22em] text-gold-200/95 bg-royal-900/55 backdrop-blur px-2 py-0.5 rounded-sm border border-gold-500/30">07</figcaption>
+      </figure>
+
+      <figure class="reveal relative overflow-hidden rounded-sm border border-gold-500/40 group">
+        <img alt="Namaste Flavours dining detail" loading="lazy" class="w-full h-[150px] md:h-[262px] object-cover group-hover:scale-[1.04] transition-transform duration-700"
+             src="img/13-900x900.jpg" data-full="img/view-13.jpg"/>
+        <figcaption class="absolute top-3 left-3 font-cinzel text-[9px] tracking-[0.22em] text-gold-200/95 bg-royal-900/55 backdrop-blur px-2 py-0.5 rounded-sm border border-gold-500/30">08</figcaption>
+      </figure>
+    </div>
+
+    <!-- Panorama -->
+    <figure class="reveal wipe relative mt-4 overflow-hidden rounded-sm border border-gold-500/40 group">
+      <img alt="Namaste Flavours house spread" loading="lazy" class="w-full h-[220px] md:h-[340px] object-cover group-hover:scale-[1.02] transition-transform duration-700"
+           src="img/14-2300x1080.jpg"/>
+      <figcaption class="absolute bottom-0 inset-x-0 px-6 py-5 bg-gradient-to-t from-royal-900/90 to-transparent">
+        <span class="font-cinzel text-[10px] tracking-[0.24em] uppercase text-gold-400">The House Table</span>
+        <p class="font-display text-base md:text-lg text-ivory mt-0.5">Prepared in the Shahdara kitchen, served under the arches</p>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= MENU ============================= -->
+<section id="menu" class="py-20 lg:py-24 bg-ivory">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+
+    <header class="text-center max-w-3xl mx-auto reveal">
+      <span class="font-cinzel text-[10px] tracking-[0.30em] uppercase text-gold-600">Culinary Folio</span>
+      <h2 class="font-display text-3xl lg:text-[42px] leading-tight text-royal-800 mt-3">The Royal Tasting &amp; À la Carte Menu</h2>
+      <div class="hd-rule my-7"></div>
+      <p class="text-[14.5px] leading-[1.85] text-royal-600/85">
+        Prepared to pure vegetarian standards with heritage spices, pure desi ghee, slow-cooked gravies
+        and premium stone ovens. Jain preparations available on request.
+      </p>
+    </header>
+
+    <!-- Filter rail -->
+    <div class="sticky top-[72px] z-40 bg-ivory/95 backdrop-blur-lg border-y border-gold-500/35 py-3.5 my-12 -mx-4 sm:-mx-6 lg:-mx-12 px-4 sm:px-6 lg:px-12 overflow-x-auto no-scrollbar">
+      <div class="flex items-center gap-1.5 min-w-max" id="filter-container">
+        <span id="tab-pill" aria-hidden="true"></span>
+        <button class="menu-tab is-active px-4 py-2.5 font-cinzel text-[10px] tracking-[0.16em] uppercase" onclick="filterMenu('all', this)">All Dishes</button>
+        <button class="menu-tab px-4 py-2.5 font-cinzel text-[10px] tracking-[0.16em] uppercase" onclick="filterMenu('dal-makhani', this)">Moghlai &amp; Dal</button>
+        <button class="menu-tab px-4 py-2.5 font-cinzel text-[10px] tracking-[0.16em] uppercase" onclick="filterMenu('tandoori', this)">Tandoori Starters</button>
+        <button class="menu-tab px-4 py-2.5 font-cinzel text-[10px] tracking-[0.16em] uppercase" onclick="filterMenu('chaat', this)">Purani Delhi Chaat</button>
+        <button class="menu-tab px-4 py-2.5 font-cinzel text-[10px] tracking-[0.16em] uppercase" onclick="filterMenu('mains', this)">Bhartiya Mains</button>
+        <button class="menu-tab px-4 py-2.5 font-cinzel text-[10px] tracking-[0.16em] uppercase" onclick="filterMenu('breads', this)">Breads &amp; Basmati</button>
+        <button class="menu-tab px-4 py-2.5 font-cinzel text-[10px] tracking-[0.16em] uppercase" onclick="filterMenu('chinese', this)">Chinese</button>
+        <button class="menu-tab px-4 py-2.5 font-cinzel text-[10px] tracking-[0.16em] uppercase" onclick="filterMenu('continental', this)">Continental &amp; Pizza</button>
+        <button class="menu-tab px-4 py-2.5 font-cinzel text-[10px] tracking-[0.16em] uppercase" onclick="filterMenu('beverages', this)">Beverages</button>
+      </div>
+    </div>
+
+    <!-- Signature pair -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-14">
+
+      <article class="card-royal rounded-sm overflow-hidden flex flex-col reveal">
+        <div class="relative h-72 overflow-hidden">
+          <img alt="Namaste Flavours Special Dal Makhani" loading="lazy" class="w-full h-full object-cover"
+               src="img/15-1900x1216.jpg"/>
+          <div class="absolute inset-0 bg-gradient-to-t from-royal-900/70 via-transparent to-transparent"></div>
+          <div class="absolute top-4 left-4 flex gap-2">
+            <span class="font-cinzel text-[9px] tracking-[0.16em] uppercase bg-royal-800/90 backdrop-blur text-gold-300 px-2.5 py-1 rounded-sm border border-gold-500/50">House Signature</span>
+          </div>
+          <div class="absolute bottom-4 right-4 bg-ivory/95 backdrop-blur px-3.5 py-1.5 rounded-sm border border-gold-500/45">
+            <span class="font-display text-lg text-royal-800 numeral">₹ 299</span>
+          </div>
+        </div>
+        <div class="p-7 grow flex flex-col">
+          <div class="flex items-baseline justify-between gap-4">
+            <h3 class="font-display text-xl text-royal-800">Namaste Flavour Special Dal Makhani</h3>
+            <span class="font-cinzel text-[9.5px] tracking-[0.16em] uppercase text-gold-700 whitespace-nowrap">18 Hrs Slow Cooked</span>
+          </div>
+          <div class="hd-rule-solid my-4"></div>
+          <p class="text-[13px] leading-[1.8] text-royal-600/85 italic grow">
+            Urad lentils simmered overnight over slow charcoal embers, enriched with fresh white butter,
+            rich dairy cream, crushed ginger juliennes and Bukhara secret garam masala.
+          </p>
+          <div class="flex items-center justify-between gap-4 mt-6 pt-5 border-t border-gold-500/30">
+            <span class="text-[11.5px] text-royal-500">Recommended with Garlic Naan &amp; Jeera Pulao</span>
+            <button class="font-cinzel text-[10px] tracking-[0.14em] uppercase text-royal-800 hover:text-gold-700 flex items-center gap-1.5 transition-colors shrink-0" onclick="addToTastingList('Special Dal Makhani', '₹ 299')">
+              Add to Selection
+              <span class="material-symbols-outlined text-[14px]" data-icon="arrow_forward">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <article class="card-royal rounded-sm overflow-hidden flex flex-col reveal">
+        <div class="relative h-72 overflow-hidden">
+          <img alt="Royal Tandoori Veg Sizzler Platter" loading="lazy" class="w-full h-full object-cover"
+               src="img/16-1900x1216.jpg"/>
+          <div class="absolute inset-0 bg-gradient-to-t from-royal-900/70 via-transparent to-transparent"></div>
+          <div class="absolute top-4 left-4 flex gap-2">
+            <span class="font-cinzel text-[9px] tracking-[0.16em] uppercase bg-wine-800/90 backdrop-blur text-gold-200 px-2.5 py-1 rounded-sm border border-gold-500/50">Sizzling Clay Oven</span>
+          </div>
+          <div class="absolute bottom-4 right-4 bg-ivory/95 backdrop-blur px-3.5 py-1.5 rounded-sm border border-gold-500/45">
+            <span class="font-display text-lg text-royal-800 numeral">₹ 399</span>
+          </div>
+        </div>
+        <div class="p-7 grow flex flex-col">
+          <div class="flex items-baseline justify-between gap-4">
+            <h3 class="font-display text-xl text-royal-800">Royal Tandoori Veg Sizzler Platter</h3>
+            <span class="font-cinzel text-[9.5px] tracking-[0.16em] uppercase text-gold-700 whitespace-nowrap">Charcoal Grilled</span>
+          </div>
+          <div class="hd-rule-solid my-4"></div>
+          <p class="text-[13px] leading-[1.8] text-royal-600/85 italic grow">
+            Succulent cottage cheese cubes, marinated soya chaap, stuffed mushrooms, roasted bell peppers
+            and seekh kebabs on a cast-iron sizzler bed with mint chutney and laccha pyaaz.
+          </p>
+          <div class="flex items-center justify-between gap-4 mt-6 pt-5 border-t border-gold-500/30">
+            <span class="text-[11.5px] text-royal-500">Recommended with Roomali Roti &amp; Masala Chaas</span>
+            <button class="font-cinzel text-[10px] tracking-[0.14em] uppercase text-royal-800 hover:text-gold-700 flex items-center gap-1.5 transition-colors shrink-0" onclick="addToTastingList('Royal Tandoori Platter', '₹ 399')">
+              Add to Selection
+              <span class="material-symbols-outlined text-[14px]" data-icon="arrow_forward">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- Full carte -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="menu-grid">
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="mains">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Paneer Butter Masala</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 299</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Fresh malai paneer steeped in a velvety tomato makhani gravy enriched with roasted cashews and aromatic fenugreek.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-gold-700">Chef's North Indian Pick</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Paneer Butter Masala', '₹ 299')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="mains">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Paneer Lababdar</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 299</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Luscious cottage cheese in a thick, spiced onion tomato gravy with grated paneer and freshly pounded coriander seeds.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Rich &amp; Creamy</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Paneer Lababdar', '₹ 299')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="mains">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Makhmali Kofta</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 320</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Silken cottage cheese and dry-fruit dumplings gently poached in a creamy saffron-scented shahi gravy.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-gold-700">Mughlai Specialty</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Makhmali Kofta', '₹ 320')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="dal-makhani">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Yellow Dal Tadka Desi Ghee</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 249</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Yellow arhar dal tempered in pure desi ghee with heeng, roasted cumin, garlic cloves and Kashmiri whole red chillies.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Tempered in Pure Ghee</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Yellow Dal Tadka', '₹ 249')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="mains">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Amritsari Pindi Chole</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 249</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Dark chickpeas slow-simmered with black tea leaves, anardana and roasted ground spices.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Tangy &amp; Hearty</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Amritsari Chole', '₹ 249')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="mains">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Soya Chaap Roganjosh</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 299</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Tender marinated soya chunks simmered in a Kashmiri-style aromatic gravy scented with fennel, dry ginger and ratanjot.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-gold-700">Vegetarian Rogan Josh</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Soya Chaap Roganjosh', '₹ 299')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="mains">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Dum Aloo Patiala</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 249</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Stuffed baby potatoes gently cooked on 'Dum' inside a sealed handi with rich spiced curd gravy.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Slow Dum Cooked</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Dum Aloo Patiala', '₹ 249')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="breads">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Subz Handi Dum Biryani</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 349</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Aged long-grain basmati layered with garden fresh vegetables, saffron milk, fresh mint and rose water, served with boondi raita.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-gold-700">Served with Raita</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Subz Handi Biryani', '₹ 349')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="breads">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Cheese Garlic Naan</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 120</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Tandoor-baked leavened bread stuffed with melted mozzarella and crowned with roasted minced garlic and fresh coriander.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Clay Oven Baked</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Cheese Garlic Naan', '₹ 120')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="breads">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Traditional Butter Naan</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 75</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Classic refined flour flatbread slapped on the clay oven walls and brushed with pure salted Amul butter.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Tandoori Classic</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Butter Naan', '₹ 75')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="chaat">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Purani Delhi Palak Patta Chaat</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 149</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Crispy batter-fried baby spinach leaves dressed with sweet spiced yoghurt, date tamarind sonth, mint chutney and sev.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-gold-700">Old Delhi Favourite</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Palak Patta Chaat', '₹ 149')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="chaat">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Bombay Bhel Puri Special</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 149</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Puffed rice tossed with diced potatoes, chopped red onions, raw mango slices, tangy chutneys and fine gram flour vermicelli.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Street Delight</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Bombay Bhel Puri', '₹ 149')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="tandoori">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Amritsari Paneer Tikka</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 299</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Charred cubes of fresh paneer marinated in hung curd, yellow mustard oil, ajwain seeds and degi mirch.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-gold-700">Charcoal Smoked</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Paneer Tikka', '₹ 299')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="chinese">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Crispy Honey Chilli Potato</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 249</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Golden fried potato fingers glazed in spicy sweet red chilli sauce, wild honey and toasted white sesame seeds.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-gold-700">Most Requested</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Honey Chilli Potato', '₹ 249')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="chinese">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Tandoori Paneer Momos (8 Pcs)</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 299</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Dumplings stuffed with spiced cottage cheese and aromatics, coated in red tandoori marinade and roasted on iron skewers.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Indo-Tibetan Fusion</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Tandoori Momos', '₹ 299')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="chinese">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Crunchy Kurkure Momos</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 249</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Crispy crusted dumplings stuffed with finely minced vegetables, served with fiery red garlic dip and spiced mayo.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Extra Crunchy</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Kurkure Momos', '₹ 249')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="chinese">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Veg Manchurian Gravy</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 299</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Golden vegetable balls tossed in an umami dark soy sauce reduction with chopped scallions, celery and ginger.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Pairs with Fried Rice</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Veg Manchurian Gravy', '₹ 299')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="chinese">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Chilli Garlic Hakka Noodles</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 199</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Wok-tossed noodles with shredded cabbage, capsicum, carrot juliennes and mild dark soy sauce.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Wok Fried</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Hakka Noodles', '₹ 199')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="continental">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Tandoori Paneer Handcrafted Pizza</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 299</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Thin stone-baked crust topped with spicy marinated paneer, diced onions, bell peppers, melted mozzarella and fresh basil.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-gold-700">Fusion Special</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Tandoori Paneer Pizza', '₹ 299')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="continental">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Penne Mozzarella Rosa</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 349</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Al dente penne folded in a velvety combination of San Marzano tomato marinara and white cream sauce with black olives.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Italian Specialty</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Penne Mozzarella', '₹ 349')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="beverages">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Belgian Dark Chocolate Shake</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 199</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Decadent blend of rich cocoa, premium vanilla cream, chocolate shavings and artisan ganache.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-gold-700">Chilled Beverage</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Belgian Chocolate Shake', '₹ 199')">Order +</button>
+        </div>
+      </article>
+
+      <article class="menu-item-card card-royal rounded-sm p-6 flex flex-col justify-between" data-category="beverages">
+        <div>
+          <div class="flex items-start justify-between gap-4">
+            <h4 class="font-display text-[17px] text-royal-800">Royal Kala Khatta Sparkler</h4>
+            <span class="font-display text-[17px] text-royal-800 numeral shrink-0">₹ 149</span>
+          </div>
+          <div class="hd-rule-solid my-3.5"></div>
+          <p class="text-[12.5px] leading-[1.75] text-royal-600/85 italic">Nostalgic jamun syrup spiked with rock salt, roasted cumin, fresh lime and crushed ice soda.</p>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-5 pt-4 border-t border-gold-500/30">
+          <span class="font-semibold tracking-[0.08em] uppercase text-royal-500">Refreshing Cooler</span>
+          <button class="font-cinzel tracking-[0.12em] uppercase text-royal-800 hover:text-gold-700 transition-colors" onclick="addToTastingList('Kala Khatta Sparkler', '₹ 149')">Order +</button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Selection tray -->
+    <div id="tray-banner" class="hidden mt-10 p-6 rounded-sm inset-panel flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+      <div class="flex items-center gap-4">
+        <span class="w-11 h-11 rounded-sm bg-royal-800 flex items-center justify-center border border-gold-500/50 shrink-0">
+          <span class="material-symbols-outlined text-gold-400 text-[20px]" data-icon="room_service">room_service</span>
+        </span>
+        <div>
+          <p class="font-display text-[17px] text-royal-800">Tasting Selection — <span id="tray-count" class="numeral">0</span> dishes</p>
+          <p class="text-[12px] text-royal-600 mt-0.5">Our concierge will hold these selections against your table or delivery request.</p>
+        </div>
+      </div>
+      <a id="attach-booking" class="shrink-0 px-6 py-3 rounded-sm bg-royal-800 text-ivory font-cinzel text-[10px] tracking-[0.16em] uppercase hover:bg-royal-700 border border-gold-500/60 transition-colors" href="#reservation">Attach to Booking</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= REVIEWS ============================= -->
+<section id="reviews" class="py-20 lg:py-24 bg-parchment border-b border-gold-500/25">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12 reveal">
+      <div class="max-w-2xl">
+        <span class="font-cinzel text-[10px] tracking-[0.30em] uppercase text-gold-600">Guest Register</span>
+        <h2 class="font-display text-3xl lg:text-[40px] leading-tight text-royal-800 mt-3">In the Words of Our Diners</h2>
+      </div>
+      <div class="inset-panel rounded-sm px-6 py-4 flex items-center gap-6 shrink-0">
+        <div>
+          <div class="font-display text-3xl text-royal-800 numeral leading-none">4.6</div>
+          <div class="flex items-center gap-0.5 text-gold-500 mt-2">
+            <span class="material-symbols-outlined text-[13px]" data-icon="star" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-[13px]" data-icon="star" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-[13px]" data-icon="star" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-[13px]" data-icon="star" style="font-variation-settings:'FILL' 1;">star</span>
+            <span class="material-symbols-outlined text-[13px]" data-icon="star_half" style="font-variation-settings:'FILL' 1;">star_half</span>
+          </div>
+        </div>
+        <div class="border-l border-gold-500/40 pl-6">
+          <div class="font-cinzel text-[9.5px] tracking-[0.18em] uppercase text-gold-700">Verified</div>
+          <p class="text-[12px] text-royal-600 mt-1 leading-snug">101 Google<br/>reviews</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <!-- Review 1 -->
+      <article class="card-royal rounded-sm p-7 flex flex-col reveal">
+        <span class="font-display text-4xl text-gold-400 leading-none">&ldquo;</span>
+        <p class="font-display text-[16px] leading-[1.8] text-royal-800 italic mt-2 grow">
+          The ambience is classy and comfortable, perfect for family dinners and casual outings.
+          Staff was polite and service was quick.
+        </p>
+        <div class="hd-rule-solid mt-6 mb-4"></div>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-cinzel text-[11.5px] tracking-[0.08em] text-royal-800">Thefoodieemunda</p>
+            <p class="text-[11px] text-royal-500 mt-0.5">Local Guide · 150+ reviews</p>
+          </div>
+          <span class="text-[9.5px] font-semibold tracking-[0.14em] uppercase text-gold-700">Family Dinner</span>
+        </div>
+      </article>
+
+      <!-- Review 2 -->
+      <article class="card-royal rounded-sm p-7 flex flex-col reveal">
+        <span class="font-display text-4xl text-gold-400 leading-none">&ldquo;</span>
+        <p class="font-display text-[16px] leading-[1.8] text-royal-800 italic mt-2 grow">
+          Amazing food and service. Tried honey chilli potato, dal makhni and spring rolls.
+          Both were delicious and well balanced.
+        </p>
+        <div class="hd-rule-solid mt-6 mb-4"></div>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-cinzel text-[11.5px] tracking-[0.08em] text-royal-800">Cherry Blossom</p>
+            <p class="text-[11px] text-royal-500 mt-0.5">Verified Google diner</p>
+          </div>
+          <span class="text-[9.5px] font-semibold tracking-[0.14em] uppercase text-gold-700">Dinner</span>
+        </div>
+      </article>
+
+      <!-- Review 3 -->
+      <article class="card-royal rounded-sm p-7 flex flex-col reveal">
+        <span class="font-display text-4xl text-gold-400 leading-none">&ldquo;</span>
+        <p class="font-display text-[16px] leading-[1.8] text-royal-800 italic mt-2 grow">
+          Food is very tasty and awesome quality, seating is very comfortable. The Paneer Tikka Sizzler
+          and Butter Naan are must tries.
+        </p>
+        <div class="hd-rule-solid mt-6 mb-4"></div>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-cinzel text-[11.5px] tracking-[0.08em] text-royal-800">Pooja Sharma</p>
+            <p class="text-[11px] text-royal-500 mt-0.5">Verified Google diner</p>
+          </div>
+          <span class="text-[9.5px] font-semibold tracking-[0.14em] uppercase text-gold-700">Weekend</span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= HERITAGE ============================= -->
+<section id="heritage" class="py-20 lg:py-24 bg-royal-900 relative overflow-hidden">
+  <div class="absolute inset-0 opacity-[0.05] pointer-events-none" style="background-image: radial-gradient(#D2B573 1px, transparent 1px); background-size: 26px 26px;"></div>
+
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-14 items-center">
+
+      <div class="lg:col-span-5 reveal">
+        <span class="font-cinzel text-[10px] tracking-[0.30em] uppercase text-gold-500">The Shahdara Legacy</span>
+        <h2 class="font-display text-3xl lg:text-[40px] leading-tight text-ivory mt-3">
+          Pure Vegetarian<br/>Royalty in East Delhi
+        </h2>
+        <div class="hd-rule-solid w-20 my-6"></div>
+        <p class="text-[14.5px] leading-[1.9] text-gold-100/70">
+          Rooted in the royal dining rooms of historic Delhi, Namaste Flavours was established as a sanctuary
+          where hand-ground spices and time-honoured slow-cooking meet sophisticated pan-Asian cuisine.
+        </p>
+        <p class="text-[14.5px] leading-[1.9] text-gold-100/70 mt-4">
+          Every dish is crafted under stringent pure vegetarian protocols — honouring our patrons' preference
+          for purity, authenticity and generous royal feasts.
+        </p>
+
+        <ul class="mt-8 space-y-3.5">
+          <li class="flex items-start gap-3 text-[13.5px] text-gold-100/85">
+            <span class="material-symbols-outlined text-gold-500 text-[18px] mt-0.5" data-icon="check_circle">check_circle</span>
+            Pure desi ghee &amp; farm-fresh malai paneer
+          </li>
+          <li class="flex items-start gap-3 text-[13.5px] text-gold-100/85">
+            <span class="material-symbols-outlined text-gold-500 text-[18px] mt-0.5" data-icon="check_circle">check_circle</span>
+            Dedicated Jain preparations available on request
+          </li>
+          <li class="flex items-start gap-3 text-[13.5px] text-gold-100/85">
+            <span class="material-symbols-outlined text-gold-500 text-[18px] mt-0.5" data-icon="check_circle">check_circle</span>
+            Spacious family seating &amp; private dining corners
+          </li>
+        </ul>
+      </div>
+
+      <div class="lg:col-span-7 reveal">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <figure class="wipe sm:col-span-2 relative arch-sm overflow-hidden border border-gold-500/40 shadow-2xl">
+            <img alt="The kitchen at Namaste Flavours, Shahdara" loading="lazy" class="w-full h-56 md:h-72 object-cover"
+                 src="img/17-2300x620.jpg"/>
+            <figcaption class="absolute bottom-0 inset-x-0 px-6 py-4 bg-gradient-to-t from-royal-900/90 to-transparent">
+              <span class="font-cinzel text-[10px] tracking-[0.22em] uppercase text-gold-400">From the House Kitchen</span>
+            </figcaption>
+          </figure>
+
+          <article class="p-6 rounded-sm bg-royal-800/60 border border-gold-500/30 hover:border-gold-500/60 transition-colors duration-300">
+            <span class="material-symbols-outlined text-gold-400 text-[24px]" data-icon="outdoor_grill">outdoor_grill</span>
+            <h3 class="font-display text-[17px] text-ivory mt-3">Clay Oven Mastercraft</h3>
+            <div class="hd-rule-solid my-3.5"></div>
+            <p class="text-[12.5px] leading-[1.8] text-gold-100/65">Charcoal tandoors fired with wood embers, lending natural smokiness to naans, stuffed kulchas and tikkas.</p>
+          </article>
+
+          <article class="p-6 rounded-sm bg-royal-800/60 border border-gold-500/30 hover:border-gold-500/60 transition-colors duration-300">
+            <span class="material-symbols-outlined text-gold-400 text-[24px]" data-icon="ramen_dining">ramen_dining</span>
+            <h3 class="font-display text-[17px] text-ivory mt-3">Wok &amp; Dim Sum Precision</h3>
+            <div class="hd-rule-solid my-3.5"></div>
+            <p class="text-[12.5px] leading-[1.8] text-gold-100/65">High-heat wok alchemy yielding authentic Cantonese and Indo-Chinese sizzles, kurkure momos and aromatic rice.</p>
+          </article>
+
+          <article class="p-6 rounded-sm bg-royal-800/60 border border-gold-500/30 hover:border-gold-500/60 transition-colors duration-300">
+            <span class="material-symbols-outlined text-gold-400 text-[24px]" data-icon="diversity_1">diversity_1</span>
+            <h3 class="font-display text-[17px] text-ivory mt-3">Family Celebrations</h3>
+            <div class="hd-rule-solid my-3.5"></div>
+            <p class="text-[12.5px] leading-[1.8] text-gold-100/65">Set menus, festive thalis and anniversary arrangements, with staff attentive to every comfort of young and elderly alike.</p>
+          </article>
+
+          <article class="p-6 rounded-sm bg-royal-800/60 border border-gold-500/30 hover:border-gold-500/60 transition-colors duration-300">
+            <span class="material-symbols-outlined text-gold-400 text-[24px]" data-icon="local_shipping">local_shipping</span>
+            <h3 class="font-display text-[17px] text-ivory mt-3">Takeaway &amp; Delivery</h3>
+            <div class="hd-rule-solid my-3.5"></div>
+            <p class="text-[12.5px] leading-[1.8] text-gold-100/65">Spill-proof, heat-preserving food-grade packaging that carries tasting-room freshness to your home banquets.</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= RESERVATION ============================= -->
+<section id="reservation" class="py-20 lg:py-24 bg-parchment">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+    <div class="rounded-sm inset-panel shadow-[0_30px_70px_-50px_rgba(11,36,71,.6)] p-8 lg:p-12">
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+        <!-- Form -->
+        <div class="lg:col-span-7">
+          <span class="font-cinzel text-[10px] tracking-[0.30em] uppercase text-gold-600">Table Hospitality</span>
+          <h2 class="font-display text-3xl lg:text-[38px] leading-tight text-royal-800 mt-3">Reserve Your Dining Experience</h2>
+          <p class="text-[13.5px] text-royal-600 mt-3 max-w-lg">
+            Priority allocation in our royal dining hall. For same-day bookings, kindly telephone the house directly.
+          </p>
+          <div class="hd-rule-solid my-8"></div>
+
+          <form class="space-y-5" onsubmit="handleReservation(event)">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label class="block font-cinzel text-[9.5px] tracking-[0.18em] uppercase text-royal-700 mb-2">Full Name</label>
+                <input class="w-full bg-white border border-gold-500/40 rounded-sm px-4 py-3 text-[14px] text-royal-900 placeholder:text-royal-600/55 focus:border-royal-800 focus:ring-1 focus:ring-royal-800" placeholder="e.g. Rajesh Malhotra" required type="text"/>
+              </div>
+              <div>
+                <label class="block font-cinzel text-[9.5px] tracking-[0.18em] uppercase text-royal-700 mb-2">Contact Phone (+91)</label>
+                <input class="w-full bg-white border border-gold-500/40 rounded-sm px-4 py-3 text-[14px] text-royal-900 placeholder:text-royal-600/55 focus:border-royal-800 focus:ring-1 focus:ring-royal-800" placeholder="e.g. 98110 00000" required type="tel"/>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <div>
+                <label class="block font-cinzel text-[9.5px] tracking-[0.18em] uppercase text-royal-700 mb-2">Date</label>
+                <input class="w-full bg-white border border-gold-500/40 rounded-sm px-4 py-3 text-[14px] text-royal-900 focus:border-royal-800 focus:ring-1 focus:ring-royal-800" required type="date"/>
+              </div>
+              <div>
+                <label class="block font-cinzel text-[9.5px] tracking-[0.18em] uppercase text-royal-700 mb-2">Time Slot</label>
+                <select class="w-full bg-white border border-gold-500/40 rounded-sm px-4 py-3 text-[14px] text-royal-900 focus:border-royal-800 focus:ring-1 focus:ring-royal-800">
+                  <option>Lunch: 12:30 PM</option>
+                  <option>Lunch: 02:00 PM</option>
+                  <option>Dinner: 07:30 PM</option>
+                  <option selected="">Dinner: 08:30 PM (Peak)</option>
+                  <option>Late Night: 10:30 PM</option>
+                  <option>Midnight Supper: 11:45 PM</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-cinzel text-[9.5px] tracking-[0.18em] uppercase text-royal-700 mb-2">Guests</label>
+                <select class="w-full bg-white border border-gold-500/40 rounded-sm px-4 py-3 text-[14px] text-royal-900 focus:border-royal-800 focus:ring-1 focus:ring-royal-800">
+                  <option>2 Guests (Couple)</option>
+                  <option selected="">4 Guests (Family)</option>
+                  <option>6 to 8 Guests (Royal Table)</option>
+                  <option>10+ Guests (Celebration)</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-cinzel text-[9.5px] tracking-[0.18em] uppercase text-royal-700 mb-2">Seating &amp; Dietary Preference</label>
+              <select class="w-full bg-white border border-gold-500/40 rounded-sm px-4 py-3 text-[14px] text-royal-900 focus:border-royal-800 focus:ring-1 focus:ring-royal-800">
+                <option>Main Dining Hall under Chandeliers</option>
+                <option>Private Blue Velvet Booth</option>
+                <option>Quiet Corner / Anniversary Setup</option>
+                <option>Strict Jain Preparation (No Onion/Garlic)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-cinzel text-[9.5px] tracking-[0.18em] uppercase text-royal-700 mb-2">Special Requests</label>
+              <textarea id="booking-notes" class="w-full bg-white border border-gold-500/40 rounded-sm px-4 py-3 text-[14px] text-royal-900 placeholder:text-royal-600/55 focus:border-royal-800 focus:ring-1 focus:ring-royal-800" placeholder="Anniversary celebration, high chair required, cake arrangement…" rows="2"></textarea>
+            </div>
+
+            <button class="w-full py-4 rounded-sm bg-royal-800 text-ivory hover:bg-royal-700 font-cinzel text-[10.5px] tracking-[0.20em] uppercase shadow-md border border-gold-500/70 transition-all flex items-center justify-center gap-2.5" type="submit">
+              <span class="material-symbols-outlined text-[17px] text-gold-400" data-icon="confirmation_number">confirmation_number</span>
+              <span>Confirm Table Reservation</span>
+            </button>
+          </form>
+
+          <div id="form-notice" role="status" aria-live="polite"
+               class="hidden mt-5 p-4 rounded-sm border text-[13px] font-semibold items-start gap-2.5"></div>
+        </div>
+
+        <!-- Location & contact -->
+        <div class="lg:col-span-5 flex flex-col gap-7 border-t lg:border-t-0 lg:border-l border-gold-500/35 pt-9 lg:pt-0 lg:pl-12" id="location">
+          <figure class="arch-sm overflow-hidden border border-gold-500/40 shadow-lg">
+            <img alt="Namaste Flavours Shahdara" loading="lazy" class="w-full h-52 object-cover"
+                 src="img/18-1900x1086.jpg"/>
+          </figure>
+
+          <div>
+            <span class="font-cinzel text-[10px] tracking-[0.30em] uppercase text-gold-600">Visit Us</span>
+            <h3 class="font-display text-2xl text-royal-800 mt-2">Location &amp; Hours</h3>
+          </div>
+
+          <div class="space-y-5 text-[13.5px]">
+            <div class="flex items-start gap-3.5">
+              <span class="material-symbols-outlined text-gold-600 text-[20px] mt-0.5" data-icon="pin_drop">pin_drop</span>
+              <div>
+                <p class="font-cinzel text-[11px] tracking-[0.10em] text-royal-800">NAMASTE FLAVOURS</p>
+                <p class="text-royal-600/85 text-[12.5px] leading-relaxed mt-1">1/11955, Panchsheel Garden, Navin Shahdara, Shahdara, Delhi 110032</p>
+                <p class="text-[11.5px] text-gold-700 mt-1">Google Plus Code: <strong>M7GH+JR Delhi</strong></p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3.5">
+              <span class="material-symbols-outlined text-gold-600 text-[20px] mt-0.5" data-icon="schedule">schedule</span>
+              <div>
+                <p class="font-cinzel text-[11px] tracking-[0.10em] text-royal-800">OPERATING HOURS</p>
+                <p class="text-royal-600/85 text-[12.5px] mt-1">Monday – Sunday · 11:30 AM to 01:00 AM</p>
+                <span class="inline-block mt-2 text-[10.5px] font-semibold uppercase tracking-[0.10em] text-emeraldink-900 bg-emeraldink-900/10 px-2.5 py-0.5 rounded-sm border border-emeraldink-900/20">Open Now · Kitchen closes 12:30 AM</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3.5">
+              <span class="material-symbols-outlined text-gold-600 text-[20px] mt-0.5" data-icon="call">call</span>
+              <div>
+                <p class="font-cinzel text-[11px] tracking-[0.10em] text-royal-800">TELEPHONE &amp; CONCIERGE</p>
+                <p class="text-royal-600/85 text-[12.5px] mt-1">+91 (011) 2282-XXXX · +91 98765-43210</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-sm bg-white border border-gold-500/40 p-5">
+            <span class="font-cinzel text-[9.5px] tracking-[0.20em] uppercase text-gold-700">Guest Conveniences</span>
+            <div class="grid grid-cols-2 gap-3 mt-4 text-[12px] text-royal-700">
+              <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-gold-600" data-icon="local_parking">local_parking</span>Complimentary Valet</span>
+              <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-gold-600" data-icon="wifi">wifi</span>High-Speed Wi-Fi</span>
+              <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-gold-600" data-icon="ac_unit">ac_unit</span>Climate Controlled</span>
+              <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-gold-600" data-icon="credit_card">credit_card</span>Cards &amp; UPI</span>
+            </div>
+          </div>
+
+          <a class="inline-flex items-center justify-center gap-2.5 w-full py-3.5 rounded-sm border border-gold-500/60 bg-white text-royal-800 hover:bg-gold-500/10 font-cinzel text-[10px] tracking-[0.18em] uppercase transition-colors" href="https://maps.google.com/?q=Panchsheel+Garden+Shahdara+Delhi" rel="noopener noreferrer" target="_blank">
+            <span class="material-symbols-outlined text-[16px] text-gold-600" data-icon="directions">directions</span>
+            <span>Get Directions on Google Maps</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================= FOOTER ============================= -->
+<footer class="bg-royal-900 border-t border-gold-500/30 pb-20 lg:pb-0">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-14">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-12">
+
+      <div class="md:col-span-5">
+        <div class="flex items-center gap-3.5">
+          <span class="w-11 h-11 rounded-sm bg-royal-800 flex items-center justify-center border border-gold-500/60">
+            <span class="material-symbols-outlined text-gold-400 text-[22px]" data-icon="restaurant">restaurant</span>
+          </span>
+          <span class="flex flex-col leading-none">
+            <span class="font-cinzel text-[19px] tracking-[0.10em] text-ivory">NAMASTE FLAVOURS</span>
+            <span class="font-display text-[12px] text-gold-400 italic mt-1">नमस्ते फ्लेवर्स</span>
+          </span>
+        </div>
+        <p class="text-[13px] leading-[1.85] text-gold-100/60 mt-6 max-w-sm">
+          A celebrated house of pure vegetarian culinary craft in Panchsheel Garden, Shahdara —
+          where every guest is greeted with <em class="text-gold-300 not-italic">Atithi Devo Bhava</em>.
+        </p>
+        <div class="hd-rule-solid my-6 max-w-sm"></div>
+        <div class="flex items-center gap-5 text-[11px] text-gold-100/55">
+          <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[15px] text-gold-500" data-icon="verified">verified</span>FSSAI Verified</span>
+          <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>Pure Vegetarian Facility</span>
+        </div>
+      </div>
+
+      <nav class="md:col-span-3">
+        <span class="font-cinzel text-[9.5px] tracking-[0.22em] uppercase text-gold-500">Navigate</span>
+        <ul class="mt-5 space-y-3 text-[13px]">
+          <li><a class="text-gold-100/65 hover:text-gold-300 transition-colors" href="#house">The House</a></li>
+          <li><a class="text-gold-100/65 hover:text-gold-300 transition-colors" href="#menu">The Menu</a></li>
+          <li><a class="text-gold-100/65 hover:text-gold-300 transition-colors" href="#heritage">Heritage</a></li>
+          <li><a class="text-gold-100/65 hover:text-gold-300 transition-colors" href="#reviews">Guest Reviews</a></li>
+          <li><a class="text-gold-100/65 hover:text-gold-300 transition-colors" href="#reservation">Reservations</a></li>
+          <li><a class="text-gold-100/65 hover:text-gold-300 transition-colors" href="#location">Location &amp; Valet</a></li>
+        </ul>
+      </nav>
+
+      <div class="md:col-span-4">
+        <span class="font-cinzel text-[9.5px] tracking-[0.22em] uppercase text-gold-500">The House</span>
+        <ul class="mt-5 space-y-4 text-[13px] text-gold-100/65">
+          <li class="flex items-start gap-3">
+            <span class="material-symbols-outlined text-[17px] text-gold-500 mt-0.5" data-icon="pin_drop">pin_drop</span>
+            <span>1/11955, Panchsheel Garden, Navin Shahdara, Delhi 110032</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="material-symbols-outlined text-[17px] text-gold-500 mt-0.5" data-icon="schedule">schedule</span>
+            <span>Daily · 11:30 AM – 1:00 AM</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="material-symbols-outlined text-[17px] text-gold-500 mt-0.5" data-icon="call">call</span>
+            <a class="hover:text-gold-300 transition-colors" href="tel:+919876543210">+91 98765 43210</a>
+          </li>
+        </ul>
+        <a class="inline-flex items-center gap-2.5 mt-7 px-6 py-3 rounded-sm bg-gold-500 hover:bg-gold-400 text-royal-900 font-cinzel text-[10px] tracking-[0.16em] uppercase transition-colors" href="#reservation">
+          <span class="material-symbols-outlined text-[16px]" data-icon="table_restaurant">table_restaurant</span>
+          Reserve a Table
+        </a>
+      </div>
+    </div>
+
+    <div class="hd-rule-solid mt-12"></div>
+    <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11.5px] text-gold-100/45">
+      <span>© 2024 Namaste Flavours. All rights reserved.</span>
+      <span class="flex items-center gap-6">
+        <a class="hover:text-gold-300 transition-colors" href="#">Terms</a>
+        <a class="hover:text-gold-300 transition-colors" href="#">Privacy</a>
+        <span>Crafted with royal heritage in Shahdara, Delhi</span>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================= GALLERY VIEWER ============================= -->
+<div id="lightbox" class="fixed inset-0 z-[80] flex items-center justify-center bg-royal-950/95 backdrop-blur-md p-4 sm:p-10"
+     role="dialog" aria-modal="true" aria-label="Gallery photograph viewer" aria-hidden="true">
+
+  <button id="lb-close" aria-label="Close viewer"
+          class="lb-btn absolute top-4 right-4 sm:top-6 sm:right-6 w-11 h-11 rounded-sm border border-gold-500/50 text-gold-300 hover:bg-gold-500/15 hover:text-gold-200 flex items-center justify-center">
+    <span class="material-symbols-outlined text-[20px]" data-icon="close">close</span>
+  </button>
+
+  <button id="lb-prev" aria-label="Previous photograph"
+          class="lb-btn absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-sm border border-gold-500/50 text-gold-300 hover:bg-gold-500/15 hover:text-gold-200 flex items-center justify-center">
+    <span class="material-symbols-outlined text-[20px]" data-icon="chevron_left">chevron_left</span>
+  </button>
+
+  <button id="lb-next" aria-label="Next photograph"
+          class="lb-btn absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-sm border border-gold-500/50 text-gold-300 hover:bg-gold-500/15 hover:text-gold-200 flex items-center justify-center">
+    <span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span>
+  </button>
+
+  <figure class="relative w-full max-w-5xl">
+    <img id="lb-img" alt="" class="w-full max-h-[72vh] object-contain rounded-sm border border-gold-500/40 shadow-2xl bg-royal-900"/>
+    <figcaption class="mt-4 flex items-center justify-between gap-4">
+      <span id="lb-caption" class="font-cinzel text-[10px] tracking-[0.22em] uppercase text-gold-300"></span>
+      <span id="lb-counter" class="font-display text-[13px] text-gold-400 numeral"></span>
+    </figcaption>
+  </figure>
+</div>
+
+<!-- ============================= BACK TO TOP ============================= -->
+<button id="to-top" aria-label="Back to top"
+        class="is-hidden fixed bottom-6 right-6 z-[70] w-11 h-11 rounded-sm bg-royal-800 border border-gold-500/60 text-gold-400 shadow-xl flex items-center justify-center hover:bg-royal-700">
+  <span class="material-symbols-outlined text-[20px]" data-icon="arrow_upward">arrow_upward</span>
+</button>
+
+<!-- ============================= MOBILE RESERVATION BAR ============================= -->
+<div id="reserve-bar" class="lg:hidden fixed inset-x-0 bottom-0 z-[65] px-3 pb-3">
+  <div class="flex items-center gap-2 rounded-sm border border-gold-500/60 bg-royal-950/92 backdrop-blur-lg p-2 shadow-2xl">
+    <a href="tel:+919876543210" class="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-sm border border-gold-500/40 text-gold-200 font-cinzel text-[10px] tracking-[0.16em] uppercase">
+      <span class="material-symbols-outlined text-[16px]" data-icon="call">call</span> Call
+    </a>
+    <a href="#reservation" class="flex-[1.5] inline-flex items-center justify-center gap-2 py-3 rounded-sm bg-gold-500 text-royal-900 font-cinzel text-[10px] tracking-[0.16em] uppercase">
+      <span class="material-symbols-outlined text-[16px]" data-icon="table_restaurant">table_restaurant</span> Reserve a Table
+    </a>
+  </div>
+</div>
+
+<!-- Hero headline rise. Standalone, with a hard timeout, so a fault anywhere
+     else can never leave the headline hidden. -->
+<script>
+  (function () {
+    var headline = document.querySelector('.hero-pending');
+    function release() { if (headline) headline.classList.remove('hero-pending'); }
+    requestAnimationFrame(function () { requestAnimationFrame(release); });
+    setTimeout(release, 900);
+  })();
+</script>
+
+<!-- ============================= BEHAVIOUR ============================= -->
+<script>
+  let tastingCount = 0;
+
+  /* Menu filtering — a sliding pill for the tab, FLIP for the grid.
+     FLIP = measure First, apply the change Last, Invert, then Play the delta. */
+  function filterMenu(category, btnElement) {
+    document.querySelectorAll('.menu-tab').forEach(tab => tab.classList.toggle('is-active', tab === btnElement));
+    moveTabPill(btnElement);
+
+    const cards = Array.prototype.slice.call(document.querySelectorAll('.menu-item-card'));
+
+    /* FIRST — where is every card right now? */
+    const before = new Map();
+    cards.forEach(card => before.set(card, card.getBoundingClientRect()));
+
+    /* LAST — apply the filter. */
+    cards.forEach(card => {
+      const match = category === 'all' || card.getAttribute('data-category') === category;
+      card.classList.toggle('is-hidden', !match);
+      if (match) card.classList.add('is-filtering');
+    });
+
+    /* INVERT + PLAY — slide survivors into their new positions. */
+    requestAnimationFrame(() => {
+      cards.forEach(card => {
+        if (card.classList.contains('is-hidden')) return;
+        const a = before.get(card), b = card.getBoundingClientRect();
+        const dx = Math.round(a.left - b.left), dy = Math.round(a.top - b.top);
+        if (dx || dy) {
+          card.style.transition = 'none';
+          card.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+          requestAnimationFrame(() => {
+            card.style.transition = '';
+            card.style.transform = '';
+            card.classList.remove('is-filtering');
+          });
+        } else {
+          card.classList.remove('is-filtering');
+        }
+      });
+    });
+  }
+
+  /* Park the royal pill behind whichever filter label is active. */
+  function moveTabPill(tab) {
+    const pill = document.getElementById('tab-pill');
+    if (!pill || !tab) return;
+    pill.style.left = tab.offsetLeft + 'px';
+    pill.style.width = tab.offsetWidth + 'px';
+    pill.style.height = tab.offsetHeight + 'px';
+  }
+
+  /* Tasting selection */
+  function addToTastingList(dishName, price) {
+    tastingCount++;
+    const banner = document.getElementById('tray-banner');
+    const countSpan = document.getElementById('tray-count');
+    const pill = document.getElementById('selection-pill');
+    const pillCount = document.getElementById('pill-count');
+    if (banner) banner.classList.remove('hidden');
+    if (countSpan) countSpan.innerText = tastingCount;
+    if (pillCount) pillCount.innerText = tastingCount;
+    if (pill) pill.classList.remove('is-hidden');
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-in fixed bottom-24 right-6 z-[75] bg-royal-800 text-ivory px-5 py-3.5 rounded-sm shadow-2xl border border-gold-500/70 flex items-center gap-3 max-w-[92vw]';
+    toast.innerHTML = '<span class="material-symbols-outlined text-gold-400 text-[18px]" style="font-variation-settings:\'FILL\' 1;">check_circle</span>' +
+                      '<span class="font-cinzel text-[10.5px] tracking-[0.12em] uppercase">Added &middot; ' + dishName + ' <span class="text-gold-400">' + price + '</span></span>';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2600);
+  }
+
+  /* Reservation — validated, with a formal acknowledgement */
+  function handleReservation(e) {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.querySelector('input[type="text"]');
+    const phone = form.querySelector('input[type="tel"]');
+    const date = form.querySelector('input[type="date"]');
+    const selects = form.querySelectorAll('select');
+    const slot = selects[0], guests = selects[1], seating = selects[2];
+    const notice = document.getElementById('form-notice');
+
+    [name, phone, date].forEach(el => el && el.classList.remove('field-invalid'));
+
+    let invalid = null, message = '';
+    if (!name.value.trim() || name.value.trim().length < 2) {
+      invalid = name; message = 'Please enter the name the table should be held under.';
+    } else if (!/^[0-9+\-()\s]{10,16}$/.test(phone.value.trim())) {
+      invalid = phone; message = 'Please give a reachable 10-digit contact number.';
+    } else if (date.value && new Date(date.value + 'T23:59') < new Date()) {
+      invalid = date; message = 'That date has passed — please choose an upcoming date.';
+    }
+
+    function show(text, ok) {
+      notice.className = 'mt-5 p-4 rounded-sm border text-[13px] font-semibold flex items-start gap-2.5 ' +
+        (ok ? 'bg-emeraldink-900/10 border-emeraldink-900/30 text-emeraldink-900'
+            : 'bg-[#4E1526]/[0.06] border-wine-800/40 text-wine-800');
+      notice.innerHTML = '<span class="material-symbols-outlined text-[18px] shrink-0">' + (ok ? 'check_circle' : 'error') + '</span><span>' + text + '</span>';
+      notice.classList.remove('hidden');
+    }
+
+    if (invalid) {
+      invalid.classList.add('field-invalid');
+      invalid.focus();
+      show(message, false);
+      return;
+    }
+
+    const when = date.value
+      ? new Date(date.value + 'T12:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
+      : 'a date to be confirmed';
+    const attached = tastingCount > 0
+      ? ' Your tasting selection of ' + tastingCount + ' dish' + (tastingCount === 1 ? '' : 'es') + ' has been attached to this booking.'
+      : '';
+
+    show('Thank you, ' + name.value.trim().split(' ')[0] + '. We have noted ' + guests.value +
+         ' for ' + when + ' at ' + slot.value + ', seating preference: ' + seating.value +
+         '. Someone from the house will confirm shortly.' + attached, true);
+
+    form.reset();
+
+    /* Clear the selection once it has been carried into a booking */
+    tastingCount = 0;
+    const pill = document.getElementById('selection-pill');
+    const banner = document.getElementById('tray-banner');
+    if (pill) pill.classList.add('is-hidden');
+    if (banner) banner.classList.add('hidden');
+  }
+
+  /* ------------------------------------------------------------------
+     Interface behaviour — progress rule, condensed header, scroll-spy,
+     hero parallax, animated figures, gallery viewer, back-to-top and
+     selection handling. Every piece fails soft: content is never hidden.
+     ------------------------------------------------------------------ */
+  (function () {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const $  = (s) => document.querySelector(s);
+    const $$ = (s) => Array.prototype.slice.call(document.querySelectorAll(s));
+
+    /* ---- Reveal on entry ---- */
+    const revealItems = $$('.reveal');
+    if (revealItems.length) {
+      if (reduced || !('IntersectionObserver' in window)) {
+        revealItems.forEach(el => el.classList.add('is-in'));
+      } else {
+        let observerAlive = false;
+
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            observerAlive = true;
+            entry.target.classList.add('is-in');
+            io.unobserve(entry.target);
+          });
+        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+        revealItems.forEach((el, i) => {
+          el.style.transitionDelay = (Math.min(i % 3, 2) * 80) + 'ms';
+          io.observe(el);
+        });
+
+        /* Anything already on screen must never remain hidden, but items
+           still below the fold stay queued so their entrance still plays. */
+        const rescueInView = () => revealItems.forEach(el => {
+          if (!el.classList.contains('is-in') && el.getBoundingClientRect().top < window.innerHeight) {
+            el.classList.add('is-in');
+          }
+        });
+        setTimeout(rescueInView, 1200);
+
+        /* If the observer never fired at all, fall back to plain scroll revealing. */
+        setTimeout(() => {
+          if (observerAlive) return;
+          revealItems.forEach(el => io.unobserve(el));
+          window.addEventListener('scroll', rescueInView, { passive: true });
+          rescueInView();
+        }, 1500);
+      }
+    }
+
+    /* ---- Animated figures ---- */
+    const counters = $$('[data-count]');
+    function runCounter(el) {
+      const target = parseFloat(el.getAttribute('data-count'));
+      const decimals = parseInt(el.getAttribute('data-decimals') || '0', 10);
+      if (isNaN(target)) return;
+      if (reduced) { el.textContent = target.toFixed(decimals); return; }
+      const started = performance.now(), duration = 1200;
+      (function step(now) {
+        const p = Math.min((now - started) / duration, 1);
+        el.textContent = (target * (1 - Math.pow(1 - p, 3))).toFixed(decimals);
+        if (p < 1) requestAnimationFrame(step);
+      })(started);
+    }
+    if (counters.length) {
+      if (!('IntersectionObserver' in window)) counters.forEach(runCounter);
+      else {
+        const cio = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) { runCounter(entry.target); cio.unobserve(entry.target); }
+          });
+        }, { threshold: 0.6 });
+        counters.forEach(c => cio.observe(c));
+      }
+    }
+
+    /* ---- Gallery: turn the house photography into a proper viewer ---- */
+    /* Captions are keyed to the local file names in img/, so the viewer keeps
+       working regardless of where the photographs are sourced from. */
+    const CAPTIONS = {
+      '06-1500x1500': 'The Dining Hall',
+      '07-900x900': 'Kitchen Craft',
+      '08-900x900': 'House Preparations',
+      '09-900x900': 'Signature Plates',
+      '10-900x900': 'Plated Courses',
+      '11-900x900': 'Course Detail',
+      '12-900x900': 'From the Kitchen',
+      '13-900x900': 'Dining Detail',
+      '14-2300x1080': 'The House Table',
+      '01-1800x1670': 'The House',
+      '02-700x900': 'House Detail',
+      '03-1300x730': 'House Interior',
+      '04-1300x730': 'The House Table',
+      '05-1300x730': 'The Dining Hall',
+      '15-1900x1216': 'Signature Preparation',
+      '16-1900x1216': 'Kitchen Detail',
+      '17-2300x620': 'From the House Kitchen',
+      '18-1900x1086': 'Dining Detail'
+    };
+
+    const tiles = $$('#house figure').filter(f => f.querySelector('img'));
+
+    const slides = tiles.map((fig, i) => {
+      const img = fig.querySelector('img');
+      const src = img.getAttribute('src');
+      const key = Object.keys(CAPTIONS).find(k => src.indexOf(k) !== -1);
+      const caption = key ? CAPTIONS[key] : 'Namaste Flavours';
+      const stamp = fig.querySelector('figcaption');
+      const label = (stamp && /^\d+$/.test(stamp.textContent.trim()))
+        ? stamp.textContent.trim()
+        : String(i + 1).padStart(2, '0');
+
+      fig.classList.add('tile', 'cursor-zoom-in');
+      fig.setAttribute('role', 'button');
+      fig.setAttribute('tabindex', '0');
+      fig.setAttribute('aria-label', 'View photograph — ' + caption);
+
+      if (!fig.querySelector('.tile-overlay')) {
+        /* Tiles that already carry a bottom caption get the chip top-right. */
+        const bottomCaptioned = !!fig.querySelector('figcaption.bg-gradient-to-t');
+        const chip = document.createElement('span');
+        chip.className = bottomCaptioned
+          ? 'tile-overlay absolute z-10 top-4 right-4 flex items-center gap-2 bg-royal-900/80 backdrop-blur text-gold-200 font-cinzel text-[9px] tracking-[0.18em] uppercase px-3 py-2 rounded-sm border border-gold-500/40'
+          : 'tile-overlay absolute z-10 inset-x-3 bottom-3 flex items-center justify-center gap-2 bg-royal-900/80 backdrop-blur text-gold-200 font-cinzel text-[9px] tracking-[0.18em] uppercase px-3 py-2 rounded-sm border border-gold-500/40';
+        chip.innerHTML = '<span class="material-symbols-outlined text-[14px]">zoom_in</span> View';
+        fig.appendChild(chip);
+      }
+
+      /* Tiles ship a small crop; the viewer loads the larger file alongside it
+         only when a photograph is actually opened. */
+      const fullSrc = img.getAttribute('data-full') || src;
+      return { full: enlarge(fullSrc), caption: caption, label: label };
+    });
+
+    /* Photographs are stored in img/ already cropped to their full display size,
+       so the viewer uses the file as authored. Kept as a single seam in case a
+       sizing rule is ever needed again. */
+    function enlarge(url) {
+      return url;
+    }
+
+    const lightbox = $('#lightbox'), lbImg = $('#lb-img'),
+          lbCaption = $('#lb-caption'), lbCounter = $('#lb-counter');
+    let current = 0, lastFocus = null;
+
+    if (lbImg) { lbImg.style.transition = 'opacity .35s ease'; lbImg.style.opacity = '1'; }
+
+    function paint() {
+      const slide = slides[current];
+      if (!slide) return;
+
+      /* Soft dip while the larger crop arrives, so nothing snaps. */
+      if (lbImg) {
+        lbImg.style.opacity = '.35';
+        const reveal = () => requestAnimationFrame(() => { lbImg.style.opacity = '1'; });
+        lbImg.onload = reveal;
+        if (lbImg.getAttribute('src') === slide.full && lbImg.complete) reveal();
+        lbImg.setAttribute('src', slide.full);
+      }
+      lbImg.setAttribute('alt', slide.caption + ' at Namaste Flavours, Shahdara');
+      lbCaption.textContent = slide.caption;
+      lbCounter.textContent = String(current + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    }
+    function openViewer(i) {
+      if (!lightbox || !slides.length) return;
+      lastFocus = document.activeElement;
+      current = i;
+      paint();
+      lightbox.classList.add('is-open');
+      lightbox.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      const closeBtn = $('#lb-close');
+      if (closeBtn) closeBtn.focus();
+    }
+    function closeViewer() {
+      if (!lightbox) return;
+      lightbox.classList.remove('is-open');
+      lightbox.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+    function shift(step) {
+      if (!slides.length) return;
+      current = (current + step + slides.length) % slides.length;
+      paint();
+    }
+
+    tiles.forEach((fig, i) => {
+      fig.addEventListener('click', () => openViewer(i));
+      fig.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openViewer(i); }
+      });
+    });
+
+    if (lightbox) {
+      const c = $('#lb-close'), p = $('#lb-prev'), n = $('#lb-next');
+      if (c) c.addEventListener('click', closeViewer);
+      if (p) p.addEventListener('click', () => shift(-1));
+      if (n) n.addEventListener('click', () => shift(1));
+      lightbox.addEventListener('click', (ev) => { if (ev.target === lightbox) closeViewer(); });
+    }
+    document.addEventListener('keydown', (ev) => {
+      if (!lightbox || !lightbox.classList.contains('is-open')) return;
+      if (ev.key === 'Escape') closeViewer();
+      else if (ev.key === 'ArrowRight') shift(1);
+      else if (ev.key === 'ArrowLeft') shift(-1);
+    });
+
+    /* ---- Carry the tasting selection into the booking note ---- */
+    const attach = $('#attach-booking');
+    if (attach) {
+      attach.addEventListener('click', () => {
+        const notes = $('#booking-notes');
+        if (!notes || tastingCount === 0) return;
+        const line = 'Tasting selection (' + tastingCount + ' dish' + (tastingCount === 1 ? '' : 'es') + ') — kindly hold these for the table.';
+        notes.value = notes.value.trim() ? notes.value.trim() + '\n' + line : line;
+      });
+    }
+
+    /* ---- Progress rule, condensed header, scroll-spy, parallax ---- */
+    const progress = $('#progress-rule'), header = $('#site-header'), toTop = $('#to-top');
+    const reserveBar = $('#reserve-bar'), footerEl = document.querySelector('footer');
+    const spied = $$('.nav-link')
+      .map(a => ({ a: a, el: document.getElementById((a.getAttribute('href') || '').slice(1)) }))
+      .filter(o => o.el);
+    const parallaxEls = $$('[data-parallax]');
+
+    function frame() {
+      const y = window.pageYOffset || document.documentElement.scrollTop || 0;
+      const span = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+
+      if (progress) progress.style.width = Math.min((y / span) * 100, 100) + '%';
+      if (header) header.classList.toggle('is-scrolled', y > 28);
+      if (toTop) toTop.classList.toggle('is-hidden', y < window.innerHeight * 0.75);
+
+      /* Mobile booking bar: in after the hero, out once the footer arrives. */
+      if (reserveBar) {
+        const footerUp = footerEl ? footerEl.getBoundingClientRect().top < window.innerHeight : false;
+        reserveBar.classList.toggle('is-shown', y > window.innerHeight * 0.7 && !footerUp);
+      }
+
+      if (spied.length) {
+        /* Take the section with the greatest top that is still above the read line.
+           That is correct regardless of the order the links sit in the nav. */
+        const line = y + window.innerHeight * 0.32;
+        let active = null, best = -Infinity;
+        spied.forEach(o => {
+          const top = o.el.getBoundingClientRect().top + y;
+          if (top <= line && top > best) { best = top; active = o; }
+        });
+        spied.forEach(o => o.a.classList.toggle('is-active', o === active));
+      }
+
+      if (!reduced && parallaxEls.length) {
+        parallaxEls.forEach(el => {
+          const speed = parseFloat(el.getAttribute('data-parallax')) || 0.05;
+          const cap = parseFloat(el.getAttribute('data-parallax-max')) || 40;
+          const offset = Math.max(-cap, Math.min(cap, y * speed));
+          el.style.transform = 'translate3d(0,' + offset.toFixed(2) + 'px,0)';
+        });
+      }
+    }
+
+    let queued = false, release = null;
+    function onScroll() {
+      if (queued) return;
+      queued = true;
+      const run = () => {
+        if (!queued) return;
+        queued = false;
+        if (release) { clearTimeout(release); release = null; }
+        frame();
+      };
+      /* The timer guarantees release even if the browser starves frames. */
+      release = setTimeout(run, 120);
+      requestAnimationFrame(run);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    frame();
+
+    /* Keep the filter pill aligned with its label as widths settle. */
+    const syncPill = () => { const t = document.querySelector('.menu-tab.is-active'); if (t) moveTabPill(t); };
+    syncPill();
+    window.addEventListener('resize', syncPill);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncPill);
+    window.addEventListener('load', syncPill);
+
+    if (toTop) toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }));
+
+    /* ---- Anchor travel that clears the sticky header ---- */
+    $$('a[href^="#"]').forEach(link => {
+      link.addEventListener('click', (ev) => {
+        const id = (link.getAttribute('href') || '').slice(1);
+        const target = id && document.getElementById(id);
+        if (!target) return;
+        ev.preventDefault();
+        const top = target.getBoundingClientRect().top + (window.pageYOffset || 0) - 74;
+        window.scrollTo({ top: top, behavior: reduced ? 'auto' : 'smooth' });
+        history.replaceState(null, '', '#' + id);
+      });
+    });
+
+    /* ================= EXTENDED INTERACTION LAYER ================= */
+
+    /* ---- Stagger grouped entrances so grids cascade instead of popping ---- */
+    $$('.reveal').forEach(el => {
+      const parent = el.parentElement;
+      if (!parent) return;
+      const sibs = Array.prototype.filter.call(parent.children, c => c.classList.contains('reveal'));
+      if (sibs.length < 3) return;
+      el.style.setProperty('--d', (Math.min(sibs.indexOf(el), 5) * 0.07) + 's');
+    });
+
+    /* ---- Cursor spotlight across the menu cards ---- */
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (finePointer && !reduced) {
+      $$('.menu-item-card').forEach(card => {
+        card.classList.add('spot');
+        let raf = 0, mx = 50, my = 0;
+        card.addEventListener('pointermove', (ev) => {
+          const r = card.getBoundingClientRect();
+          mx = ((ev.clientX - r.left) / r.width) * 100;
+          my = ((ev.clientY - r.top) / r.height) * 100;
+          if (raf) return;
+          raf = requestAnimationFrame(() => {
+            raf = 0;
+            card.style.setProperty('--mx', mx.toFixed(1) + '%');
+            card.style.setProperty('--my', my.toFixed(1) + '%');
+          });
+        }, { passive: true });
+        card.addEventListener('pointerleave', () => { if (raf) { cancelAnimationFrame(raf); raf = 0; } });
+      });
+    }
+
+    /* ---- Gold underline on inline links ---- */
+    $$('#location a, footer a').forEach(a => a.classList.add('ul-gold'));
+
+    /* ---- Swipe between photographs in the viewer ---- */
+    if (lightbox) {
+      let sx = 0, sy = 0;
+      lightbox.addEventListener('touchstart', (ev) => {
+        const t = ev.touches && ev.touches[0];
+        if (!t) return;
+        sx = t.clientX; sy = t.clientY;
+      }, { passive: true });
+      lightbox.addEventListener('touchend', (ev) => {
+        const t = ev.changedTouches && ev.changedTouches[0];
+        if (!t) return;
+        const dx = t.clientX - sx, dy = t.clientY - sy;
+        if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          const btn = document.getElementById(dx < 0 ? 'lb-next' : 'lb-prev');
+          if (btn) btn.click();
+        }
+      }, { passive: true });
+    }
+  })();
+</script>
+</body>
+</html>

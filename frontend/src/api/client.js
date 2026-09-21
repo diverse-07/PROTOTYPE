@@ -43,7 +43,7 @@ export function getApiBaseUrl() {
       if (host.startsWith("192.168.") || host.startsWith("10.") || host.startsWith("172.")) {
         return `http://${host}:8000/api`;
       }
-      if (host.includes("github.io") || host.includes("diverse-07")) {
+      if (host.includes("github.io") || host.includes("diverse-07") || host.includes("vercel.app")) {
         return "https://web-production-938c6.up.railway.app/api";
       }
     } catch (e) {}
