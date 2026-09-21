@@ -33,7 +33,7 @@ export function getApiBaseUrl() {
 
       const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
       if (isNative) {
-        return "https://web-production-938c6.up.railway.app/api";
+        return "https://aegis-lews.onrender.com/api";
       }
 
       const host = window.location.hostname;
@@ -44,7 +44,7 @@ export function getApiBaseUrl() {
         return `http://${host}:8000/api`;
       }
       if (host.includes("github.io") || host.includes("diverse-07") || host.includes("vercel.app")) {
-        return "https://web-production-938c6.up.railway.app/api";
+        return "https://aegis-lews.onrender.com/api";
       }
     } catch (e) {}
   }
