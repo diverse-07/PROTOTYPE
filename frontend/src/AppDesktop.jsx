@@ -1297,7 +1297,7 @@ function get30mTerrainRisk(lat, lon, activeRainfall = 28, stateFilter = "ALL") {
 }
 const getMicroCellGeotechnicalRisk = get30mTerrainRisk;
 
-export default function AppDesktop({ onSwitchToMobile }) {
+export default function AppDesktop({ onSwitchToMobile, onLogout }) {
   // Selected Sector (defaults to Arunachal Pradesh)
   const [selectedZone, setSelectedZone] = useState(() => {
     const arunachalZone = ZONES.find(z => z.state.toLowerCase().includes("arunachal"))
@@ -2223,11 +2223,11 @@ export default function AppDesktop({ onSwitchToMobile }) {
             </button>
           </nav>
 
-          {/* Right Action Controls: Quick Sector Picker + Print Report */}
-          <div className="flex items-center gap-2.5">
+          {/* Right Action Controls: Quick Sector Picker + Print Report + Logout */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={() => setSectorModalOpen(true)}
-              className="bg-slate-100 hover:bg-slate-200 text-[#003B73] px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1.5 transition cursor-pointer"
+              className="bg-slate-100 hover:bg-slate-200 text-[#003B73] px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 transition cursor-pointer"
               title="Select one of 18 Regional Monitoring Sectors"
             >
               <span className="material-symbols-outlined text-amber-600 text-sm">pin_drop</span>
@@ -2238,14 +2238,49 @@ export default function AppDesktop({ onSwitchToMobile }) {
 
             <button
               onClick={handleExportReport}
-              className="bg-[#005B9E] hover:bg-[#004A8F] text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+              className="bg-[#005B9E] hover:bg-[#004A8F] text-white px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs flex items-center gap-1 transition cursor-pointer"
               title="Generate printable EOC Geotechnical & Rainfall Report"
             >
               <span className="material-symbols-outlined text-sm">print</span>
               <span className="hidden sm:inline">Report</span>
             </button>
+
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition cursor-pointer"
+                title="Log out of EOC Officer Session"
+              >
+                <span className="material-symbols-outlined text-sm text-red-600">logout</span>
+                <span className="hidden md:inline">Logout</span>
+              </button>
+            )}
           </div>
 
+        </div>
+
+        {/* Mobile Navigation Strip (Enables seamless tab switching on phones for Authority Portal) */}
+        <div className="lg:hidden bg-[#002C57] text-white px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs border-t border-blue-900">
+          {[
+            { id: "overview", label: "Overview", icon: "dashboard" },
+            { id: "map", label: "GIS Map", icon: "map" },
+            { id: "ai", label: "AI Model", icon: "neurology" },
+            { id: "rainfall", label: "Precipitation", icon: "rainy" },
+            { id: "advisories", label: "Advisories", icon: "warning" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`px-2.5 py-1 rounded whitespace-nowrap flex items-center gap-1 font-semibold text-xs transition cursor-pointer ${
+                activeTab === tab.id
+                  ? "bg-white text-[#003B73] font-bold shadow-xs"
+                  : "text-blue-100 hover:bg-white/10"
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
       </header>
 
