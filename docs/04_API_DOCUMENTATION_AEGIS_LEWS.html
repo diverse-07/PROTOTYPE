@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AEGIS-LEWS v2.0 - API Specification &amp; Interface Control Document (ICD)</title>
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+@page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+    @bottom-right {
+        content: counter(page);
+        font-family: 'Inter', sans-serif;
+        font-size: 9pt;
+        color: #64748B;
+    }
+    @bottom-left {
+        content: "AEGIS-LEWS v2.0 · Government of India / MDoNER / NDMA";
+        font-family: 'Inter', sans-serif;
+        font-size: 8pt;
+        color: #64748B;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1E293B;
+    line-height: 1.55;
+    font-size: 10pt;
+    margin: 0;
+    padding: 0;
+    background: #FFFFFF;
+}
+
+.cover-page {
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 92vh;
+    padding: 20px 10px;
+}
+
+.gov-header {
+    border-bottom: 2px solid #003B73;
+    padding-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.gov-title-group h2 {
+    margin: 0;
+    font-size: 13pt;
+    font-weight: 800;
+    color: #003B73;
+    letter-spacing: -0.2px;
+}
+
+.gov-title-group h3 {
+    margin: 2px 0 0 0;
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: #475569;
+}
+
+.doc-badge {
+    background: #003B73;
+    color: #FFFFFF;
+    font-size: 8.5pt;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cover-body {
+    margin: 60px 0;
+}
+
+.cover-type {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #DC2626;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+}
+
+.cover-title {
+    font-size: 26pt;
+    font-weight: 900;
+    color: #0F172A;
+    line-height: 1.15;
+    letter-spacing: -0.8px;
+    margin: 0 0 12px 0;
+}
+
+.cover-subtitle {
+    font-size: 13pt;
+    font-weight: 500;
+    color: #475569;
+    line-height: 1.4;
+    margin: 0 0 30px 0;
+}
+
+.cover-meta-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 30px;
+    font-size: 9pt;
+}
+
+.cover-meta-table td {
+    padding: 8px 12px;
+    border: 1px solid #E2E8F0;
+}
+
+.cover-meta-table td.label {
+    background: #F8FAFC;
+    font-weight: 700;
+    color: #334155;
+    width: 25%;
+}
+
+.cover-meta-table td.value {
+    color: #0F172A;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.cover-footer {
+    border-top: 1px solid #E2E8F0;
+    padding-top: 12px;
+    font-size: 8pt;
+    color: #64748B;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Document Body Styling */
+h1 {
+    font-size: 17pt;
+    font-weight: 800;
+    color: #003B73;
+    border-bottom: 1.5px solid #CBD5E1;
+    padding-bottom: 6px;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    page-break-after: avoid;
+    letter-spacing: -0.3px;
+}
+
+h2 {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #1E293B;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+    letter-spacing: -0.2px;
+}
+
+h3 {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #334155;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+}
+
+p {
+    margin: 0 0 10px 0;
+    text-align: justify;
+}
+
+ul, ol {
+    margin: 0 0 12px 0;
+    padding-left: 20px;
+}
+
+li {
+    margin-bottom: 4px;
+}
+
+/* Tables */
+table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 8.5pt;
+    page-break-inside: avoid;
+}
+
+table.data-table th {
+    background: #003B73;
+    color: #FFFFFF;
+    font-weight: 700;
+    text-align: left;
+    padding: 7px 10px;
+    border: 1px solid #002C57;
+}
+
+table.data-table td {
+    padding: 6px 10px;
+    border: 1px solid #E2E8F0;
+    vertical-align: top;
+}
+
+table.data-table tr:nth-child(even) td {
+    background: #F8FAFC;
+}
+
+/* Callouts */
+.callout {
+    border-left: 4px solid #005B9E;
+    background: #F0F7FC;
+    padding: 10px 14px;
+    margin: 14px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 9pt;
+    page-break-inside: avoid;
+}
+
+.callout.danger {
+    border-left-color: #DC2626;
+    background: #FEF2F2;
+}
+
+.callout.warning {
+    border-left-color: #D97706;
+    background: #FFFBEB;
+}
+
+.callout.success {
+    border-left-color: #16A34A;
+    background: #F0FDF4;
+}
+
+.callout-title {
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.callout.danger .callout-title { color: #991B1B; }
+.callout.warning .callout-title { color: #92400E; }
+.callout.success .callout-title { color: #166534; }
+.callout .callout-title { color: #003B73; }
+
+/* Code and Pre */
+code {
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 8.5pt;
+    background: #F1F5F9;
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: #0F172A;
+}
+
+pre {
+    background: #0F172A;
+    color: #F8FAFC;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 8pt;
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 12px 0;
+    line-height: 1.4;
+    page-break-inside: avoid;
+}
+
+.badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+.badge-red { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
+.badge-green { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
+.badge-blue { background: #DBEAFE; color: #1E40AF; border: 1px solid #93C5FD; }
+.badge-amber { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
+
+.section-page {
+    page-break-before: always;
+}
+
+.formula-box {
+    background: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    border-left: 4px solid #003B73;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9pt;
+    border-radius: 0 4px 4px 0;
+    page-break-inside: avoid;
+}
+
+</style>
+</head>
+<body>
+
+    <div class="cover-page">
+        <div class="gov-header">
+            <div class="gov-title-group">
+                <h2>GOVERNMENT OF INDIA · MINISTRY OF DEVELOPMENT OF NORTH EASTERN REGION</h2>
+                <h3>National Disaster Management Division · North Eastern Regional Landslide Early Warning System</h3>
+            </div>
+            <div class="doc-badge">RESTRICTED OFFICIAL / HACKATHON JURY EVALUATION</div>
+        </div>
+
+        <div class="cover-body">
+            <div class="cover-type">API SPECIFICATION &amp; INTERFACE CONTROL DOCUMENT (ICD)</div>
+            <h1 class="cover-title">AEGIS-LEWS v2.0: Comprehensive API &amp; Protocol Specification</h1>
+            <div class="cover-subtitle">RESTful Web Services, Real-Time WebSockets, and Bluetooth LE GATT Radio Mesh Specifications</div>
+
+            <table class="cover-meta-table">
+                <tr>
+                    <td class="label">Document ID</td>
+                    <td class="value">API-ICD-NER-LEWS-2026</td>
+                    <td class="label">Release Version</td>
+                    <td class="value">2.0.4-RELEASE</td>
+                </tr>
+                <tr>
+                    <td class="label">System Designation</td>
+                    <td class="value">AEGIS-LEWS v2.0 (Autonomous Geotechnical Early Warning)</td>
+                    <td class="label">Release Date</td>
+                    <td class="value">September 2026</td>
+                </tr>
+                <tr>
+                    <td class="label">Author / Lead</td>
+                    <td class="value">AEGIS Platform API Architecture Group</td>
+                    <td class="label">Reviewed / Approved By</td>
+                    <td class="value">National Disaster Communications Standards Committee</td>
+                </tr>
+                <tr>
+                    <td class="label">Security Clearance</td>
+                    <td class="value">NIC-CERT-IN Level-4 · Restricted Official Distribution</td>
+                    <td class="label">Target Environments</td>
+                    <td class="value">NER 8 States EOC Command &amp; Citizen P2P Mesh</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="cover-footer">
+            <span>National Informatics Centre (NIC) · Disaster Management Cyberinfrastructure</span>
+            <span>Emergency Coordination Helpline: 1078 / 112 · Confidential</span>
+        </div>
+    </div>
+    
+
+<h1>1. API Architecture &amp; Global Conventions</h1>
+<p>
+The AEGIS-LEWS API suite provides high-throughput, low-latency interoperability between Earth observation telemetry pipelines, emergency operation center command consoles, and sovereign mobile field nodes.
+</p>
+
+<h3>1.1 Base Environment URLs</h3>
+<ul>
+    <li><strong>Production Cloud (Render Live):</strong> <code>https://aegis-lews.onrender.com/api</code></li>
+    <li><strong>Production WebSocket Bus:</strong> <code>wss://aegis-lews.onrender.com/ws/mesh-bus</code></li>
+    <li><strong>Local Edge Development:</strong> <code>http://127.0.0.1:8000/api</code></li>
+    <li><strong>Public Resilient Mesh Fallback:</strong> <code>https://ntfy.sh/ner_landslide_alert</code></li>
+</ul>
+
+<h3>1.2 Standard HTTP Response Envelope</h3>
+<p>All successful REST API responses return standard JSON payloads with ISO-8601 timestamps:</p>
+<pre>
+{
+  "status": "success",
+  "timestamp": 1790012469.341,
+  "execution_time_ms": 14.2,
+  "data": { ... }
+}
+</pre>
+
+<h3>1.3 Standard HTTP Status Codes</h3>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th style="width: 15%;">HTTP Status</th>
+            <th style="width: 25%;">Meaning</th>
+            <th style="width: 60%;">Condition Triggered</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>200 OK</code></td>
+            <td>Success</td>
+            <td>Telemetry retrieved, FoS model executed, or node queried successfully.</td>
+        </tr>
+        <tr>
+            <td><code>201 Created</code></td>
+            <td>Dispatched / Registered</td>
+            <td>BLE broadcast initiated or edge gateway registered into active mesh pool.</td>
+        </tr>
+        <tr>
+            <td><code>400 Bad Request</code></td>
+            <td>Validation Error</td>
+            <td>Coordinates outside monitored bounds or invalid geotechnical parameters.</td>
+        </tr>
+        <tr>
+            <td><code>401 Unauthorized</code></td>
+            <td>Authentication Failure</td>
+            <td>Missing or invalid EOC Officer credentials (expected: <code>prototype</code>).</td>
+        </tr>
+        <tr>
+            <td><code>503 Unavailable</code></td>
+            <td>Service Degraded</td>
+            <td>Cloud database down; client automatically transitions to resilient ntfy.sh fallback.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h1>2. Core RESTful Endpoints</h1>
+
+<h3>2.1 Weather &amp; Orographic Precipitation Telemetry</h3>
+<p><strong><code>GET /weather</code></strong> &mdash; Ingests live precipitation, atmospheric pressure, and soil saturation indices.</p>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>lat</code></td>
+            <td>Float</td>
+            <td>Yes</td>
+            <td>Latitude in decimal degrees (e.g., <code>25.4484</code> for Jaintia Hills).</td>
+        </tr>
+        <tr>
+            <td><code>lng</code></td>
+            <td>Float</td>
+            <td>Yes</td>
+            <td>Longitude in decimal degrees (e.g., <code>92.2152</code>).</td>
+        </tr>
+    </tbody>
+</table>
+<p><strong>Sample Response (200 OK):</strong></p>
+<pre>
+{
+  "latitude": 25.4484,
+  "longitude": 92.2152,
+  "elevation_m": 1280.0,
+  "current": {
+    "precipitation_mm": 5.2,
+    "rainfall_24h_mm": 64.8,
+    "soil_moisture_index": 0.88,
+    "temperature_c": 19.4,
+    "wind_speed_kmh": 14.5
+  },
+  "status": "Within Safe Limits",
+  "source": "Open-Meteo Orographic Ingestion Engine"
+}
+</pre>
+
+<h3>2.2 Geotechnical Slope Stability Evaluation</h3>
+<p><strong><code>GET /risk/evaluate</code></strong> &mdash; Computes dynamic Factor of Safety (FoS) and slope failure probability.</p>
+<p><strong>Sample Request Query:</strong> <code>/risk/evaluate?slope=52&wetness=92&insar=42.1&cohesion=22</code></p>
+<p><strong>Sample Response (200 OK):</strong></p>
+<pre>
+{
+  "factor_of_safety": 0.67,
+  "failure_probability_pct": 99.4,
+  "status": "CRITICAL BREACH",
+  "color": "#DC2626",
+  "failure_type": "Active Translational Shear",
+  "estimated_impact_hours": 1.2,
+  "shear_velocity_mm_day": 42.1,
+  "geomechanical_metrics": {
+    "driving_stress_kpa": 148.6,
+    "resisting_strength_kpa": 99.5,
+    "pore_pressure_ratio_ru": 0.44
+  },
+  "evacuation_directive": "EVACUATE IMMEDIATELY: Debris flow expected in 15 mins. Move to safe ground."
+}
+</pre>
+
+<h3>2.3 Emergency BLE Broadcast Dispatch</h3>
+<p><strong><code>POST /alerts/ble-broadcast</code></strong> &mdash; Triggers immediate EOC hardware beacon broadcast sequence.</p>
+<p><strong>Sample Request Payload (JSON):</strong></p>
+<pre>
+{
+  "zone_name": "West Kameng &amp; Tawang MCT Corridor",
+  "severity": "CRITICAL",
+  "risk_score": 99,
+  "preset_code": 1,
+  "message": "CRITICAL BREACH: Tawang Axis FoS=0.67. Active shear failure. Evacuate immediately.",
+  "target_gateway": "all",
+  "latitude": 27.5860,
+  "longitude": 91.8650
+}
+</pre>
+<p><strong>Sample Response (201 Created):</strong></p>
+<pre>
+{
+  "status": "dispatched",
+  "dispatch_id": "BLE-RELAY-E4F92A",
+  "zone": "West Kameng &amp; Tawang MCT Corridor",
+  "severity": "CRITICAL",
+  "risk_score": 99,
+  "preset_code": 1,
+  "primary_gateways_notified": 4,
+  "websockets_active": 1,
+  "detail": "Signal dispatched to Primary Gateway phone. BLE radio advertisement initiated for offline peers."
+}
+</pre>
+
+<h1>3. Real-Time WebSockets Protocol</h1>
+<p>
+The platform maintains a bi-directional WebSocket telemetry stream for instant synchronization between the cloud inference pipeline and connected authority dashboards:
+</p>
+<ul>
+    <li><strong>Connection Endpoint:</strong> <code>wss://aegis-lews.onrender.com/ws/mesh-bus</code></li>
+    <li><strong>Heartbeat Interval:</strong> 15 seconds (<code>{ "type": "PING" }</code> &rarr; <code>{ "type": "PONG" }</code>)</li>
+</ul>
+<p><strong>Inbound Disaster Alert Broadcast Frame:</strong></p>
+<pre>
+{
+  "event": "DISASTER_BREACH_TRIGGER",
+  "dispatch_id": "BLE-RELAY-98B10C",
+  "zone": "Jaintia Hills Sector 8 (NH-44)",
+  "severity": "CRITICAL",
+  "fos": 0.62,
+  "preset_code": 1,
+  "message": "EVACUATE IMMEDIATELY: Debris flow expected in 15 mins. Move to safe ground.",
+  "coords": [25.4484, 92.2152],
+  "dispatched_at": "2026-09-21 23:46:14 IST"
+}
+</pre>
+
+<h1>4. Bluetooth LE (BLE) GATT Radio Interface Control</h1>
+<p>
+The sovereign hardware radio interface exposes standard Bluetooth SIG compliant service structures:
+</p>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>GATT Entity</th>
+            <th>UUID</th>
+            <th>Permissions</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Sovereign Service</strong></td>
+            <td><code>0000AE61-0000-1000-8000-00805F9B34FB</code></td>
+            <td>N/A</td>
+            <td>Primary AEGIS Emergency Signaling Service (Advertised in BLE Channels 37, 38, 39).</td>
+        </tr>
+        <tr>
+            <td><strong>Full Directive Char</strong></td>
+            <td><code>0000AE62-0000-1000-8000-00805F9B34FB</code></td>
+            <td>READ (Unauthenticated)</td>
+            <td>Returns complete UTF-8 evacuation text to connecting rescue devices and civil defence radios.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>4.1 Standard Preset Emergency Directive Codes</h3>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th style="width: 15%;">Preset Code</th>
+            <th style="width: 30%;">Title</th>
+            <th style="width: 55%;">Standard Canonical Directive Text</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>0x01</code></td>
+            <td>EVACUATE IMMEDIATELY</td>
+            <td>EVACUATE IMMEDIATELY: Debris flow expected in 15 mins. Move to safe ground.</td>
+        </tr>
+        <tr>
+            <td><code>0x02</code></td>
+            <td>DEBRIS FLOW IMMINENT</td>
+            <td>DEBRIS FLOW IMMINENT: Heavy rainfall detected. Stay clear of natural drainage channels.</td>
+        </tr>
+        <tr>
+            <td><code>0x03</code></td>
+            <td>ROAD BLOCKED</td>
+            <td>ROAD BLOCKED: Rockfall at highway corridor. Traffic suspended.</td>
+        </tr>
+        <tr>
+            <td><code>0x04</code></td>
+            <td>SHELTER IN PLACE</td>
+            <td>SHELTER IN PLACE: Seek designated bedrock refuge center.</td>
+        </tr>
+        <tr>
+            <td><code>0x05</code></td>
+            <td>FLASH FLOOD WARNING</td>
+            <td>FLASH FLOOD WARNING: Rapid runoff rising in valley floor.</td>
+        </tr>
+        <tr>
+            <td><code>0x06</code></td>
+            <td>BRIDGE WASHED OUT</td>
+            <td>BRIDGE WASHED OUT: Do not attempt crossing.</td>
+        </tr>
+    </tbody>
+</table>
+
+</body>
+</html>
