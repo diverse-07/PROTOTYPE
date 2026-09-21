@@ -3093,18 +3093,33 @@ export default function AppMobile({ onSwitchToDesktop }) {
     let lastMsgId = null
 
     const handleIncomingAlert = (data) => {
-      if (!data || !data.message) return
+      if (!data) return
+
+      let rawMsg = data.message
+      let rawTitle = data.title || "MDoNER CRITICAL EVACUATION SIREN"
+      let rawZone = data.zone || "Jaintia Hills Sector 8 (NH-44 Corridor)"
+
+      // If data.message is an object (e.g. from BLE mesh packet)
+      if (rawMsg && typeof rawMsg === "object") {
+        rawZone = rawMsg.zone || rawZone
+        rawMsg = rawMsg.fullDirective || rawMsg.presetText || rawMsg.message || "Immediate Evacuation Directive"
+      } else if (typeof data === "object" && !rawMsg && data.presetText) {
+        rawMsg = data.fullDirective || data.presetText || "Immediate Evacuation Directive"
+      }
+
+      const stringMsg = String(rawMsg || "Immediate Evacuation Siren Dispatched by Central Command.")
+
       if (data.id && data.id === lastMsgId) return
       lastMsgId = data.id || Date.now()
 
-      if (data.message === "AEGIS_SILENCE_ALL_SIRENS" || (data.title && data.title.includes("AEGIS_SILENCE"))) {
+      if (stringMsg === "AEGIS_SILENCE_ALL_SIRENS" || (rawTitle && String(rawTitle).includes("AEGIS_SILENCE"))) {
         stopDeviceSiren()
         setIncomingSiren(null)
         return
       }
 
-      if (typeof data.message === "string" && data.message.startsWith("AEGIS_BLE_CMD:")) {
-        const parts = data.message.replace("AEGIS_BLE_CMD:", "").split("|")
+      if (stringMsg.startsWith("AEGIS_BLE_CMD:")) {
+        const parts = stringMsg.replace("AEGIS_BLE_CMD:", "").split("|")
         const cmdPayload = {
           dispatch_id: parts[0] || "BLE-RELAY",
           preset_code: parseInt(parts[1] || "1", 10),
@@ -3121,11 +3136,11 @@ export default function AppMobile({ onSwitchToDesktop }) {
       if (data.time && (nowSec - data.time) > 120) return
 
       // INSTANT SIREN TRIGGER (0ms delay)
-      startDeviceSiren()
+      startDeviceSiren(stringMsg)
       setIncomingSiren({
-        title: data.title || "MDoNER CRITICAL EVACUATION SIREN",
-        message: data.message,
-        zone: data.zone || "Jaintia Hills Sector 8 (NH-44 Corridor)",
+        title: String(rawTitle),
+        message: stringMsg,
+        zone: String(rawZone),
         time: new Date().toLocaleTimeString("en-IN")
       })
 
@@ -3133,7 +3148,7 @@ export default function AppMobile({ onSwitchToDesktop }) {
       if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
         try {
           new Notification("🚨 AEGIS RED ALERT: EVACUATION SIREN", {
-            body: data.message,
+            body: stringMsg,
             icon: "/logo.png",
             tag: "aegis_emergency_siren",
             requireInteraction: true,
@@ -3145,16 +3160,25 @@ export default function AppMobile({ onSwitchToDesktop }) {
 
     if (typeof window !== "undefined") {
       window.triggerNativeAegisAlert = (msg) => {
+        let textMsg = "Immediate Evacuation Siren Dispatched by Central Command."
+        let zoneName = "Jaintia Hills Sector 8 (NH-44 Corridor)"
+        if (typeof msg === "string") {
+          textMsg = msg
+        } else if (msg && typeof msg === "object") {
+          textMsg = msg.fullDirective || msg.presetText || msg.message || textMsg
+          zoneName = msg.zone || msg.zone_name || zoneName
+        }
         handleIncomingAlert({
           title: "MDoNER CRITICAL EVACUATION SIREN",
-          message: msg || "Immediate Evacuation Siren Dispatched by Central Command.",
+          message: textMsg,
+          zone: zoneName,
           time: Math.floor(Date.now() / 1000)
-        });
-      };
+        })
+      }
       window.silenceNativeAegisAlert = () => {
-        stopDeviceSiren();
-        setIncomingSiren(null);
-      };
+        stopDeviceSiren()
+        setIncomingSiren(null)
+      }
 
       // Direct Hardware BLE Mesh Emergency Packet Receiver (Zero SIM, Zero Wi-Fi)
       window.onAegisBlePacketReceived = (packet) => {
@@ -4288,7 +4312,7 @@ export default function AppMobile({ onSwitchToDesktop }) {
                 <span className="siren-audio-bar bar-4" />
                 <span className="siren-audio-bar bar-2" />
               </div>
-              <p>{incomingSiren.message}</p>
+              <p>{typeof incomingSiren.message === "string" ? incomingSiren.message : (incomingSiren.message?.fullDirective || incomingSiren.message?.presetText || incomingSiren.message?.message || JSON.stringify(incomingSiren.message))}</p>
               <div className="siren-dispatch-time">Dispatched: {incomingSiren.time} &bull; Audible Alarm &amp; Vibration On</div>
             </div>
 
