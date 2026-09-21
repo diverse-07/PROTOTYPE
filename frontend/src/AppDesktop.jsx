@@ -1634,9 +1634,7 @@ export default function AppDesktop({ onSwitchToMobile, onLogout }) {
       setBlePacketsSent((p) => p + 1)
       setBleFeedbackMsg(`BROADCAST ACTIVE: Packet ID ${id} dispatched via Bluetooth mesh relay and emergency cloud bus.`)
       
-      if (riskResult.status.includes("CRITICAL") && !sirenPlaying) {
-        toggleSirenAudio()
-      }
+      // PC audio remains quiet — the siren wails only on citizen field phones!
     } catch (err) {
       setBleDispatchId(`BLE-OFFLINE-${Date.now().toString(16).slice(-4).toUpperCase()}`)
       setBleFeedbackMsg("Broadcast queued in offline BLE beacon relay.")
