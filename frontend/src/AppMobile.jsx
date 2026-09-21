@@ -3411,6 +3411,7 @@ export default function AppMobile({ onSwitchToDesktop }) {
           </div>
 
           {/* Top Right: Authority Switcher + Settings Antenna + 3-Dot More Menu */}
+          <div className="mobile-header-actions">
             <a 
               href="./desktop.html" 
               className="mobile-auth-switch-btn"
